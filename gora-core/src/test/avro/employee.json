@@ -1,0 +1,16 @@
+{"namespace": "org.gora.example.generated",
+ "protocol": "ProtocolTest",
+
+ "types": [
+  {
+    "type": "record",
+    "name": "Employee",
+    "fields" : [
+      {"name": "name", "type": "string"},
+      {"name": "dateOfBirth", "type": "long"},
+      {"name": "ssn", "type": "string"},
+      {"name": "salary", "type": "int"}
+    ]
+  }
+ ]
+}

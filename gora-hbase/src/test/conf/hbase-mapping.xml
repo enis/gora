@@ -1,0 +1,11 @@
+<table name="Employees" keyClass="java.lang.String" rowClass="org.gora.example.generated.Employee">
+  <description>
+    <family name="info"/> <!-- This can also have params like compression, bloom filters -->
+  </description>
+  <fields>
+    <field name="name" family="info" qualifier="nm"/>
+    <field name="dateOfBirth" family="info" qualifier="db"/>
+    <field name="ssn" family="info" qualifier="sn"/>
+    <field name="salary" family="info" qualifier="sl"/>
+  </fields>
+</table>
