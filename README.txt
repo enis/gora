@@ -9,7 +9,7 @@ For the latest information about Gora, please visit our website at:
 Gora uses git distributed version tracking. Source code for gora resides in 
 GitHub server. To checkout the code from git use
 
-$ git clone git@github.com:enis/gora.git
+$ git clone git://github.com/enis/gora.git
 
 adding changes to local repository can be done like
 $ touch first.txt
