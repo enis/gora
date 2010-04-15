@@ -13,18 +13,18 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Deserializer;
-import org.gora.TableRow;
+import org.gora.Persistent;
 import org.gora.util.StatefulHashMap;
 import org.gora.util.StatefulHashMap.State;
 
-public class TableRowDeserializer extends SpecificDatumReader
-implements Deserializer<TableRow> {
+public class PersistentDeserializer extends SpecificDatumReader
+implements Deserializer<Persistent> {
 
   private BinaryDecoder decoder;
-  private Class<TableRow> rowClass;
+  private Class<Persistent> rowClass;
   private boolean reuseOld;
 
-  public TableRowDeserializer(Class<TableRow> c, boolean reuseOld) {
+  public PersistentDeserializer(Class<Persistent> c, boolean reuseOld) {
     this.rowClass = c;
     this.reuseOld = reuseOld;
   }
@@ -38,7 +38,7 @@ implements Deserializer<TableRow> {
   public void close() throws IOException { }
 
   @Override
-  public TableRow deserialize(TableRow row)
+  public Persistent deserialize(Persistent row)
   throws IOException {
     if (row == null || !reuseOld) {
       try {

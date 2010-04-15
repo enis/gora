@@ -8,11 +8,11 @@ import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.gora.TableRow;
-import org.gora.store.TableSerializer;
-import org.gora.store.TableSerializerFactory;
+import org.gora.Persistent;
+import org.gora.store.DataStore;
+import org.gora.store.DataStoreFactory;
 
-public class RowOutputFormat<K, R extends TableRow>
+public class GoraOutputFormat<K, R extends Persistent>
 extends OutputFormat<K, R>{
 
   public static final String REDUCE_KEY_CLASS   = "storage.reduce.key.class";
@@ -36,8 +36,8 @@ extends OutputFormat<K, R>{
     Configuration conf = context.getConfiguration();
     Class<K> keyClass = (Class<K>) conf.getClass(REDUCE_KEY_CLASS, null);
     Class<R> rowClass = (Class<R>) conf.getClass(REDUCE_VALUE_CLASS, null);
-    final TableSerializer<K, R> serializer =
-      TableSerializerFactory.create(context.getConfiguration(), keyClass, rowClass);
+    final DataStore<K, R> serializer =
+      DataStoreFactory.create(context.getConfiguration(), keyClass, rowClass);
     return new RecordWriter<K, R>() {
       @Override
       public void close(TaskAttemptContext context) throws IOException,
@@ -48,7 +48,7 @@ extends OutputFormat<K, R>{
       @Override
       public void write(K key, R row)
       throws IOException, InterruptedException {
-        serializer.updateRow(key, row);
+        serializer.persist(key, row);
       }
     };
   }

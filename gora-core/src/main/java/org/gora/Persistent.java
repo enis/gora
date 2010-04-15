@@ -4,12 +4,12 @@ import java.util.BitSet;
 
 import org.apache.avro.specific.SpecificRecord;
 
-public abstract class TableRow
+public abstract class Persistent
 implements SpecificRecord {
   protected BitSet changedBits;
   protected BitSet readableBits;
   
-  protected TableRow() {
+  protected Persistent() {
     changedBits = new BitSet(getSchema().getFields().size());
     readableBits = new BitSet(getSchema().getFields().size());
   }

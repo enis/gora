@@ -14,11 +14,11 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.reflect.FixedSize;
-import org.gora.TableRow;
+import org.gora.Persistent;
 import org.gora.util.StatefulHashMap;
 
 @SuppressWarnings("all")
-public class Employee extends TableRow {
+public class Employee extends Persistent {
   public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"Employee\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"dateOfBirth\",\"type\":\"long\"},{\"name\":\"ssn\",\"type\":\"string\"},{\"name\":\"salary\",\"type\":\"int\"}]}");
   private Utf8 name;
   private long dateOfBirth;

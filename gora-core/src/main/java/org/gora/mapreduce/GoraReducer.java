@@ -2,37 +2,37 @@ package org.gora.mapreduce;
 
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.gora.TableRow;
+import org.gora.Persistent;
 
-public class RowReducer<K1, V1, K2, V2 extends TableRow>
+public class GoraReducer<K1, V1, K2, V2 extends Persistent>
 extends Reducer<K1, V1, K2, V2> {
 
-  public static <K1, V1, K2, V2 extends TableRow>
+  public static <K1, V1, K2, V2 extends Persistent>
   void initRowReducerJob(Job job, Class<K2> keyClass, Class<V2> valueClass,
-      Class<? extends RowReducer<K1, V1, K2, V2>> reducerClass) {
+      Class<? extends GoraReducer<K1, V1, K2, V2>> reducerClass) {
     initRowReducerJob(job, keyClass, valueClass, reducerClass, true);
   }
 
-  public static <K1, V1, K2, V2 extends TableRow>
+  public static <K1, V1, K2, V2 extends Persistent>
   void initRowReducerJob(Job job, Class<K2> keyClass, Class<V2> valueClass,
-      Class<? extends RowReducer<K1, V1, K2, V2>> reducerClass,
+      Class<? extends GoraReducer<K1, V1, K2, V2>> reducerClass,
           boolean reuseOld) {
     String tableSerializationClass =
-      TableRowSerialization.class.getCanonicalName();
+      PersistentSerialization.class.getCanonicalName();
     if (!reuseOld) {
       tableSerializationClass =
-        TableRowNonReusingSerialization.class.getCanonicalName();
+        PersistentNonReusingSerialization.class.getCanonicalName();
     }
     job.getConfiguration().setStrings("io.serializations", 
         "org.apache.hadoop.io.serializer.WritableSerialization",
         StringSerialization.class.getCanonicalName(),
         tableSerializationClass);
-    job.setOutputFormatClass(RowOutputFormat.class);
+    job.setOutputFormatClass(GoraOutputFormat.class);
     job.setReducerClass(reducerClass);
-    job.getConfiguration().setClass(RowOutputFormat.REDUCE_KEY_CLASS,
+    job.getConfiguration().setClass(GoraOutputFormat.REDUCE_KEY_CLASS,
         keyClass, Object.class);
-    job.getConfiguration().setClass(RowOutputFormat.REDUCE_VALUE_CLASS,
-        valueClass, TableRow.class);
+    job.getConfiguration().setClass(GoraOutputFormat.REDUCE_VALUE_CLASS,
+        valueClass, Persistent.class);
 
   }
 }

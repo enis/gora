@@ -12,10 +12,10 @@ import org.gora.example.generated.Employee;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestHBaseSerializer extends HBaseClusterTestCase {
+public class TestHBaseStore extends HBaseClusterTestCase {
  
   private HBaseConfiguration conf = new HBaseConfiguration();
-  private HbaseSerializer<String, Employee> serializer;
+  private HbaseStore<String, Employee> serializer;
   
   private static final long YEAR_IN_MS = 365L * 24L * 60L * 60L * 1000L; 
   
@@ -26,12 +26,12 @@ public class TestHBaseSerializer extends HBaseClusterTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    this.serializer = new HbaseSerializer<String, Employee>(conf, String.class, 
+    this.serializer = new HbaseStore<String, Employee>(conf, String.class, 
         Employee.class);
   }
   
   private Employee createEmployee() throws IOException {
-    Employee employee = serializer.makeRow();
+    Employee employee = serializer.newInstance();
     employee.setName(new Utf8("Random Joe"));
     employee.setDateOfBirth( System.currentTimeMillis() - 42L *  YEAR_IN_MS );
     employee.setSalary(100000);
@@ -40,7 +40,7 @@ public class TestHBaseSerializer extends HBaseClusterTestCase {
   }
   
   @Test
-  public void testMakeRow() throws IOException {
+  public void testNewInstance() throws IOException {
     createEmployee();
   }
   
@@ -48,20 +48,20 @@ public class TestHBaseSerializer extends HBaseClusterTestCase {
     serializer.createTable();
   }
   
-  public void testUpdateRow() throws IOException {
+  public void testPersist() throws IOException {
     serializer.createTable();
     Employee employee = createEmployee();
-    serializer.updateRow(employee.getSsn().toString(), employee);
+    serializer.persist(employee.getSsn().toString(), employee);
   }
   
-  public void testReadRow() throws IOException {
+  public void testRetrieve() throws IOException {
     serializer.createTable();
     Employee employee = createEmployee();
     String ssn = employee.getSsn().toString();
-    serializer.updateRow(ssn, employee);
+    serializer.persist(ssn, employee);
     serializer.sync();
     
-    Employee after = serializer.readRow(ssn, EMPYLOYEE_FIELDS);
+    Employee after = serializer.retrieve(ssn, EMPYLOYEE_FIELDS);
     
     Assert.assertEquals(employee, after);
   }

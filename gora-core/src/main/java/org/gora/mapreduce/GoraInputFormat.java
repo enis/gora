@@ -12,11 +12,11 @@ import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.gora.RowScanner;
-import org.gora.TableRow;
-import org.gora.store.TableSerializer;
-import org.gora.store.TableSerializerFactory;
+import org.gora.Persistent;
+import org.gora.store.DataStore;
+import org.gora.store.DataStoreFactory;
 
-public class RowInputFormat<K, R extends TableRow>
+public class GoraInputFormat<K, R extends Persistent>
 extends InputFormat<K, R> implements Configurable {
 
   public static final String MAPRED_FIELDS   = "storage.mapred.fields";
@@ -25,7 +25,7 @@ extends InputFormat<K, R> implements Configurable {
 
   public static final String MAP_VALUE_CLASS = "storage.map.value.class";
 
-  private TableSerializer<K, R> serializer;
+  private DataStore<K, R> serializer;
 
   private Configuration conf;
 
@@ -92,7 +92,7 @@ extends InputFormat<K, R> implements Configurable {
     this.conf = conf;
     Class<K> keyClass = (Class<K>) conf.getClass(MAP_KEY_CLASS, null);
     Class<R> rowClass = (Class<R>) conf.getClass(MAP_VALUE_CLASS, null);
-    this.serializer = TableSerializerFactory.create(conf, keyClass, rowClass);
+    this.serializer = DataStoreFactory.create(conf, keyClass, rowClass);
   }
 
 }

@@ -40,9 +40,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.gora.Persistent;
 import org.gora.RowScanner;
-import org.gora.TableRow;
-import org.gora.store.TableSerializer;
+import org.gora.store.DataStore;
 import org.gora.util.NodeWalker;
 import org.gora.util.StatefulHashMap;
 import org.gora.util.XmlUtils;
@@ -50,8 +50,8 @@ import org.gora.util.StatefulHashMap.State;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-public class HbaseSerializer<K, R extends TableRow>
-extends TableSerializer<K, R> {
+public class HbaseStore<K, R extends Persistent>
+extends DataStore<K, R> {
 
   public static final String PARSE_MAPPING_FILE_KEY = "gora.hbase.mapping.file"; 
 
@@ -97,7 +97,7 @@ extends TableSerializer<K, R> {
       if (result == null) {
         return null;
       }
-      K key = HbaseSerializer.this.fromBytes(getKeyClass(), result.getRow());
+      K key = HbaseStore.this.fromBytes(getKeyClass(), result.getRow());
       R row = makeTableRow(result, fields);
       return new SimpleEntry<K, R>(key, row);
     }
@@ -108,7 +108,7 @@ extends TableSerializer<K, R> {
     }
   }
 
-  public HbaseSerializer(Configuration conf, Class<K> keyClass, Class<R> rowClass)  {
+  public HbaseStore(Configuration conf, Class<K> keyClass, Class<R> rowClass)  {
     super(conf, keyClass, rowClass);
     columnMap = new HashMap<String, HbaseColumn>();
     colDescs = new ArrayList<HColumnDescriptor>();
@@ -131,7 +131,7 @@ extends TableSerializer<K, R> {
   }
 
   @Override
-  public R makeRow() throws IOException {
+  public R newInstance() throws IOException {
     try {
       R row = getRowClass().newInstance();
       return row;
@@ -143,7 +143,7 @@ extends TableSerializer<K, R> {
   }
 
   @Override
-  public R readRow(K key, String[] fields) throws IOException {
+  public R retrieve(K key, String[] fields) throws IOException {
     Get get = new Get(toBytes(key));
     addFields(get, fields);
     Result result = table.get(get);
@@ -152,7 +152,7 @@ extends TableSerializer<K, R> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public void updateRow(K key, R row) throws IOException {
+  public void persist(K key, R row) throws IOException {
     Schema schema = row.getSchema();
     byte[] keyRaw = toBytes(key);
     Put put = new Put(keyRaw);
@@ -201,7 +201,7 @@ extends TableSerializer<K, R> {
   }
 
   @Override
-  public void deleteRow(K key) throws IOException {
+  public void delete(K key) throws IOException {
     table.delete(new Delete(toBytes(key)));
   }
 
@@ -301,7 +301,7 @@ extends TableSerializer<K, R> {
   @SuppressWarnings("unchecked")
   private R makeTableRow(Result result, String[] fields)
   throws IOException {
-    R row = makeRow();
+    R row = newInstance();
     Schema schema = row.getSchema();
     Map<String, Field> fieldMap = schema.getFields();
     for (String f : fields) {
@@ -432,7 +432,7 @@ extends TableSerializer<K, R> {
   SecurityException, NoSuchFieldException {
     try {      
       InputStream stream =
-        HbaseSerializer.class.getClassLoader().getResourceAsStream(fileName);
+        HbaseStore.class.getClassLoader().getResourceAsStream(fileName);
       Document doc = docBuilder.parse(stream);
       NodeWalker walker = new NodeWalker(doc.getFirstChild());
       boolean processInfo = false;
