@@ -16,7 +16,6 @@ public class StateManagerImpl implements StateManager {
   }
 
   public void setManagedPersistent(Persistent persistent) {
-    System.out.println("setManagedPersitent");
     dirtyBits = new BitSet(persistent.getSchema().getFields().size());
     readableBits = new BitSet(persistent.getSchema().getFields().size());    
   }

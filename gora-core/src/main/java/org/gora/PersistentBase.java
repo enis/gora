@@ -15,7 +15,6 @@ public abstract class PersistentBase implements Persistent {
   }
   
   protected PersistentBase(StateManager stateManager) {
-    System.out.println("const");
     this.stateManager = stateManager;
   }
 
