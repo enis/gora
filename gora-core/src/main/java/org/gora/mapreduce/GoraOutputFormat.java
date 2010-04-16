@@ -36,19 +36,20 @@ extends OutputFormat<K, R>{
     Configuration conf = context.getConfiguration();
     Class<K> keyClass = (Class<K>) conf.getClass(REDUCE_KEY_CLASS, null);
     Class<R> rowClass = (Class<R>) conf.getClass(REDUCE_VALUE_CLASS, null);
-    final DataStore<K, R> serializer =
-      DataStoreFactory.create(context.getConfiguration(), keyClass, rowClass);
+    final DataStore<K, R> store =
+      new DataStoreFactory().getDataStore(keyClass, rowClass);
+    
     return new RecordWriter<K, R>() {
       @Override
       public void close(TaskAttemptContext context) throws IOException,
           InterruptedException {
-        serializer.sync();
+        store.sync();
       }
 
       @Override
-      public void write(K key, R row)
+      public void write(K key, R value)
       throws IOException, InterruptedException {
-        serializer.persist(key, row);
+        store.put(key, value);
       }
     };
   }

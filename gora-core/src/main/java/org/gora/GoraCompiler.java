@@ -16,12 +16,12 @@ import org.apache.avro.Protocol.Message;
 import org.apache.avro.specific.SpecificData;
 
 /** Generate specific Java interfaces and classes for protocols and schemas. */
-public class SpecificCompiler {
+public class GoraCompiler {
   private File dest;
   private Writer out;
   private Set<Schema> queue = new HashSet<Schema>();
 
-  private SpecificCompiler(File dest) {
+  private GoraCompiler(File dest) {
     this.dest = dest;                             // root directory for output
   }
 
@@ -30,7 +30,7 @@ public class SpecificCompiler {
    * @param dest the directory to place generated files in
    */
   public static void compileProtocol(File src, File dest) throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler(dest);
+    GoraCompiler compiler = new GoraCompiler(dest);
     Protocol protocol = Protocol.parse(src);
     for (Schema s : protocol.getTypes())          // enqueue types
       compiler.enqueue(s);
@@ -40,7 +40,7 @@ public class SpecificCompiler {
 
   /** Generates Java classes for a schema. */
   public static void compileSchema(File src, File dest) throws IOException {
-    SpecificCompiler compiler = new SpecificCompiler(dest);
+    GoraCompiler compiler = new GoraCompiler(dest);
     compiler.enqueue(Schema.parse(src));          // enqueue types
     compiler.compile();                           // generate classes for types
   }
@@ -135,7 +135,10 @@ public class SpecificCompiler {
     line(0, "import org.apache.avro.specific.SpecificRecord;");
     line(0, "import org.apache.avro.specific.SpecificFixed;");
     line(0, "import org.apache.avro.reflect.FixedSize;");
-    line(0, "import org.gora.TableRow;");
+    line(0, "import org.gora.Persistent;");
+    line(0, "import org.gora.PersistentBase;");
+    line(0, "import org.gora.StateManager;");
+    line(0, "import org.gora.StateManagerImpl;");
     line(0, "import org.gora.util.StatefulHashMap;");
     for (Schema s : queue)
       if (namespace == null
@@ -174,8 +177,9 @@ public class SpecificCompiler {
     try {
       switch (schema.getType()) {
       case RECORD:
-        line(0, "public class "+type(schema)
-             +" extends TableRow {");
+        String type = type(schema);
+        line(0, "public class "+ type
+             +" extends PersistentBase {");
         // schema definition
         line(1, "public static final Schema _SCHEMA = Schema.parse(\""
              +esc(schema)+"\");");
@@ -183,6 +187,21 @@ public class SpecificCompiler {
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
           line(1,"private "+unbox(field.getValue())+" "+field.getKey()+";");
         }
+        
+        //constructors
+        line(1, "public " + type + "() {");
+        line(2, "this(new StateManagerImpl());");
+        line(1, "}");
+        line(1, "public " + type + "(StateManager stateManager) {");
+        line(2, "super(stateManager);");
+        line(2, "stateManager.setManagedPersistent(this);");
+        line(1, "}");
+        
+        //newInstance(StateManager)
+        line(1, "public " + type + " newInstance(StateManager stateManager) {");
+        line(2, "return new " + type + "(stateManager);" );
+        line(1, "}");
+        
         // schema method
         line(1, "public Schema getSchema() { return _SCHEMA; }");
         // get method
@@ -197,7 +216,7 @@ public class SpecificCompiler {
         // set method
         line(1, "@SuppressWarnings(value=\"unchecked\")");
         line(1, "public void set(int _field, Object _value) {");
-        line(2, "setFieldChanged(_field);");
+        line(2, "getStateManager().setDirty(this, _field);");
         line(2, "switch (_field) {");
         i = 0;
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
@@ -242,28 +261,19 @@ public class SpecificCompiler {
             line(2, "if ("+field.getKey()+" == null) {");
             line(3, field.getKey()+" = new StatefulHashMap<Utf8,"+valueType+">();");
             line(2, "}");
-            line(2, "setFieldChanged("+i+");");
+            line(2, "stateManager.setDirty(this, "+i+");");
             line(2, field.getKey()+".put(key, value);");
             line(1, "}");
             line(1, "public "+unboxed+" removeFrom"+camelKey+"(Utf8 key) {");
             line(2, "if ("+field.getKey()+" == null) { return null; }");
-            line(2, "setFieldChanged("+i+");");
+            line(2, "stateManager.setDirty(this, "+i+");");
             line(2, "return "+field.getKey()+".remove(key);");
             line(1, "}");
           }
           i++;
         }
-        // has(field) implementation
-        line(1, " // O(n)... TODO: Find a better implementation");
-        line(1, "public boolean has(String fieldName) {");
-        line(2, "int i = 0;");
-        line(2, "for (Map.Entry<String, Schema> field : getSchema().getFieldSchemas()) {");
-        line(3, "if (field.getKey().equals(fieldName)) { return isFieldReadable(i); }");
-        line(3, "i++;");
-        line(2, "}");
-        line(2, "throw new AvroRuntimeException(\"No Such field\");");
-        line(1, "}");
         line(0, "}");
+        
         break;
       case ENUM:
         line(0, "public enum "+type(schema)+" { ");

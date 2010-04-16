@@ -14,6 +14,7 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.gora.Persistent;
+import org.gora.StateManager;
 import org.gora.util.StatefulHashMap;
 import org.gora.util.StatefulHashMap.State;
 
@@ -38,43 +39,46 @@ implements Deserializer<Persistent> {
   public void close() throws IOException { }
 
   @Override
-  public Persistent deserialize(Persistent row)
+  public Persistent deserialize(Persistent persistent)
   throws IOException {
-    if (row == null || !reuseOld) {
+    StateManager stateManager = null;
+    if (persistent == null || !reuseOld) {
       try {
-        row = rowClass.newInstance();
+        persistent = rowClass.newInstance();
+        stateManager = persistent.getStateManager();
       } catch (Exception e) {
         throw new RuntimeException(e);
       }
     } else {
-      row.clearChangedBits();
-      row.clearReadableBits();
+      stateManager = persistent.getStateManager();
+      stateManager.clearDirty(persistent);
+      stateManager.clearReadable(persistent);
     }
-    setSchema(row.getSchema());
+    setSchema(persistent.getSchema());
 
-    Map<String, Field> fieldMap = row.getSchema().getFields();
-    boolean[] changeds = new boolean[fieldMap.size()];
+    Map<String, Field> fieldMap = persistent.getSchema().getFields();
+    boolean[] isDirty = new boolean[fieldMap.size()];
 
     int i = 0;
     for (Entry<String, Field> e : fieldMap.entrySet()) {
       boolean isReadable = decoder.readBoolean();
-      changeds[i++] = decoder.readBoolean();
+      isDirty[i++] = decoder.readBoolean();
       Field field = e.getValue();
       if (isReadable) {
         Object o = read(null, field.schema(), field.schema(), decoder);
         o = readExtraInformation(field.schema(), o, decoder);
-        row.set(field.pos(), o);
+        persistent.set(field.pos(), o);
       }
     }
 
     // Now set changed bits
-    row.clearChangedBits();
-    for (i = 0; i < changeds.length; i++) {
-      if (changeds[i]) {
-        row.setFieldChanged(i);
+    stateManager.clearDirty(persistent);
+    for (i = 0; i < isDirty.length; i++) {
+      if (isDirty[i]) {
+        stateManager.setDirty(persistent, i);
       }
     }
-    return row;
+    return persistent;
   }
 
   @SuppressWarnings("unchecked")

@@ -15,15 +15,28 @@ import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.reflect.FixedSize;
 import org.gora.Persistent;
+import org.gora.PersistentBase;
+import org.gora.StateManager;
+import org.gora.StateManagerImpl;
 import org.gora.util.StatefulHashMap;
 
 @SuppressWarnings("all")
-public class Employee extends Persistent {
+public class Employee extends PersistentBase {
   public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"Employee\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"dateOfBirth\",\"type\":\"long\"},{\"name\":\"ssn\",\"type\":\"string\"},{\"name\":\"salary\",\"type\":\"int\"}]}");
   private Utf8 name;
   private long dateOfBirth;
   private Utf8 ssn;
   private int salary;
+  public Employee() {
+    this(new StateManagerImpl());
+  }
+  public Employee(StateManager stateManager) {
+    super(stateManager);
+    stateManager.setManagedPersistent(this);
+  }
+  public Employee newInstance(StateManager stateManager) {
+    return new Employee(stateManager);
+  }
   public Schema getSchema() { return _SCHEMA; }
   public Object get(int _field) {
     switch (_field) {
@@ -36,7 +49,7 @@ public class Employee extends Persistent {
   }
   @SuppressWarnings(value="unchecked")
   public void set(int _field, Object _value) {
-    setFieldChanged(_field);
+    getStateManager().setDirty(this, _field);
     switch (_field) {
     case 0:name = (Utf8)_value; break;
     case 1:dateOfBirth = (Long)_value; break;
@@ -68,14 +81,5 @@ public class Employee extends Persistent {
   }
   public void setSalary(int value) {
     set(3, value);
-  }
-   // O(n)... TODO: Find a better implementation
-  public boolean has(String fieldName) {
-    int i = 0;
-    for (Map.Entry<String, Schema> field : getSchema().getFieldSchemas()) {
-      if (field.getKey().equals(fieldName)) { return isFieldReadable(i); }
-      i++;
-    }
-    throw new AvroRuntimeException("No Such field");
   }
 }

@@ -90,7 +90,7 @@ fi
 
 # figure out which class to run
 if [ "$COMMAND" = "compiler" ] ; then
-  CLASS=org.gora.SpecificCompiler
+  CLASS=org.gora.GoraCompiler
   MODULE=gora-core
 else
   MODULE="$COMMAND"

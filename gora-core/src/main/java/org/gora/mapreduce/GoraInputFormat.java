@@ -11,8 +11,8 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.gora.RowScanner;
 import org.gora.Persistent;
+import org.gora.RowScanner;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 
@@ -34,6 +34,7 @@ extends InputFormat<K, R> implements Configurable {
       TaskAttemptContext context) throws IOException, InterruptedException {
     String[] fields = context.getConfiguration().getStrings(MAPRED_FIELDS);
     final RowScanner<K, R> scanner = serializer.makeScanner(split, fields);
+    
     return new RecordReader<K, R>() {
       private K key;
       private R row;
@@ -92,7 +93,7 @@ extends InputFormat<K, R> implements Configurable {
     this.conf = conf;
     Class<K> keyClass = (Class<K>) conf.getClass(MAP_KEY_CLASS, null);
     Class<R> rowClass = (Class<R>) conf.getClass(MAP_VALUE_CLASS, null);
-    this.serializer = DataStoreFactory.create(conf, keyClass, rowClass);
+    this.serializer = new DataStoreFactory().getDataStore(keyClass, rowClass);
   }
 
 }

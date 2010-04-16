@@ -15,7 +15,7 @@ import org.junit.Test;
 public class TestHBaseStore extends HBaseClusterTestCase {
  
   private HBaseConfiguration conf = new HBaseConfiguration();
-  private HbaseStore<String, Employee> serializer;
+  private HBaseStore<String, Employee> store;
   
   private static final long YEAR_IN_MS = 365L * 24L * 60L * 60L * 1000L; 
   
@@ -26,12 +26,12 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   @Before
   public void setUp() throws Exception {
     super.setUp();
-    this.serializer = new HbaseStore<String, Employee>(conf, String.class, 
+    this.store = new HBaseStore<String, Employee>(conf, String.class, 
         Employee.class);
   }
   
   private Employee createEmployee() throws IOException {
-    Employee employee = serializer.newInstance();
+    Employee employee = store.newInstance();
     employee.setName(new Utf8("Random Joe"));
     employee.setDateOfBirth( System.currentTimeMillis() - 42L *  YEAR_IN_MS );
     employee.setSalary(100000);
@@ -45,23 +45,23 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   public void testCreateTable() throws IOException {
-    serializer.createTable();
+    store.createTable();
   }
   
-  public void testPersist() throws IOException {
-    serializer.createTable();
+  public void testPut() throws IOException {
+    store.createTable();
     Employee employee = createEmployee();
-    serializer.persist(employee.getSsn().toString(), employee);
+    store.put(employee.getSsn().toString(), employee);
   }
   
-  public void testRetrieve() throws IOException {
-    serializer.createTable();
+  public void testGet() throws IOException {
+    store.createTable();
     Employee employee = createEmployee();
     String ssn = employee.getSsn().toString();
-    serializer.persist(ssn, employee);
-    serializer.sync();
+    store.put(ssn, employee);
+    store.sync();
     
-    Employee after = serializer.retrieve(ssn, EMPYLOYEE_FIELDS);
+    Employee after = store.get(ssn, EMPYLOYEE_FIELDS);
     
     Assert.assertEquals(employee, after);
   }

@@ -13,6 +13,7 @@ import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.gora.Persistent;
+import org.gora.StateManager;
 import org.gora.util.StatefulHashMap;
 import org.gora.util.StatefulHashMap.State;
 
@@ -32,17 +33,18 @@ implements Serializer<Persistent> {
   }
 
   @Override
-  public void serialize(Persistent row) throws IOException {   
-    setSchema(row.getSchema());
+  public void serialize(Persistent persistent) throws IOException {   
+    setSchema(persistent.getSchema());
 
-    for (Entry<String, Field> e : row.getSchema().getFields().entrySet()) {
+    StateManager stateManager = persistent.getStateManager();
+    for (Entry<String, Field> e : persistent.getSchema().getFields().entrySet()) {
       Field field = e.getValue();
       // TODO: This is extremely inefficient. Read and write bitsets
       // directly. Right now, a readable bit is unnecessarily an INTEGER.
-      encoder.writeBoolean(row.isFieldReadable(field.pos()));
-      encoder.writeBoolean(row.isFieldChanged(field.pos()));
-      if (row.isFieldReadable(field.pos())) {
-        Object o = row.get(field.pos());
+      encoder.writeBoolean(stateManager.isReadable(persistent, field.pos()));
+      encoder.writeBoolean(stateManager.isDirty(persistent, field.pos()));
+      if (stateManager.isReadable(persistent, field.pos())) {
+        Object o = persistent.get(field.pos());
         write(field.schema(), o, encoder);
         writeExtraInfo(o, field.schema(), encoder);
       }

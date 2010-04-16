@@ -22,6 +22,7 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.util.Utf8;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
@@ -42,7 +43,8 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.gora.Persistent;
 import org.gora.RowScanner;
-import org.gora.store.DataStore;
+import org.gora.StateManager;
+import org.gora.store.DataStoreBase;
 import org.gora.util.NodeWalker;
 import org.gora.util.StatefulHashMap;
 import org.gora.util.XmlUtils;
@@ -50,10 +52,10 @@ import org.gora.util.StatefulHashMap.State;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-public class HbaseStore<K, R extends Persistent>
-extends DataStore<K, R> {
+public class HBaseStore<K, T extends Persistent> extends DataStoreBase<K, T> 
+implements Configurable {
 
-  public static final String PARSE_MAPPING_FILE_KEY = "gora.hbase.mapping.file"; 
+  public static final String PARSE_MAPPING_FILE_KEY = "gora.hbase.mapping.file";
 
   public static final String DEFAULT_FILE_NAME = "hbase-mapping.xml";
 
@@ -70,6 +72,8 @@ extends DataStore<K, R> {
 
   private Schema schema;
 
+  private Configuration conf;
+  
   static {
     try {
       docBuilder = 
@@ -81,25 +85,25 @@ extends DataStore<K, R> {
     }
   }
 
-  private class HbaseScanner implements RowScanner<K, R> {
+  private class HBaseScanner implements RowScanner<K, T> {
     private final ResultScanner scanner;
 
     private final String[] fields;
 
-    private HbaseScanner(ResultScanner scanner, String[] fields) {
+    private HBaseScanner(ResultScanner scanner, String[] fields) {
       this.scanner = scanner;
       this.fields = fields;
     }
 
     @Override
-    public Entry<K, R> next() throws IOException {
+    public Entry<K, T> next() throws IOException {
       Result result = scanner.next();
       if (result == null) {
         return null;
       }
-      K key = HbaseStore.this.fromBytes(getKeyClass(), result.getRow());
-      R row = makeTableRow(result, fields);
-      return new SimpleEntry<K, R>(key, row);
+      K key = HBaseStore.this.fromBytes(getKeyClass(), result.getRow());
+      T row = makeTableRow(result, fields);
+      return new SimpleEntry<K, T>(key, row);
     }
 
     @Override
@@ -108,8 +112,13 @@ extends DataStore<K, R> {
     }
   }
 
-  public HbaseStore(Configuration conf, Class<K> keyClass, Class<R> rowClass)  {
-    super(conf, keyClass, rowClass);
+  public HBaseStore()  {
+    this.conf = new HBaseConfiguration();
+  }
+  
+  public HBaseStore(Configuration conf, Class<K> keyClass, Class<T> rowClass)  {
+    super(keyClass, rowClass);
+    this.conf = conf;
     columnMap = new HashMap<String, HbaseColumn>();
     colDescs = new ArrayList<HColumnDescriptor>();
     try {
@@ -131,19 +140,7 @@ extends DataStore<K, R> {
   }
 
   @Override
-  public R newInstance() throws IOException {
-    try {
-      R row = getRowClass().newInstance();
-      return row;
-    } catch (InstantiationException e) {
-      throw new IOException(e);
-    } catch (IllegalAccessException e) {
-      throw new IOException(e);
-    }
-  }
-
-  @Override
-  public R retrieve(K key, String[] fields) throws IOException {
+  public T get(K key, String[] fields) throws IOException {
     Get get = new Get(toBytes(key));
     addFields(get, fields);
     Result result = table.get(get);
@@ -152,8 +149,9 @@ extends DataStore<K, R> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public void persist(K key, R row) throws IOException {
-    Schema schema = row.getSchema();
+  public void put(K key, T persistent) throws IOException {
+    Schema schema = persistent.getSchema();
+    StateManager stateManager = persistent.getStateManager();
     byte[] keyRaw = toBytes(key);
     Put put = new Put(keyRaw);
     Delete delete = new Delete(keyRaw);
@@ -163,11 +161,11 @@ extends DataStore<K, R> {
       schema.getFieldSchemas().iterator();
     for (int i = 0; iter.hasNext(); i++) {
       Entry<String, Schema> field = iter.next();
-      if (!row.isFieldChanged(i)) {
+      if (!stateManager.isDirty(persistent, i)) {
         continue;
       }
       Type type = field.getValue().getType();
-      Object o = row.get(i);
+      Object o = persistent.get(i);
       HbaseColumn hcol = columnMap.get(field.getKey());
       if (type == Type.MAP) {
         StatefulHashMap<Utf8, ?> map = (StatefulHashMap<Utf8, ?>) o;
@@ -200,8 +198,12 @@ extends DataStore<K, R> {
     }
   }
 
+  public void delete(T obj) {
+    throw new RuntimeException("Not implemented yet");
+  }
+  
   @Override
-  public void delete(K key) throws IOException {
+  public void deleteByKey(K key) throws IOException {
     table.delete(new Delete(toBytes(key)));
   }
 
@@ -248,7 +250,7 @@ extends DataStore<K, R> {
   }
 
   @Override
-  public RowScanner<K, R> makeScanner(K startRow, K stopRow, final String[] fields)
+  public RowScanner<K, T> makeScanner(K startRow, K stopRow, final String[] fields)
   throws IOException {
     final Scan scan = new Scan();
     if (startRow != null) {
@@ -259,11 +261,11 @@ extends DataStore<K, R> {
     }
     addFields(scan, fields);
     final ResultScanner scanner = table.getScanner(scan);
-    return new HbaseScanner(scanner, fields);
+    return new HBaseScanner(scanner, fields);
   }
 
   @Override
-  public RowScanner<K, R> makeScanner(InputSplit split, String[] fields)
+  public RowScanner<K, T> makeScanner(InputSplit split, String[] fields)
   throws IOException {
     TableSplit tSplit = (TableSplit) split;
     K startRow = fromBytes(getKeyClass(), tSplit.getStartRow());
@@ -299,10 +301,11 @@ extends DataStore<K, R> {
   }
 
   @SuppressWarnings("unchecked")
-  private R makeTableRow(Result result, String[] fields)
+  private T makeTableRow(Result result, String[] fields)
   throws IOException {
-    R row = newInstance();
-    Schema schema = row.getSchema();
+    T persistent = newInstance();
+    StateManager stateManager = persistent.getStateManager();
+    Schema schema = persistent.getSchema();
     Map<String, Field> fieldMap = schema.getFields();
     for (String f : fields) {
       HbaseColumn col = columnMap.get(f);
@@ -320,18 +323,18 @@ extends DataStore<K, R> {
           map.put(new Utf8(Bytes.toString(e.getKey())), 
               fromBytes(valueSchema, e.getValue()));
         }
-        setField(row, field, map);
+        setField(persistent, field, map);
       } else {
         byte[] val =
           result.getValue(col.getFamily(), col.getQualifier());
         if (val == null) {
           continue;
         }
-        setField(row, field, val);
+        setField(persistent, field, val);
       }
     }
-    row.clearChangedBits();
-    return row;
+    stateManager.clearDirty(persistent);
+    return persistent;
   }
 
   @SuppressWarnings("unchecked")
@@ -418,11 +421,11 @@ extends DataStore<K, R> {
   }
 
   @SuppressWarnings("unchecked")
-  private void setField(R row, Field field, Map map) {
+  private void setField(T row, Field field, Map map) {
     row.set(field.pos(), new StatefulHashMap(map));
   }
 
-  private void setField(R row, Field field, byte[] val) {
+  private void setField(T row, Field field, byte[] val) {
     row.set(field.pos(), fromBytes(field.schema(), val));
   }
 
@@ -432,7 +435,7 @@ extends DataStore<K, R> {
   SecurityException, NoSuchFieldException {
     try {      
       InputStream stream =
-        HbaseStore.class.getClassLoader().getResourceAsStream(fileName);
+        HBaseStore.class.getClassLoader().getResourceAsStream(fileName);
       Document doc = docBuilder.parse(stream);
       NodeWalker walker = new NodeWalker(doc.getFirstChild());
       boolean processInfo = false;
@@ -445,13 +448,13 @@ extends DataStore<K, R> {
         if (node.getNodeName().equals("table")) {
           Class<K> currentKeyClass =
             (Class<K>) Class.forName(XmlUtils.getAttribute(node, "keyClass"));
-          Class<R> currentRowClass =
-            (Class<R>) Class.forName(XmlUtils.getAttribute(node, "rowClass"));
+          Class<T> currentRowClass =
+            (Class<T>) Class.forName(XmlUtils.getAttribute(node, "rowClass"));
           if (!currentKeyClass.equals(getKeyClass())) {
             processInfo = false;
             continue;
           }
-          if (!currentRowClass.equals(getRowClass())) {
+          if (!currentRowClass.equals(getPersistentClass())) {
             processInfo = false;
             continue;
           }
@@ -464,7 +467,7 @@ extends DataStore<K, R> {
           } else {
             table = null;
           }
-          schema = getRowClass().newInstance().getSchema();
+          schema = getPersistentClass().newInstance().getSchema();
           processInfo = true;
         } else if (node.getNodeName().equals("field") && processInfo) {
           String fieldName = XmlUtils.getAttribute(node, "name");
@@ -495,6 +498,16 @@ extends DataStore<K, R> {
     sync();
     if(table != null) 
       table.close();
+  }
+
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
+
+  @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
   }
 
 }
