@@ -8,7 +8,7 @@ import java.io.IOException;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.gora.Persistent;
-import org.gora.store.hbase.HBaseStore;
+import org.gora.hbase.store.HBaseStore;
 
 /**
  * Result of a query based on an HBase scanner.

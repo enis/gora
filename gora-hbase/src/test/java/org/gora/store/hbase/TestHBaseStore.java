@@ -9,6 +9,7 @@ import org.apache.avro.util.Utf8;
 import org.apache.hadoop.hbase.HBaseClusterTestCase;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.gora.example.generated.Employee;
+import org.gora.hbase.store.HBaseStore;
 import org.junit.Before;
 import org.junit.Test;
 

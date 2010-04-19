@@ -2,8 +2,8 @@
 package org.gora.hbase.query;
 
 import org.gora.Persistent;
+import org.gora.hbase.store.HBaseStore;
 import org.gora.query.impl.ResultBase;
-import org.gora.store.hbase.HBaseStore;
 
 public abstract class HBaseResult<K, T extends Persistent> 
   extends ResultBase<K, T> {

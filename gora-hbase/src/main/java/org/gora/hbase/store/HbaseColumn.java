@@ -1,4 +1,4 @@
-package org.gora.store.hbase;
+package org.gora.hbase.store;
 
 import java.util.Arrays;
 

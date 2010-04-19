@@ -1,4 +1,4 @@
-package org.gora.store.hbase;
+package org.gora.hbase.store;
 
 import static org.gora.hbase.util.HBaseByteInterface.fromBytes;
 import static org.gora.hbase.util.HBaseByteInterface.toBytes;
