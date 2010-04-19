@@ -1,15 +1,16 @@
 package org.gora.store.hbase;
 
+import static org.gora.hbase.util.HBaseByteInterface.fromBytes;
+import static org.gora.hbase.util.HBaseByteInterface.toBytes;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -20,12 +21,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -36,14 +37,16 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.hfile.Compression.Algorithm;
-import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
 import org.gora.Persistent;
-import org.gora.RowScanner;
 import org.gora.StateManager;
+import org.gora.hbase.query.HBaseQuery;
+import org.gora.hbase.query.HBaseScannerResult;
+import org.gora.hbase.util.HBaseByteInterface;
+import org.gora.query.PartitionQuery;
+import org.gora.query.Query;
+import org.gora.query.impl.PartitionQueryImpl;
 import org.gora.store.DataStoreBase;
 import org.gora.util.NodeWalker;
 import org.gora.util.StatefulHashMap;
@@ -85,33 +88,6 @@ implements Configurable {
     }
   }
 
-  private class HBaseScanner implements RowScanner<K, T> {
-    private final ResultScanner scanner;
-
-    private final String[] fields;
-
-    private HBaseScanner(ResultScanner scanner, String[] fields) {
-      this.scanner = scanner;
-      this.fields = fields;
-    }
-
-    @Override
-    public Entry<K, T> next() throws IOException {
-      Result result = scanner.next();
-      if (result == null) {
-        return null;
-      }
-      K key = HBaseStore.this.fromBytes(getKeyClass(), result.getRow());
-      T row = makeTableRow(result, fields);
-      return new SimpleEntry<K, T>(key, row);
-    }
-
-    @Override
-    public void close() throws IOException {
-      scanner.close();
-    }
-  }
-
   public HBaseStore()  {
     this.conf = new HBaseConfiguration();
   }
@@ -144,7 +120,7 @@ implements Configurable {
     Get get = new Get(toBytes(key));
     addFields(get, fields);
     Result result = table.get(get);
-    return makeTableRow(result, fields);
+    return newInstance(result, fields);
   }
 
   @SuppressWarnings("unchecked")
@@ -203,7 +179,7 @@ implements Configurable {
   }
   
   @Override
-  public void deleteByKey(K key) throws IOException {
+  public void delete(K key) throws IOException {
     table.delete(new Delete(toBytes(key)));
   }
 
@@ -213,8 +189,14 @@ implements Configurable {
   }
 
   @Override
-  public List<InputSplit> getSplits(K start, K stop, JobContext context)
-  throws IOException {
+  public Query<K, T> newQuery() {
+    return new HBaseQuery<K, T>(this);
+  }
+  
+  @Override
+  public List<PartitionQuery<K, T>> getPartitions(Query<K, T> query)
+      throws IOException {
+    
     // taken from o.a.h.hbase.mapreduce.TableInputFormatBase
     Pair<byte[][], byte[][]> keys = table.getStartEndKeys();
     if (keys == null || keys.getFirst() == null || 
@@ -224,12 +206,12 @@ implements Configurable {
     if (table == null) {
       throw new IOException("No table was provided.");
     }
-    List<InputSplit> splits = new ArrayList<InputSplit>(keys.getFirst().length); 
+    List<PartitionQuery<K,T>> partitions = new ArrayList<PartitionQuery<K,T>>(keys.getFirst().length); 
     for (int i = 0; i < keys.getFirst().length; i++) {
       String regionLocation = table.getRegionLocation(keys.getFirst()[i]).
       getServerAddress().getHostname();
-      byte[] startRow = start != null ? toBytes(start) : new byte[0];
-      byte[] stopRow = stop != null ? toBytes(stop) : new byte[0];
+      byte[] startRow = query.getStartKey() != null ? toBytes(query.getStartKey()) : HConstants.EMPTY_START_ROW;
+      byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey()) : HConstants.EMPTY_END_ROW;
       // determine if the given start an stop key fall into the region
       if ((startRow.length == 0 || keys.getSecond()[i].length == 0 ||
           Bytes.compareTo(startRow, keys.getSecond()[i]) < 0) &&
@@ -241,36 +223,43 @@ implements Configurable {
             byte[] splitStop = stopRow.length == 0 || 
             Bytes.compareTo(keys.getSecond()[i], stopRow) <= 0 ? 
                 keys.getSecond()[i] : stopRow;
-                InputSplit split = new TableSplit(table.getTableName(),
-                    splitStart, splitStop, regionLocation);
-                splits.add(split);
+                
+                K startKey = HBaseByteInterface.fromBytes(keyClass, splitStart);
+                K endKey = HBaseByteInterface.fromBytes(keyClass, splitStop);
+                
+                PartitionQuery<K, T> partition = new PartitionQueryImpl<K, T>(
+                    query, startKey, endKey, regionLocation);
+                partitions.add(partition);
       }
     }
-    return splits;
+    return partitions;
   }
 
   @Override
-  public RowScanner<K, T> makeScanner(K startRow, K stopRow, final String[] fields)
+  public org.gora.query.Result<K, T> execute(Query<K, T> query)
+      throws IOException {
+
+    HBaseQuery<K, T> hQuery = (HBaseQuery<K, T>) query;
+    ResultScanner scanner = createScanner(hQuery);
+    
+    org.gora.query.Result<K,T> result 
+      = new HBaseScannerResult<K,T>(this,hQuery, scanner);
+    
+    return result; 
+  }
+  
+  public ResultScanner createScanner(HBaseQuery<K, T> query) 
   throws IOException {
     final Scan scan = new Scan();
-    if (startRow != null) {
-      scan.setStartRow(toBytes(startRow));
+    if (query.getStartKey() != null) {
+      scan.setStartRow(toBytes(query.getStartKey()));
     }
-    if (stopRow != null) {
-      scan.setStopRow(toBytes(stopRow));
+    if (query.getEndKey() != null) {
+      scan.setStopRow(toBytes(query.getEndKey()));
     }
-    addFields(scan, fields);
-    final ResultScanner scanner = table.getScanner(scan);
-    return new HBaseScanner(scanner, fields);
-  }
-
-  @Override
-  public RowScanner<K, T> makeScanner(InputSplit split, String[] fields)
-  throws IOException {
-    TableSplit tSplit = (TableSplit) split;
-    K startRow = fromBytes(getKeyClass(), tSplit.getStartRow());
-    K endRow = fromBytes(getKeyClass(), tSplit.getEndRow());
-    return makeScanner(startRow, endRow, fields);
+    addFields(scan, query);
+    
+    return table.getScanner(scan);
   }
 
   private void addFields(Get get, String[] fields) {
@@ -286,8 +275,9 @@ implements Configurable {
     }
   }
 
-  private void addFields(Scan scan, String[] fields)
+  private void addFields(Scan scan, HBaseQuery<K,T> query)
   throws IOException {
+    String[] fields = query.getFields();
     Map<String, Field> fieldMap = schema.getFields();
     for (String f : fields) {
       HbaseColumn col = columnMap.get(f);
@@ -301,7 +291,7 @@ implements Configurable {
   }
 
   @SuppressWarnings("unchecked")
-  private T makeTableRow(Result result, String[] fields)
+  public T newInstance(Result result, String[] fields)
   throws IOException {
     T persistent = newInstance();
     StateManager stateManager = persistent.getStateManager();
@@ -337,88 +327,7 @@ implements Configurable {
     return persistent;
   }
 
-  @SuppressWarnings("unchecked")
-  private Object fromBytes(Schema schema, byte[] val) {
-    Type type = schema.getType();
-    switch (type) {
-    case ENUM:
-      String symbol = schema.getEnumSymbols().get(val[0]);
-      return Enum.valueOf(ReflectData.get().getClass(schema), symbol);
-    case STRING:  return new Utf8(Bytes.toString(val));
-    case BYTES:   return ByteBuffer.wrap(val);
-    case INT:     return Bytes.toInt(val);
-    case LONG:    return Bytes.toLong(val);
-    case FLOAT:   return Bytes.toFloat(val);
-    case DOUBLE:  return Bytes.toDouble(val);
-    case BOOLEAN: return val[0] != 0;
-    default: throw new RuntimeException("Unknown type: "+type);
-    }
-  }
 
-  @SuppressWarnings("unchecked")
-  private K fromBytes(Class<K> clazz, byte[] val) {
-    if (clazz.equals(Byte.TYPE) || clazz.equals(Byte.class)) {
-      return (K) Byte.valueOf(val[0]);
-    } else if (clazz.equals(Boolean.TYPE) || clazz.equals(Boolean.class)) {
-      return (K) Boolean.valueOf(val[0] == 0 ? false : true);
-    } else if (clazz.equals(Short.TYPE) || clazz.equals(Short.class)) {
-      return (K) Short.valueOf(Bytes.toShort(val));
-    } else if (clazz.equals(Integer.TYPE) || clazz.equals(Integer.class)) {
-      return (K) Integer.valueOf(Bytes.toInt(val));
-    } else if (clazz.equals(Long.TYPE) || clazz.equals(Long.class)) {
-      return (K) Long.valueOf(Bytes.toLong(val));
-    } else if (clazz.equals(Float.TYPE) || clazz.equals(Float.class)) {
-      return (K) Float.valueOf(Bytes.toFloat(val));
-    } else if (clazz.equals(Double.TYPE) || clazz.equals(Double.class)) {
-      return (K) Double.valueOf(Bytes.toDouble(val));
-    } else if (clazz.equals(String.class)) {
-      return (K) Bytes.toString(val);
-    } else if (clazz.equals(Utf8.class)) {
-      return (K) new Utf8(Bytes.toString(val));
-    }
-    throw new RuntimeException("Can't parse data as class: " + clazz);
-  }
-
-  private byte[] toBytes(Object o) {
-    Class<?> clazz = o.getClass();
-    if (clazz.equals(Enum.class)) {
-      return new byte[] { (byte)((Enum<?>) o).ordinal() }; // yeah, yeah it's a hack
-    } else if (clazz.equals(Byte.TYPE) || clazz.equals(Byte.class)) {
-      return new byte[] { (Byte) o };
-    } else if (clazz.equals(Boolean.TYPE) || clazz.equals(Boolean.class)) {
-      return new byte[] { ((Boolean) o ? (byte) 1 :(byte) 0)};
-    } else if (clazz.equals(Short.TYPE) || clazz.equals(Short.class)) {
-      return Bytes.toBytes((Short) o);
-    } else if (clazz.equals(Integer.TYPE) || clazz.equals(Integer.class)) {
-      return Bytes.toBytes((Integer) o);
-    } else if (clazz.equals(Long.TYPE) || clazz.equals(Long.class)) {
-      return Bytes.toBytes((Long) o);
-    } else if (clazz.equals(Float.TYPE) || clazz.equals(Float.class)) {
-      return Bytes.toBytes((Float) o);
-    } else if (clazz.equals(Double.TYPE) || clazz.equals(Double.class)) {
-      return Bytes.toBytes((Double) o);
-    } else if (clazz.equals(String.class)) {
-      return Bytes.toBytes((String) o);
-    } else if (clazz.equals(Utf8.class)) {
-      return ((Utf8) o).getBytes();
-    }
-    throw new RuntimeException("Can't parse data as class: " + clazz);
-  }
-
-  private byte[] toBytes(Object o, Schema schema) {
-    Type type = schema.getType();
-    switch (type) {
-    case STRING:  return Bytes.toBytes(((Utf8)o).toString()); // TODO: maybe ((Utf8)o).getBytes(); ?
-    case BYTES:   return ((ByteBuffer)o).array();
-    case INT:     return Bytes.toBytes((Integer)o);
-    case LONG:    return Bytes.toBytes((Long)o);
-    case FLOAT:   return Bytes.toBytes((Float)o);
-    case DOUBLE:  return Bytes.toBytes((Double)o);
-    case BOOLEAN: return (Boolean)o ? new byte[] {1} : new byte[] {0};
-    case ENUM:    return new byte[] { (byte)((Enum<?>) o).ordinal() };
-    default: throw new RuntimeException("Unknown type: "+type);
-    }
-  }
 
   @SuppressWarnings("unchecked")
   private void setField(T row, Field field, Map map) {
