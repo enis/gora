@@ -3,7 +3,7 @@ package org.gora.mapreduce;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.Serialization;
 import org.apache.hadoop.io.serializer.Serializer;
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 
 public class PersistentSerialization
 implements Serialization<Persistent> {

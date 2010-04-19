@@ -1,4 +1,4 @@
-package org.gora;
+package org.gora.persistency;
 
 import org.apache.avro.specific.SpecificRecord;
 

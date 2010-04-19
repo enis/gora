@@ -13,8 +13,8 @@ import org.apache.avro.io.Decoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Deserializer;
-import org.gora.Persistent;
-import org.gora.StateManager;
+import org.gora.persistency.Persistent;
+import org.gora.persistency.StateManager;
 import org.gora.util.StatefulHashMap;
 import org.gora.util.StatefulHashMap.State;
 

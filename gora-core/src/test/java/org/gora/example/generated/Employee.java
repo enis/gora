@@ -14,10 +14,10 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.reflect.FixedSize;
-import org.gora.Persistent;
-import org.gora.PersistentBase;
-import org.gora.StateManager;
-import org.gora.StateManagerImpl;
+import org.gora.persistency.Persistent;
+import org.gora.persistency.StateManager;
+import org.gora.persistency.impl.PersistentBase;
+import org.gora.persistency.impl.StateManagerImpl;
 import org.gora.util.StatefulHashMap;
 
 @SuppressWarnings("all")

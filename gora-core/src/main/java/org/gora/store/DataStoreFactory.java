@@ -1,7 +1,7 @@
 package org.gora.store;
 
 import org.apache.hadoop.util.StringUtils;
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 import org.gora.util.ReflectionUtils;
 import org.mortbay.log.Log;
 

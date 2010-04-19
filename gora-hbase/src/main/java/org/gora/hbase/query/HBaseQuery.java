@@ -1,7 +1,7 @@
 
 package org.gora.hbase.query;
 
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 import org.gora.query.impl.QueryBase;
 import org.gora.store.DataStore;
 

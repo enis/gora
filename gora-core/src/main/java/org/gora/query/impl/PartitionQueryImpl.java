@@ -1,7 +1,7 @@
 
 package org.gora.query.impl;
 
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.store.DataStore;

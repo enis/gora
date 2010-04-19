@@ -1,4 +1,4 @@
-package org.gora;
+package org.gora.compiler;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -135,10 +135,10 @@ public class GoraCompiler {
     line(0, "import org.apache.avro.specific.SpecificRecord;");
     line(0, "import org.apache.avro.specific.SpecificFixed;");
     line(0, "import org.apache.avro.reflect.FixedSize;");
-    line(0, "import org.gora.Persistent;");
-    line(0, "import org.gora.PersistentBase;");
-    line(0, "import org.gora.StateManager;");
-    line(0, "import org.gora.StateManagerImpl;");
+    line(0, "import org.gora.persistency.Persistent;");
+    line(0, "import org.gora.persistency.StateManager;");
+    line(0, "import org.gora.persistency.impl.PersistentBase;");
+    line(0, "import org.gora.persistency.impl.StateManagerImpl;");
     line(0, "import org.gora.util.StatefulHashMap;");
     for (Schema s : queue)
       if (namespace == null

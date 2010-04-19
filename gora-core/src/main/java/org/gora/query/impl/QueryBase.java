@@ -3,7 +3,7 @@ package org.gora.query.impl;
 
 import java.io.IOException;
 
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 import org.gora.query.Query;
 import org.gora.query.Result;
 import org.gora.store.DataStore;

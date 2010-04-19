@@ -2,7 +2,7 @@ package org.gora.mapreduce;
 
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 
 public class GoraReducer<K1, V1, K2, V2 extends Persistent>
 extends Reducer<K1, V1, K2, V2> {

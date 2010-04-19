@@ -1,9 +1,10 @@
 
-package org.gora.store;
+package org.gora.store.impl;
 
 import java.io.IOException;
 
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
+import org.gora.store.DataStore;
 import org.gora.util.ReflectionUtils;
 
 public abstract class DataStoreBase<K, T extends Persistent> 

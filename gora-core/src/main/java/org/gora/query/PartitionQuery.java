@@ -1,7 +1,7 @@
 
 package org.gora.query;
 
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 
 /**
  * PartitionQuery divides the results of the Query to multi partitions, so that 

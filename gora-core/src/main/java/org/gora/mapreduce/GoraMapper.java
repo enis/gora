@@ -3,7 +3,7 @@ package org.gora.mapreduce;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Partitioner;
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 
 public class GoraMapper<K1, V1 extends Persistent, K2, V2>
 extends Mapper<K1, V1, K2, V2> {

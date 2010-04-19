@@ -1,6 +1,8 @@
-package org.gora;
+package org.gora.persistency.impl;
 
 import org.apache.avro.specific.SpecificRecord;
+import org.gora.persistency.Persistent;
+import org.gora.persistency.StateManager;
 
 /**
  * Base classs implementing common functionality for Persistent

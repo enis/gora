@@ -89,8 +89,8 @@ fi
 #GORA_OPTS="$GORA_OPTS -Dhadoop.log.file=$GORA_LOGFILE"
 
 # figure out which class to run
-if [ "$COMMAND" = "compiler" ] ; then
-  CLASS=org.gora.GoraCompiler
+if [ "$COMMAND" = "compile" ] ; then
+  CLASS=org.gora.compiler.GoraCompiler
   MODULE=gora-core
 else
   MODULE="$COMMAND"

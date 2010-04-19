@@ -1,7 +1,11 @@
 
-package org.gora;
+package org.gora.persistency.impl;
 
 import java.util.BitSet;
+
+import org.gora.persistency.Persistent;
+import org.gora.persistency.StateManager;
+
 
 /**
  * An implementation for the StateManager. This implementation assumes 

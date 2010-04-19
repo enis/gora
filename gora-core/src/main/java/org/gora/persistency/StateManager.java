@@ -1,5 +1,5 @@
 
-package org.gora;
+package org.gora.persistency;
 
 public interface StateManager {
 

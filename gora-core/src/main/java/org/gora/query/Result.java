@@ -4,7 +4,7 @@ package org.gora.query;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 import org.gora.store.DataStore;
 
 /**

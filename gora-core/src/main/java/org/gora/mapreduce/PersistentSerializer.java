@@ -12,8 +12,8 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Serializer;
-import org.gora.Persistent;
-import org.gora.StateManager;
+import org.gora.persistency.Persistent;
+import org.gora.persistency.StateManager;
 import org.gora.util.StatefulHashMap;
 import org.gora.util.StatefulHashMap.State;
 

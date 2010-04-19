@@ -8,7 +8,7 @@ import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.gora.Persistent;
+import org.gora.persistency.Persistent;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 
