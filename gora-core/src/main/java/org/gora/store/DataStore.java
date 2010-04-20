@@ -9,6 +9,15 @@ import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.Result;
 
+/**
+ * DataStore handles actual object persistence. Objects can be persisted, 
+ * fetched, queried or deleted by the DataStore methods. DataStores can be
+ * constructed by an instance of {@link DataStoreFactory}.   
+ * 
+ * <p> DataStores implementations should be thread safe.
+ * @param <K> the class of keys in the datastore
+ * @param <T> the class of persistent objects in the datastore
+ */
 public interface DataStore<K, T extends Persistent> extends Closeable {
 
   /**
@@ -35,14 +44,34 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
    */
   public abstract Class<T> getPersistentClass();
   
+  
   public abstract void createTable() throws IOException;
 
+  /**
+   * Returns a new instance of the managed persistent object.
+   * @return a new instance of the managed persistent object.
+   */
   public abstract T newInstance() throws IOException;
-  
+
+  /**
+   * Returns the 
+   * @param key
+   * @param fields
+   * @return
+   * @throws IOException
+   */
   public abstract T get(K key, String[] fields) throws IOException;
   
+  /**
+   * Inserts the persistent object with the given key.
+   */
   public abstract void put(K key, T obj) throws IOException;
 
+  /**
+   * Deletes the object with the given key
+   * @param key the key of the object
+   * @throws IOException
+   */
   public abstract void delete(K key) throws IOException;
 
   /**
@@ -69,7 +98,10 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
   public abstract List<PartitionQuery<K,T>> getPartitions(Query<K,T> query) 
     throws IOException;
   
-  public abstract void sync() throws IOException;
+  /**
+   * Forces the write caches to be flushed.
+   */
+  public abstract void flush() throws IOException;
   
   @Override
   public abstract void close() throws IOException;

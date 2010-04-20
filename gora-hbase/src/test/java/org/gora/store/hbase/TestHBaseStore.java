@@ -60,7 +60,7 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     Employee employee = createEmployee();
     String ssn = employee.getSsn().toString();
     store.put(ssn, employee);
-    store.sync();
+    store.flush();
     
     Employee after = store.get(ssn, EMPYLOYEE_FIELDS);
     

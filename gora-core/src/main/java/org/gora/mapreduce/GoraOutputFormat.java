@@ -43,7 +43,7 @@ extends OutputFormat<K, R>{
       @Override
       public void close(TaskAttemptContext context) throws IOException,
           InterruptedException {
-        store.sync();
+        store.flush();
       }
 
       @Override

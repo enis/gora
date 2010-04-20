@@ -55,6 +55,11 @@ import org.gora.util.StatefulHashMap.State;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+/**
+ * DataStore for HBase. 
+ * 
+ * <p> Note: HBaseStore is not yet thread-safe.
+ */
 public class HBaseStore<K, T extends Persistent> extends DataStoreBase<K, T> 
 implements Configurable {
 
@@ -184,7 +189,7 @@ implements Configurable {
   }
 
   @Override
-  public void sync() throws IOException {
+  public void flush() throws IOException {
     table.flushCommits();
   }
 
@@ -404,7 +409,7 @@ implements Configurable {
 
   @Override
   public void close() throws IOException {
-    sync();
+    flush();
     if(table != null) 
       table.close();
   }
