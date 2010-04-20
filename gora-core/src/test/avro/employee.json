@@ -1,10 +1,7 @@
-{"namespace": "org.gora.example.generated",
- "protocol": "ProtocolTest",
-
- "types": [
   {
     "type": "record",
     "name": "Employee",
+    "namespace": "org.gora.example.generated",
     "fields" : [
       {"name": "name", "type": "string"},
       {"name": "dateOfBirth", "type": "long"},
@@ -12,5 +9,3 @@
       {"name": "salary", "type": "int"}
     ]
   }
- ]
-}

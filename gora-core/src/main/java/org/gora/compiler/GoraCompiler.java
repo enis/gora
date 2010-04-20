@@ -362,8 +362,7 @@ public class GoraCompiler {
       System.err.println("Usage: SpecificCompiler <schema file> <output dir>");
       System.exit(1);
     }
-    //compileSchema(new File(args[0]), new File(args[1]));
-    compileProtocol(new File(args[0]), new File(args[1]));
+    compileSchema(new File(args[0]), new File(args[1]));
   }
 
 }
