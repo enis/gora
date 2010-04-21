@@ -261,12 +261,12 @@ public class GoraCompiler {
             line(2, "if ("+field.getKey()+" == null) {");
             line(3, field.getKey()+" = new StatefulHashMap<Utf8,"+valueType+">();");
             line(2, "}");
-            line(2, "stateManager.setDirty(this, "+i+");");
+            line(2, "getStateManager().setDirty(this, "+i+");");
             line(2, field.getKey()+".put(key, value);");
             line(1, "}");
             line(1, "public "+unboxed+" removeFrom"+camelKey+"(Utf8 key) {");
             line(2, "if ("+field.getKey()+" == null) { return null; }");
-            line(2, "stateManager.setDirty(this, "+i+");");
+            line(2, "getStateManager().setDirty(this, "+i+");");
             line(2, "return "+field.getKey()+".remove(key);");
             line(1, "}");
           }
