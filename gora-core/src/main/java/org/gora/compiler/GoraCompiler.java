@@ -49,6 +49,24 @@ public class GoraCompiler {
     return s.substring(0, 1).toUpperCase() + s.substring(1);
   }
 
+  /** Recognizes camel case */ 
+  private static String toUpperCase(String s) {
+    StringBuilder builder = new StringBuilder();
+    
+    for(int i=0; i<s.length(); i++) {
+      if(i > 0) {
+        if(Character.isUpperCase(s.charAt(i))
+         && Character.isLowerCase(s.charAt(i-1))
+         && Character.isLetter(s.charAt(i))) {
+          builder.append("_");
+        }
+      }
+      builder.append(Character.toUpperCase(s.charAt(i)));
+    }
+    
+    return builder.toString();
+  }
+  
   /** Recursively enqueue schemas that need a class generated. */
   private void enqueue(Schema schema) throws IOException {
     if (queue.contains(schema)) return;
@@ -123,6 +141,7 @@ public class GoraCompiler {
     }
     line(0, "import java.nio.ByteBuffer;");
     line(0, "import java.util.Map;");
+    line(0, "import java.util.HashMap;");
     line(0, "import org.apache.avro.Protocol;");
     line(0, "import org.apache.avro.Schema;");
     line(0, "import org.apache.avro.AvroRuntimeException;");
@@ -182,6 +201,32 @@ public class GoraCompiler {
         // schema definition
         line(1, "public static final Schema _SCHEMA = Schema.parse(\""
              +esc(schema)+"\");");
+
+        //static field information
+        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
+          line(1,"public static final String "+ toUpperCase(field.getKey()) 
+              + " = " + "\"" + field.getKey() + "\";");
+        }
+        
+        String fieldName = "_FIELDS" ;
+        line(1, "public static final HashMap<String,Integer> " 
+            + fieldName + " = new HashMap<String,Integer>();");
+        line(1, "static {");
+        int fieldIndex = 0;
+        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
+          line(2, fieldName + ".put(" + toUpperCase(field.getKey()) +","  
+              + fieldIndex++ + ");");
+        }
+        line(1, "}");
+        
+        StringBuilder builder = new StringBuilder(
+            "public static final String[] _ALL_FIELDS = {");
+        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
+           builder.append(toUpperCase(field.getKey())).append(",");
+        }
+        builder.append("};");
+        line(1, builder.toString());
+        
         // field declations
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
           line(1,"private "+unbox(field.getValue())+" "+field.getKey()+";");

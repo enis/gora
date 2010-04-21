@@ -2,6 +2,7 @@ package org.gora.example.generated;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.HashMap;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.AvroRuntimeException;
@@ -22,6 +23,18 @@ import org.gora.util.StatefulHashMap;
 @SuppressWarnings("all")
 public class Employee extends PersistentBase {
   public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"Employee\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"dateOfBirth\",\"type\":\"long\"},{\"name\":\"ssn\",\"type\":\"string\"},{\"name\":\"salary\",\"type\":\"int\"}]}");
+  public static final String NAME = "name";
+  public static final String DATE_OF_BIRTH = "dateOfBirth";
+  public static final String SSN = "ssn";
+  public static final String SALARY = "salary";
+  public static final HashMap<String,Integer> _FIELDS = new HashMap<String,Integer>();
+  static {
+    _FIELDS.put(NAME,0);
+    _FIELDS.put(DATE_OF_BIRTH,1);
+    _FIELDS.put(SSN,2);
+    _FIELDS.put(SALARY,3);
+  }
+  public static final String[] _ALL_FIELDS = {NAME,DATE_OF_BIRTH,SSN,SALARY,};
   private Utf8 name;
   private long dateOfBirth;
   private Utf8 ssn;
