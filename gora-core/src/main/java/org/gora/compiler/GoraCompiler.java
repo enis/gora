@@ -135,7 +135,6 @@ public class GoraCompiler {
     line(0, "import org.apache.avro.specific.SpecificRecord;");
     line(0, "import org.apache.avro.specific.SpecificFixed;");
     line(0, "import org.apache.avro.reflect.FixedSize;");
-    line(0, "import org.gora.persistency.Persistent;");
     line(0, "import org.gora.persistency.StateManager;");
     line(0, "import org.gora.persistency.impl.PersistentBase;");
     line(0, "import org.gora.persistency.impl.StateManagerImpl;");
@@ -194,7 +193,6 @@ public class GoraCompiler {
         line(1, "}");
         line(1, "public " + type + "(StateManager stateManager) {");
         line(2, "super(stateManager);");
-        line(2, "stateManager.setManagedPersistent(this);");
         line(1, "}");
         
         //newInstance(StateManager)

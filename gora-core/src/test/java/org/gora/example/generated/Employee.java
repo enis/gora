@@ -14,7 +14,6 @@ import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.reflect.FixedSize;
-import org.gora.persistency.Persistent;
 import org.gora.persistency.StateManager;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
@@ -32,7 +31,6 @@ public class Employee extends PersistentBase {
   }
   public Employee(StateManager stateManager) {
     super(stateManager);
-    stateManager.setManagedPersistent(this);
   }
   public Employee newInstance(StateManager stateManager) {
     return new Employee(stateManager);

@@ -18,11 +18,67 @@ public abstract class PersistentBase implements Persistent {
   
   protected PersistentBase(StateManager stateManager) {
     this.stateManager = stateManager;
+    stateManager.setManagedPersistent(this);
   }
 
   @Override
   public StateManager getStateManager() {
     return stateManager;
+  }
+  
+  @Override
+  public boolean isNew() {
+    return getStateManager().isNew(this);
+  }
+  
+  @Override
+  public void setNew() {
+    getStateManager().setNew(this);
+  }
+  
+  @Override
+  public void clearNew() {
+    getStateManager().clearNew(this);
+  }
+  
+  @Override
+  public boolean isDirty() {
+    return getStateManager().isDirty(this);
+  }
+  
+  @Override
+  public boolean isDirty(int fieldNum) {
+    return getStateManager().isDirty(this, fieldNum);
+  }
+  
+  @Override
+  public void setDirty() {
+    getStateManager().setDirty(this);
+  }
+  
+  @Override
+  public void setDirty(int fieldNum) {
+    getStateManager().setDirty(this, fieldNum);
+  }
+  
+  @Override
+  public void clearDirty() {
+    getStateManager().clearDirty(this);
+  }
+  
+  @Override
+  public boolean isReadable(int fieldNum) {
+    return getStateManager().isReadable(this, fieldNum);
+  }
+  
+  @Override
+  public void setReadable(int fieldNum) {
+    getStateManager().setReadable(this, fieldNum);
+  }
+  
+  @Override
+  public void clearReadable() {
+    getStateManager().clearReadable(this);
   }
   
   @Override

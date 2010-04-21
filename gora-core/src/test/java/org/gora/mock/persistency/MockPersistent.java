@@ -8,22 +8,57 @@ import org.gora.persistency.impl.PersistentBase;
 
 public class MockPersistent extends PersistentBase {
 
+  private int foo;
+  private int baz;
+  
+  public MockPersistent() {
+  }
+  
+  public MockPersistent(StateManager stateManager) {
+    super(stateManager);
+  }
+  
   @Override
   public Persistent newInstance(StateManager stateManager) {
     return new MockPersistent();
   }
 
   @Override
-  public Object get(int arg0) {
+  public Object get(int field) {
+    switch(field) {
+      case 0: return foo;
+      case 1: return baz;
+    }
     return null;
   }
 
   @Override
-  public void set(int arg0, Object arg1) {
+  public void set(int field, Object value) {
+    switch(field) {
+      case 0:  foo = (Integer)value;
+      case 1:  baz = (Integer)value;
+    }
   }
 
   @Override
   public Schema getSchema() {
-    return null;
+    return Schema.parse("{\"type\":\"record\",\"name\":\"MockPersistent\",\"namespace\":\"org.gora.mock.persistency\",\"fields\":[{\"name\":\"foo\",\"type\":\"int\"},{\"name\":\"baz\",\"type\":\"int\"}]}");
   }
+  
+  public void setFoo(int foo) {
+    this.foo = foo;
+  }
+  
+  public void setBaz(int baz) {
+    this.baz = baz;
+  }
+  
+  public int getFoo() {
+    return foo;
+  }
+  
+  public int getBaz() {
+    return baz;
+  }
+  
 }

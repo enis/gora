@@ -57,7 +57,7 @@ public class MockDataStore implements DataStore<Object, MockPersistent> {
 
   @Override
   public MockPersistent newInstance() throws IOException {
-    return null;
+    return new MockPersistent();
   }
 
   @Override

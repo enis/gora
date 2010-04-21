@@ -6,13 +6,14 @@ import java.util.BitSet;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.StateManager;
 
-
 /**
  * An implementation for the StateManager. This implementation assumes 
  * every Persistent object has it's own StateManager.
  */
 public class StateManagerImpl implements StateManager {
 
+  //TODO: serialize isNew in PersistentSerializer 
+  protected boolean isNew;
   protected BitSet dirtyBits;
   protected BitSet readableBits;
 
@@ -21,7 +22,23 @@ public class StateManagerImpl implements StateManager {
 
   public void setManagedPersistent(Persistent persistent) {
     dirtyBits = new BitSet(persistent.getSchema().getFields().size());
-    readableBits = new BitSet(persistent.getSchema().getFields().size());    
+    readableBits = new BitSet(persistent.getSchema().getFields().size());
+    isNew = true;
+  }
+
+  @Override
+  public boolean isNew(Persistent persistent) {
+    return isNew;
+  }
+  
+  @Override
+  public void setNew(Persistent persistent) {
+    this.isNew = true;
+  }
+  
+  @Override
+  public void clearNew(Persistent persistent) {
+    this.isNew = false;
   }
   
   public void setDirty(Persistent persistent, int fieldNum) {
@@ -34,7 +51,12 @@ public class StateManagerImpl implements StateManager {
   }
 
   public boolean isDirty(Persistent persistent) {
-    throw new RuntimeException("not yet impl.");
+    return !dirtyBits.isEmpty();
+  }
+  
+  @Override
+  public void setDirty(Persistent persistent) {
+    dirtyBits.set(0, dirtyBits.size());
   }
   
   public void setReadable(Persistent persistent, int fieldNum) {
@@ -53,8 +75,5 @@ public class StateManagerImpl implements StateManager {
     readableBits.clear();
   }
 
-  @Override
-  public void setDirty(Persistent persistent) {
-    throw new RuntimeException("not yet impl.");
-  }
+
 }
