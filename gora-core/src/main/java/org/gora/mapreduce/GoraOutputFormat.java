@@ -37,7 +37,7 @@ extends OutputFormat<K, R>{
     Class<K> keyClass = (Class<K>) conf.getClass(REDUCE_KEY_CLASS, null);
     Class<R> rowClass = (Class<R>) conf.getClass(REDUCE_VALUE_CLASS, null);
     final DataStore<K, R> store =
-      new DataStoreFactory().getDataStore(keyClass, rowClass);
+      DataStoreFactory.getDataStore(keyClass, rowClass);
     
     return new RecordWriter<K, R>() {
       @Override

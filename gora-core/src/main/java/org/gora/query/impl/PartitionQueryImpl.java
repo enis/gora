@@ -1,10 +1,16 @@
 
 package org.gora.query.impl;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.store.DataStore;
+import org.gora.util.IOUtils;
 
 /**
  * Implementation for {@link PartitionQuery}.
@@ -12,8 +18,12 @@ import org.gora.store.DataStore;
 public class PartitionQueryImpl<K, T extends Persistent> 
   extends QueryBase<K, T> implements PartitionQuery<K, T> {
 
-  protected final Query<K, T> baseQuery;
-  protected final String[] locations;
+  protected Query<K, T> baseQuery;
+  protected String[] locations;
+  
+  public PartitionQueryImpl() {
+    super(null);
+  }
   
   public PartitionQueryImpl(Query<K, T> baseQuery, String... locations) {
     this(baseQuery, null, null, locations);
@@ -30,6 +40,10 @@ public class PartitionQueryImpl<K, T extends Persistent>
   
   public String[] getLocations() {
     return locations;
+  }
+  
+  public Query<K, T> getBaseQuery() {
+    return baseQuery;
   }
   
   /* Override everything except start-key/end-key */
@@ -94,4 +108,32 @@ public class PartitionQueryImpl<K, T extends Persistent>
     baseQuery.setLimit(limit);
   }
   
+  @Override
+  public void write(DataOutput out) throws IOException {
+    super.write(out);
+    IOUtils.serialize(null, out, baseQuery);
+    IOUtils.writeStringArray(out, locations);
+  }
+  
+  @Override
+  public void readFields(DataInput in) throws IOException {
+    super.readFields(in);
+    try {
+      baseQuery = IOUtils.deserialize(null, in, null);
+    } catch (ClassNotFoundException ex) {
+      throw new IOException(ex);
+    }
+    locations = IOUtils.readStringArray(in);
+  }
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  public boolean equals(Object obj) {
+    if(obj instanceof PartitionQueryImpl) {
+      PartitionQueryImpl that = (PartitionQueryImpl) obj;
+      return this.baseQuery.equals(that.baseQuery)
+        && Arrays.equals(locations, that.locations);
+    }
+    return false;
+  }
 }

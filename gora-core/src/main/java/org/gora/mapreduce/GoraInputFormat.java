@@ -63,7 +63,7 @@ extends InputFormat<K, T> implements Configurable {
     this.conf = conf;
     Class<K> keyClass = (Class<K>) conf.getClass(MAP_KEY_CLASS, null);
     Class<T> rowClass = (Class<T>) conf.getClass(MAP_VALUE_CLASS, null);
-    this.dataStore = new DataStoreFactory().getDataStore(keyClass, rowClass);
+    this.dataStore = DataStoreFactory.getDataStore(keyClass, rowClass);
     //TODO: query should be read from the serialized form
     String[] fields = conf.getStrings(MAPRED_FIELDS);
     query = dataStore.newQuery();

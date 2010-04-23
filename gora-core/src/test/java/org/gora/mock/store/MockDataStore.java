@@ -2,16 +2,32 @@
 package org.gora.mock.store;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.gora.mock.persistency.MockPersistent;
+import org.gora.mock.query.MockQuery;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.Result;
+import org.gora.query.impl.PartitionQueryImpl;
 import org.gora.store.DataStore;
+import org.gora.store.DataStoreFactory;
 
-public class MockDataStore implements DataStore<Object, MockPersistent> {
+public class MockDataStore implements DataStore<String, MockPersistent> {
 
+  public static final int NUM_PARTITIONS = 5;
+  public static final String[] LOCATIONS = {"foo1", "foo2", "foo3", "foo4", "foo1"};
+  
+  public static MockDataStore get() {
+    MockDataStore dataStore = (MockDataStore) 
+    DataStoreFactory.getDataStore(MockDataStore.class
+        , String.class, MockPersistent.class);
+    return dataStore;
+  }
+  
+  public MockDataStore() { }
+  
   @Override
   public void close() throws IOException {
   }
@@ -21,12 +37,12 @@ public class MockDataStore implements DataStore<Object, MockPersistent> {
   }
 
   @Override
-  public void delete(Object key) throws IOException {
+  public void delete(String key) throws IOException {
   }
 
   @Override
-  public Result<Object, MockPersistent> execute(
-      Query<Object, MockPersistent> query) throws IOException {
+  public Result<String, MockPersistent> execute(
+      Query<String, MockPersistent> query) throws IOException {
     return null;
   }
 
@@ -35,24 +51,32 @@ public class MockDataStore implements DataStore<Object, MockPersistent> {
   }
 
   @Override
-  public MockPersistent get(Object key, String[] fields) throws IOException {
+  public MockPersistent get(String key, String[] fields) throws IOException {
     return null;
   }
 
   @Override
-  public Class<Object> getKeyClass() {
-    return null;
+  public Class<String> getKeyClass() {
+    return String.class;
   }
 
   @Override
-  public List<PartitionQuery<Object, MockPersistent>> getPartitions(
-      Query<Object, MockPersistent> query) throws IOException {
-    return null;
+  public List<PartitionQuery<String, MockPersistent>> getPartitions(
+      Query<String, MockPersistent> query) throws IOException {
+    
+    ArrayList<PartitionQuery<String, MockPersistent>> list = 
+      new ArrayList<PartitionQuery<String,MockPersistent>>();
+    
+    for(int i=0; i<NUM_PARTITIONS; i++) {
+      list.add(new PartitionQueryImpl<String, MockPersistent>(query, LOCATIONS[i]));
+    }
+    
+    return list;
   }
 
   @Override
   public Class<MockPersistent> getPersistentClass() {
-    return null;
+    return MockPersistent.class;
   }
 
   @Override
@@ -61,16 +85,16 @@ public class MockDataStore implements DataStore<Object, MockPersistent> {
   }
 
   @Override
-  public Query<Object, MockPersistent> newQuery() {
-    return null;
+  public MockQuery newQuery() {
+    return new MockQuery(this);
   }
 
   @Override
-  public void put(Object key, MockPersistent obj) throws IOException {
+  public void put(String key, MockPersistent obj) throws IOException {
   }
 
   @Override
-  public void setKeyClass(Class<Object> keyClass) {
+  public void setKeyClass(Class<String> keyClass) {
   }
 
   @Override

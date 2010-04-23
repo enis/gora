@@ -21,6 +21,7 @@ public class ReflectionUtils {
       throw new IllegalArgumentException("class cannot be null");
     }
     Constructor<T> cons = clazz.getConstructor();
+    cons.setAccessible(true);
     return cons.newInstance();
   }
   
