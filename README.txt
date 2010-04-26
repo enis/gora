@@ -5,6 +5,10 @@ For the latest information about Gora, please visit our website at:
 
    http://github.com/enis/gora
 
+and the wiki page at:
+
+   http://wiki.github.com/enis/gora/
+
 How to check out project
 ------------------------
 
