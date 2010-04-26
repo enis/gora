@@ -8,6 +8,11 @@ import org.gora.persistency.impl.PersistentBase;
 
 public class MockPersistent extends PersistentBase {
 
+  public static final String FOO = "foo";
+  public static final String BAZ = "baz";
+  
+  public static final String[] _ALL_FIELDS = {FOO, BAZ};
+  
   private int foo;
   private int baz;
   

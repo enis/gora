@@ -73,5 +73,4 @@ public class GoraInputSplit extends InputSplit
     }
     return false;
   }
-  
 }

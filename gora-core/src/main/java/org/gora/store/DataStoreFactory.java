@@ -61,8 +61,9 @@ public class DataStoreFactory {
   }
   
   @SuppressWarnings("unchecked")
-  public static <D extends DataStore<K,T>, K, T extends Persistent> DataStore<K,T> getDataStore(
-      Class<D> dataStoreClass, Class<K> keyClass, Class<T> persistentClass) {
+  public static <D extends DataStore<K,T>, K, T extends Persistent> 
+  DataStore<K,T> getDataStore( Class<D> dataStoreClass, Class<K> keyClass, 
+      Class<T> persistentClass) {
     int hash = getDataStoreKey(dataStoreClass, keyClass, persistentClass);
     
     DataStore dataStore = dataStores.get(hash);

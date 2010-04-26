@@ -22,12 +22,12 @@ public class PersistentDeserializer extends SpecificDatumReader
 implements Deserializer<Persistent> {
 
   private BinaryDecoder decoder;
-  private Class<Persistent> rowClass;
-  private boolean reuseOld;
+  private Class<Persistent> persistentClass;
+  private boolean reuseObjects;
 
-  public PersistentDeserializer(Class<Persistent> c, boolean reuseOld) {
-    this.rowClass = c;
-    this.reuseOld = reuseOld;
+  public PersistentDeserializer(Class<Persistent> c, boolean reuseObjects) {
+    this.persistentClass = c;
+    this.reuseObjects = reuseObjects;
   }
   
   @Override
@@ -42,9 +42,9 @@ implements Deserializer<Persistent> {
   public Persistent deserialize(Persistent persistent)
   throws IOException {
     StateManager stateManager = null;
-    if (persistent == null || !reuseOld) {
+    if (persistent == null || !reuseObjects) {
       try {
-        persistent = rowClass.newInstance();
+        persistent = persistentClass.newInstance();
         stateManager = persistent.getStateManager();
       } catch (Exception e) {
         throw new RuntimeException(e);
