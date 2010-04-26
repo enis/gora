@@ -32,4 +32,11 @@ public class TestQueryBase {
     TestIOUtils.testSerializeDeserialize(query);
   }
   
+  @Test
+  public void testReadWrite2() throws Exception {
+    query.setLimit(1000);
+    query.setTimeRange(0, System.currentTimeMillis());
+    TestIOUtils.testSerializeDeserialize(query);
+  }
+  
 }
