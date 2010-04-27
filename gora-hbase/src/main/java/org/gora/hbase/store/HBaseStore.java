@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Properties;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -22,6 +23,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -44,15 +46,16 @@ import org.gora.hbase.query.HBaseQuery;
 import org.gora.hbase.query.HBaseScannerResult;
 import org.gora.hbase.util.HBaseByteInterface;
 import org.gora.persistency.Persistent;
+import org.gora.persistency.State;
 import org.gora.persistency.StateManager;
+import org.gora.persistency.StatefulHashMap;
+import org.gora.persistency.StatefulMap;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.impl.PartitionQueryImpl;
 import org.gora.store.impl.DataStoreBase;
 import org.gora.util.NodeWalker;
-import org.gora.util.StatefulHashMap;
 import org.gora.util.XmlUtils;
-import org.gora.util.StatefulHashMap.State;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -150,27 +153,50 @@ implements Configurable {
       Type type = field.getValue().getType();
       Object o = persistent.get(i);
       HbaseColumn hcol = columnMap.get(field.getKey());
-      if (type == Type.MAP) {
-        StatefulHashMap<Utf8, ?> map = (StatefulHashMap<Utf8, ?>) o;
-        for (Entry<Utf8, State> e : map.states().entrySet()) {
-          Utf8 mapKey = e.getKey();
-          switch (e.getValue()) {
-          case UPDATED:
-            byte[] qual = Bytes.toBytes(mapKey.toString());
-            byte[] val = toBytes(map.get(mapKey), field.getValue().getValueType());
-            put.add(hcol.getFamily(), qual, val);
-            hasPuts = true;
-            break;
-          case DELETED:
-            qual = Bytes.toBytes(mapKey.toString());
-            hasDeletes = true;
-            delete.deleteColumn(hcol.getFamily(), qual);
-            break;
+      switch(type) {
+        case MAP:
+          if(o instanceof StatefulMap) {
+            StatefulHashMap<Utf8, ?> map = (StatefulHashMap<Utf8, ?>) o;
+            for (Entry<Utf8, State> e : map.states().entrySet()) {
+              Utf8 mapKey = e.getKey();
+              switch (e.getValue()) {
+                case DIRTY:
+                  byte[] qual = Bytes.toBytes(mapKey.toString());
+                  byte[] val = toBytes(map.get(mapKey), field.getValue().getValueType());
+                  put.add(hcol.getFamily(), qual, val);
+                  hasPuts = true;
+                  break;
+                case DELETED:
+                  qual = Bytes.toBytes(mapKey.toString());
+                  hasDeletes = true;
+                  delete.deleteColumn(hcol.getFamily(), qual);
+                  break;
+              }
+            }  
+          } else {
+            Set<Map.Entry> set = ((Map)o).entrySet();
+            for(Entry entry: set) {
+              byte[] qual = toBytes(entry.getKey());
+              byte[] val = toBytes(entry.getValue());
+              put.add(hcol.getFamily(), qual, val);
+              hasPuts = true;
+            }
           }
-        }
-      } else {
-        put.add(hcol.getFamily(), hcol.getQualifier(), toBytes(o, field.getValue()));
-        hasPuts = true;
+          break;
+        case ARRAY:
+          if(o instanceof GenericArray) {
+            GenericArray arr = (GenericArray) o;
+            for(Object item : arr) {
+              byte[] val = toBytes(item);
+              put.add(hcol.getFamily(), val, null);
+              hasPuts = true;
+            }
+          }
+          break;
+        default:
+          put.add(hcol.getFamily(), hcol.getQualifier(), toBytes(o, field.getValue()));
+          hasPuts = true;
+          break;
       }
     }
     if (hasPuts) {

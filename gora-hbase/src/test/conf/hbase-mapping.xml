@@ -17,13 +17,13 @@
   <description>
     <family name="common"/>
     <family name="content"/>
-    <family name="parsed_content"/>
+    <family name="parsedContent"/>
     <family name="outlinks"/>
   </description>
   <fields>
     <field name="url" family="common" qualifier="u"/>
     <field name="content" family="content"/>
-    <field name="parsed_content" family="parsed_content"/>
+    <field name="parsedContent" family="parsedContent"/>
     <field name="outlinks" family="outlinks"/>
   </fields>
 </table>

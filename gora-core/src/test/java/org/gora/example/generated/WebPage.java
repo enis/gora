@@ -18,7 +18,8 @@ import org.apache.avro.reflect.FixedSize;
 import org.gora.persistency.StateManager;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
-import org.gora.util.StatefulHashMap;
+import org.gora.persistency.StatefulHashMap;
+import org.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")
 public class WebPage extends PersistentBase {
@@ -80,6 +81,16 @@ public class WebPage extends PersistentBase {
   }
   public void setContent(ByteBuffer value) {
     set(1, value);
+  }
+  public GenericArray<Utf8> getParsedContent() {
+    return (GenericArray<Utf8>) get(2);
+  }
+  public void addToParsedContent(Utf8 element) {
+    if (parsedContent == null) {
+      parsedContent = new ListGenericArray<Utf8>(getSchema());
+    }
+    getStateManager().setDirty(this, 2);
+    parsedContent.add(element);
   }
   public Map<Utf8, Utf8> getOutlinks() {
     return (Map<Utf8, Utf8>) get(3);

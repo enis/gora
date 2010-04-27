@@ -13,9 +13,9 @@ import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Serializer;
 import org.gora.persistency.Persistent;
+import org.gora.persistency.State;
 import org.gora.persistency.StateManager;
-import org.gora.util.StatefulHashMap;
-import org.gora.util.StatefulHashMap.State;
+import org.gora.persistency.StatefulMap;
 
 public class PersistentSerializer extends SpecificDatumWriter
 implements Serializer<Persistent> {
@@ -56,7 +56,7 @@ implements Serializer<Persistent> {
   throws IOException {
     if (schema.getType() == Type.MAP) {
       // write extra state information for maps
-      StatefulHashMap<Utf8, ?> map = (StatefulHashMap) o;
+      StatefulMap<Utf8, ?> map = (StatefulMap) o;
       encoder.writeInt(map.states().size());
       for (Entry<Utf8, State> e2 : map.states().entrySet()) {
         encoder.writeString(e2.getKey());

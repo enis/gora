@@ -157,7 +157,8 @@ public class GoraCompiler {
     line(0, "import org.gora.persistency.StateManager;");
     line(0, "import org.gora.persistency.impl.PersistentBase;");
     line(0, "import org.gora.persistency.impl.StateManagerImpl;");
-    line(0, "import org.gora.util.StatefulHashMap;");
+    line(0, "import org.gora.persistency.StatefulHashMap;");
+    line(0, "import org.gora.persistency.ListGenericArray;");
     for (Schema s : queue)
       if (namespace == null
           ? (s.getNamespace() != null)
@@ -289,6 +290,17 @@ public class GoraCompiler {
           case ARRAY:
             String valueType = type(fieldSchema.getElementType());
             unboxed = unbox(fieldSchema.getElementType());
+            
+            line(1, "public GenericArray<"+unboxed+"> get"+camelKey+"() {");
+            line(2, "return (GenericArray<"+unboxed+">) get("+i+");");
+            line(1, "}");
+            line(1, "public void addTo"+camelKey+"("+unboxed+" element) {");
+            line(2, "if ("+field.getKey()+" == null) {");
+            line(3, field.getKey()+" = new ListGenericArray<"+valueType+">(getSchema());");
+            line(2, "}");
+            line(2, "getStateManager().setDirty(this, "+i+");");
+            line(2, field.getKey()+".add(element);");
+            line(1, "}");
             break;
           case MAP:
             valueType = type(fieldSchema.getValueType());

@@ -14,9 +14,10 @@ import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.gora.persistency.Persistent;
+import org.gora.persistency.State;
 import org.gora.persistency.StateManager;
-import org.gora.util.StatefulHashMap;
-import org.gora.util.StatefulHashMap.State;
+import org.gora.persistency.StatefulHashMap;
+import org.gora.persistency.StatefulMap;
 
 public class PersistentDeserializer extends SpecificDatumReader
 implements Deserializer<Persistent> {
@@ -85,8 +86,8 @@ implements Deserializer<Persistent> {
   private Object readExtraInformation(Schema schema, Object o, Decoder decoder)
   throws IOException {
     if (schema.getType() == Type.MAP) {
-      StatefulHashMap<Utf8, ?> map = new StatefulHashMap((Map)o);
-      map.resetStates();
+      StatefulMap<Utf8, ?> map = new StatefulHashMap((Map)o);
+      map.clearStates();
       int size = decoder.readInt();
       for (int j = 0; j < size; j++) {
         Utf8 key = decoder.readString(null);

@@ -64,7 +64,30 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
+    pageStore.createTable();
     WebPage page = pageStore.newInstance();
+    
+    String[] tokens = {"example", "content", "in", "example.com"};
+    
+    for(String token: tokens) {
+      page.addToParsedContent(new Utf8(token));  
+    }
+    
+    pageStore.put("com.example/http", page);
+    pageStore.close();
+    
+    HTable table = new HTable("WebPage");
+    Get get = new Get(Bytes.toBytes("com.example/http"));
+    org.apache.hadoop.hbase.client.Result result = table.get(get);
+    
+    Assert.assertEquals(result.getFamilyMap(Bytes.toBytes("parsedContent")).size(), 4);
+    Assert.assertTrue(result.containsColumn(Bytes.toBytes("parsedContent")
+        , Bytes.toBytes("example")));
+    Assert.assertTrue(result.containsColumn(Bytes.toBytes("parsedContent")
+        , Bytes.toBytes("example.com")));
+    table.close();
+    
+    deleteTable("WebPage");
   }
   
   @Test

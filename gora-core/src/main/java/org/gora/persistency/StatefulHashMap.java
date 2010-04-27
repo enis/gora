@@ -1,15 +1,12 @@
-package org.gora.util;
+package org.gora.persistency;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 @SuppressWarnings("serial")
-public class StatefulHashMap<K, V> extends HashMap<K, V> {
-  
-  public static enum State {
-    NOT_UPDATED, UPDATED, DELETED
-  }
+public class StatefulHashMap<K, V> extends HashMap<K, V> 
+  implements StatefulMap<K, V> {
   
   /* This is probably a terrible design but I do not yet have a better
    * idea of managing write/delete info on a per-key basis
@@ -30,7 +27,7 @@ public class StatefulHashMap<K, V> extends HashMap<K, V> {
   
   @Override
   public V put(K key, V value) {
-    keyStates.put(key, State.UPDATED);
+    keyStates.put(key, State.DIRTY);
     return super.put(key, value);
   }
 
@@ -58,14 +55,27 @@ public class StatefulHashMap<K, V> extends HashMap<K, V> {
     super.clear();
   }
 
-  public void resetStates() {
+  public State getState(K key) {
+    return keyStates.get(key);
+  };
+  
+  /* (non-Javadoc)
+   * @see org.gora.persistency.StatefulMap#resetStates()
+   */
+  public void clearStates() {
     keyStates.clear();
   }
 
+  /* (non-Javadoc)
+   * @see org.gora.persistency.StatefulMap#putState(K, org.gora.persistency.State)
+   */
   public void putState(K key, State state) {
     keyStates.put(key, state);
   }
 
+  /* (non-Javadoc)
+   * @see org.gora.persistency.StatefulMap#states()
+   */
   public Map<K, State> states() {
     return keyStates;
   }

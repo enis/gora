@@ -30,7 +30,8 @@ done
 if [ $# = 0 ]; then
   echo "Usage: run COMMAND [COMMAND options]"
   echo "where COMMAND is one of:"
-  echo "  compile           Run Compiler"
+  echo "  compile                    Run Compiler"
+  echo "  specificcompiler           Run Avro Specific Compiler"
   echo " or"
   echo " MODULE CLASSNAME   run the class named CLASSNAME in module MODULE"
   echo "Most commands print help when invoked w/o parameters."
@@ -91,6 +92,9 @@ fi
 # figure out which class to run
 if [ "$COMMAND" = "compile" ] ; then
   CLASS=org.gora.compiler.GoraCompiler
+  MODULE=gora-core
+elif [ "$COMMAND" = "specificcompiler" ] ; then
+  CLASS=org.apache.avro.specific.SpecificCompiler
   MODULE=gora-core
 else
   MODULE="$COMMAND"
