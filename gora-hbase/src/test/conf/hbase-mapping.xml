@@ -1,4 +1,7 @@
-<table name="Employees" keyClass="java.lang.String" rowClass="org.gora.example.generated.Employee">
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gora-orm>
+<table name="Employees" keyClass="java.lang.String" persistentClass="org.gora.example.generated.Employee">
   <description>
     <family name="info"/> <!-- This can also have params like compression, bloom filters -->
   </description>
@@ -9,3 +12,19 @@
     <field name="salary" family="info" qualifier="sl"/>
   </fields>
 </table>
+
+<table name="WebPage" keyClass="java.lang.String" persistentClass="org.gora.example.generated.WebPage">
+  <description>
+    <family name="common"/>
+    <family name="content"/>
+    <family name="parsed_content"/>
+    <family name="outlinks"/>
+  </description>
+  <fields>
+    <field name="url" family="common" qualifier="u"/>
+    <field name="content" family="content"/>
+    <field name="parsed_content" family="parsed_content"/>
+    <field name="outlinks" family="outlinks"/>
+  </fields>
+</table>
+</gora-orm>

@@ -28,6 +28,8 @@ public class DataStoreFactory {
   
   private static HashMap<Integer, DataStore<?,?>> dataStores;
   
+  private static Properties properties;
+  
   static {
     dataStores = new HashMap<Integer, DataStore<?,?>>();
     try {
@@ -40,18 +42,18 @@ public class DataStoreFactory {
   private DataStoreFactory() { }
   
   private static <K, T extends Persistent> void initializeDataStore(
-      DataStore<K, T> dataStore, Class<K> keyClass, Class<T> persistent) {
-    dataStore.setKeyClass(keyClass);
-    dataStore.setPersistentClass(persistent);
+      DataStore<K, T> dataStore, Class<K> keyClass, Class<T> persistent
+      , Properties properties) {
+    dataStore.initialize(keyClass, persistent, properties);
   }
   
   private static <D extends DataStore<K,T>, K, T extends Persistent> 
-  DataStore<K,T> createDataStore(Class<D> dataStoreClass
-      , Class<K> keyClass, Class<T> persistent) {
+  D createDataStore(Class<D> dataStoreClass
+      , Class<K> keyClass, Class<T> persistent, Properties properties) {
     try {
-      DataStore<K, T> dataStore = 
+      D dataStore = 
         ReflectionUtils.newInstance(dataStoreClass);
-      initializeDataStore(dataStore, keyClass, persistent);
+      initializeDataStore(dataStore, keyClass, persistent, properties);
       return dataStore;
       
     } catch (Exception ex) {
@@ -62,13 +64,14 @@ public class DataStoreFactory {
   
   @SuppressWarnings("unchecked")
   public static <D extends DataStore<K,T>, K, T extends Persistent> 
-  DataStore<K,T> getDataStore( Class<D> dataStoreClass, Class<K> keyClass, 
+  D getDataStore( Class<D> dataStoreClass, Class<K> keyClass, 
       Class<T> persistentClass) {
     int hash = getDataStoreKey(dataStoreClass, keyClass, persistentClass);
     
-    DataStore dataStore = dataStores.get(hash);
+    D dataStore = (D) dataStores.get(hash);
     if(dataStore == null) {
-      dataStore = createDataStore(dataStoreClass, keyClass, persistentClass);
+      dataStore = createDataStore(dataStoreClass, keyClass, persistentClass
+          , properties);
       dataStores.put(hash, dataStore);
     }
     return dataStore;  
@@ -112,7 +115,7 @@ public class DataStoreFactory {
     return (int)hash;
   }
   
-  private static void readProperties() throws IOException {
+  private static Properties readProperties() throws IOException {
     Properties properties = new Properties();
     if(propertiesFile != null) {
       InputStream stream = DataStoreFactory.class.getClassLoader()
@@ -121,17 +124,19 @@ public class DataStoreFactory {
         try {
           properties.load(stream);
           setProperties(properties);
-          return;
+          return properties;
         } finally {
           stream.close();  
         }
       }
     }
     log.warn("Gora properties are not loaded!");
+    return null;
   }
   
   private static void setProperties(Properties properties) {
     defaultDataStoreClass = properties.getProperty(GORA_DEFAULT_DATASTORE_KEY);
+    DataStoreFactory.properties = properties;
   }
   
 }

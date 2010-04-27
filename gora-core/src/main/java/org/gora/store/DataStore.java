@@ -3,6 +3,7 @@ package org.gora.store;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
@@ -20,6 +21,15 @@ import org.gora.query.Result;
  */
 public interface DataStore<K, T extends Persistent> extends Closeable {
 
+  /**
+   * Initializes this DataStore.
+   * @param keyClass the class of the keys
+   * @param persistentClass the class of the persistent objects
+   * @param properties extra metadata  
+   */
+  public abstract void initialize(Class<K> keyClass, Class<T> persistentClass,
+      Properties properties);
+  
   /**
    * Sets the class of the keys
    * @param keyClass the class of keys

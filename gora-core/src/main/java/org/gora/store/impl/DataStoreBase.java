@@ -2,6 +2,7 @@
 package org.gora.store.impl;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import org.gora.persistency.Persistent;
 import org.gora.store.DataStore;
@@ -19,6 +20,13 @@ implements DataStore<K, T> {
   public DataStoreBase(Class<K> keyClass, Class<T> persistentClass) {
     this.keyClass = keyClass;
     this.persistentClass = persistentClass;
+  }
+  
+  @Override
+  public void initialize(Class<K> keyClass, Class<T> persistentClass,
+      Properties properties) {
+    setKeyClass(keyClass);
+    setPersistentClass(persistentClass);
   }
   
   @Override

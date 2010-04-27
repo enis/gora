@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "WebPage",
+  "namespace": "org.gora.example.generated",
+  "fields" : [
+    {"name": "url", "type": "string"},
+    {"name": "content", "type": "bytes"},
+    {"name": "parsedContent", "type": {"type":"array", "items": "string"}},
+    {"name": "outlinks", "type": {"type":"map", "values":"string"}}
+  ]
+}

@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Properties;
 import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -94,12 +95,13 @@ implements Configurable {
   }
 
   public HBaseStore()  {
-    this.conf = new HBaseConfiguration();
   }
-  
-  public HBaseStore(Configuration conf, Class<K> keyClass, Class<T> rowClass)  {
-    super(keyClass, rowClass);
-    this.conf = conf;
+
+  @Override
+  public void initialize(Class<K> keyClass, Class<T> persistentClass,
+      Properties properties) {
+    super.initialize(keyClass, persistentClass, properties);
+    this.conf = new HBaseConfiguration();
     columnMap = new HashMap<String, HbaseColumn>();
     colDescs = new ArrayList<HColumnDescriptor>();
     try {
@@ -108,7 +110,7 @@ implements Configurable {
       throw new RuntimeException(e);
     }
   }
-
+  
   @Override
   public void createTable() throws IOException {
     HBaseAdmin admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
@@ -360,20 +362,22 @@ implements Configurable {
           continue;
         }
         if (node.getNodeName().equals("table")) {
+          processInfo = true;
           Class<K> currentKeyClass =
             (Class<K>) Class.forName(XmlUtils.getAttribute(node, "keyClass"));
-          Class<T> currentRowClass =
-            (Class<T>) Class.forName(XmlUtils.getAttribute(node, "rowClass"));
-          if (!currentKeyClass.equals(getKeyClass())) {
-            processInfo = false;
-            continue;
-          }
-          if (!currentRowClass.equals(getPersistentClass())) {
+          Class<T> currentPersistentClass =
+            (Class<T>) Class.forName(XmlUtils.getAttribute(node, "persistentClass"));
+          System.out.println(currentKeyClass);
+          System.out.println(currentPersistentClass);
+          System.out.println(getKeyClass());
+          System.out.println(getPersistentClass());
+          if (!currentKeyClass.equals(getKeyClass()) || !currentPersistentClass.equals(getPersistentClass())) {
             processInfo = false;
             continue;
           }
 
           tableName = XmlUtils.getAttribute(node, "name");
+          System.out.println(tableName);
           HBaseAdmin admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
           if (admin.tableExists(tableName)) {
             table = new HTable(tableName);
@@ -382,7 +386,6 @@ implements Configurable {
             table = null;
           }
           schema = getPersistentClass().newInstance().getSchema();
-          processInfo = true;
         } else if (node.getNodeName().equals("field") && processInfo) {
           String fieldName = XmlUtils.getAttribute(node, "name");
           String familyStr = XmlUtils.getAttribute(node, "family");

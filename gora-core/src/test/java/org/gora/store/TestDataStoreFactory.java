@@ -17,20 +17,28 @@ public class TestDataStoreFactory {
   @Test
   public void testGetDataStore() throws ClassNotFoundException {
     DataStore<?,?> dataStore = DataStoreFactory.getDataStore("org.gora.mock.store.MockDataStore"
-        , Object.class, MockPersistent.class);
+        , String.class, MockPersistent.class);
     Assert.assertNotNull(dataStore);
   }
   
   @Test
-  public void testReadProperties() {
-    //indirect testing
-    DataStore<?,?> dataStore = DataStoreFactory.getDataStore(String.class, MockPersistent.class);
+  public void testGetClasses() throws ClassNotFoundException {
+    DataStore<?,?> dataStore = DataStoreFactory.getDataStore("org.gora.mock.store.MockDataStore"
+        , String.class, MockPersistent.class);
     Assert.assertNotNull(dataStore);
-    Assert.assertEquals(MockDataStore.class, dataStore.getClass());
+    Assert.assertEquals(String.class, dataStore.getKeyClass());
+    Assert.assertEquals(MockPersistent.class, dataStore.getPersistentClass());
   }
   
   @Test
   public void testGetDataStore2() throws ClassNotFoundException {
+    DataStore<?,?> dataStore = DataStoreFactory.getDataStore(MockDataStore.class
+        , String.class, MockPersistent.class);
+    Assert.assertNotNull(dataStore);
+  }
+  
+  @Test
+  public void testGetDataStore3() throws ClassNotFoundException {
     DataStore<?,?> dataStore1 = DataStoreFactory.getDataStore("org.gora.mock.store.MockDataStore"
         , Object.class, MockPersistent.class);
     DataStore<?,?> dataStore2 = DataStoreFactory.getDataStore("org.gora.mock.store.MockDataStore"
@@ -40,6 +48,14 @@ public class TestDataStoreFactory {
     
     Assert.assertTrue(dataStore1 == dataStore2);
     Assert.assertNotSame(dataStore1, dataStore3);
+  }
+  
+  @Test
+  public void testReadProperties() {
+    //indirect testing
+    DataStore<?,?> dataStore = DataStoreFactory.getDataStore(String.class, MockPersistent.class);
+    Assert.assertNotNull(dataStore);
+    Assert.assertEquals(MockDataStore.class, dataStore.getClass());
   }
   
 }

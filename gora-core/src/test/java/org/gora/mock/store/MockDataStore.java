@@ -11,17 +11,16 @@ import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.Result;
 import org.gora.query.impl.PartitionQueryImpl;
-import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
+import org.gora.store.impl.DataStoreBase;
 
-public class MockDataStore implements DataStore<String, MockPersistent> {
+public class MockDataStore extends DataStoreBase<String, MockPersistent> {
 
   public static final int NUM_PARTITIONS = 5;
   public static final String[] LOCATIONS = {"foo1", "foo2", "foo3", "foo4", "foo1"};
   
   public static MockDataStore get() {
-    MockDataStore dataStore = (MockDataStore) 
-    DataStoreFactory.getDataStore(MockDataStore.class
+    MockDataStore dataStore = DataStoreFactory.getDataStore(MockDataStore.class
         , String.class, MockPersistent.class);
     return dataStore;
   }
