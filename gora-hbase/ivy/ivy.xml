@@ -11,7 +11,7 @@
   </configurations>
   
   <publications>
-    <artifact conf="compile"/>
+    <artifact name="gora-hbase" conf="compile"/>
     <artifact name="gora-hbase-test" conf="test"/>
   </publications>
 

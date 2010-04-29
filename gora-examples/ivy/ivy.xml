@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+
+<ivy-module version="2.0">
+    <info 
+      organisation="org.gora"
+      module="gora-examples"
+      status="integration"/>
+
+  <configurations>
+    <include file="${project.dir}/ivy/ivy-configurations.xml"/>
+  </configurations>
+
+  <publications defaultconf="compile">
+    <artifact name="gora-examples" conf="compile"/>
+  </publications>
+
+  <dependencies>
+
+    <dependency org="org.gora" name="gora-core" rev="latest.integration" changing="true" conf="*->compile"/>
+
+  </dependencies>
+</ivy-module>
+
