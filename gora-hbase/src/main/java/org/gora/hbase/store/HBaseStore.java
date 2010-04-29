@@ -393,17 +393,14 @@ implements Configurable {
             (Class<K>) Class.forName(XmlUtils.getAttribute(node, "keyClass"));
           Class<T> currentPersistentClass =
             (Class<T>) Class.forName(XmlUtils.getAttribute(node, "persistentClass"));
-          System.out.println(currentKeyClass);
-          System.out.println(currentPersistentClass);
-          System.out.println(getKeyClass());
-          System.out.println(getPersistentClass());
+          
           if (!currentKeyClass.equals(getKeyClass()) || !currentPersistentClass.equals(getPersistentClass())) {
             processInfo = false;
             continue;
           }
 
           tableName = XmlUtils.getAttribute(node, "name");
-          System.out.println(tableName);
+          
           HBaseAdmin admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
           if (admin.tableExists(tableName)) {
             table = new HTable(tableName);
