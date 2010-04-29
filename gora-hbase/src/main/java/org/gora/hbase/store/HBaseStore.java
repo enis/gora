@@ -42,9 +42,11 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.io.hfile.Compression.Algorithm;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
+import org.gora.hbase.query.HBaseGetResult;
 import org.gora.hbase.query.HBaseQuery;
 import org.gora.hbase.query.HBaseScannerResult;
 import org.gora.hbase.util.HBaseByteInterface;
+import org.gora.persistency.ListGenericArray;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.State;
 import org.gora.persistency.StateManager;
@@ -112,6 +114,9 @@ implements Configurable {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+    try {
+      table = new HTable(tableName);  
+    } catch (Exception ignore) { }
   }
   
   @Override
@@ -273,12 +278,21 @@ implements Configurable {
       throws IOException {
 
     HBaseQuery<K, T> hQuery = (HBaseQuery<K, T>) query;
-    ResultScanner scanner = createScanner(hQuery);
     
-    org.gora.query.Result<K,T> result 
+    if(query.getStartKey().equals(query.getEndKey())) {
+      Get get = new Get(toBytes(query.getStartKey()));
+      addFields(get, query.getFields());
+      addTimeRange(get, hQuery);
+      Result result = table.get(get);
+      return new HBaseGetResult<K,T>(this, hQuery, result);
+    } else {
+      ResultScanner scanner = createScanner(hQuery);
+      
+      org.gora.query.Result<K,T> result 
       = new HBaseScannerResult<K,T>(this,hQuery, scanner);
-    
-    return result; 
+      
+      return result; 
+    }
   }
   
   public ResultScanner createScanner(HBaseQuery<K, T> query) 
@@ -323,6 +337,18 @@ implements Configurable {
     }
   }
 
+  private void addTimeRange(Get get, Query<K, T> query) throws IOException {
+    if(query.getStartTime() > 0 || query.getEndTime() > 0) {
+      if(query.getStartTime() == query.getEndTime()) {
+        get.setTimeStamp(query.getStartTime());
+      } else {
+        long startTime = query.getStartTime() > 0 ? query.getStartTime() : 0;
+        long endTime = query.getEndTime() > 0 ? query.getEndTime() : Long.MAX_VALUE;
+        get.setTimeRange(startTime, endTime);
+      }
+    }
+  }
+  
   @SuppressWarnings("unchecked")
   public T newInstance(Result result, String[] fields)
   throws IOException {
@@ -334,26 +360,41 @@ implements Configurable {
       HbaseColumn col = columnMap.get(f);
       Field field = fieldMap.get(f);
       Schema fieldSchema = field.schema();
-      if (fieldSchema.getType() == Type.MAP) {
-        NavigableMap<byte[], byte[]> qualMap =
-          result.getNoVersionMap().get(col.getFamily());
-        if (qualMap == null) {
-          continue;
-        }
-        Schema valueSchema = fieldSchema.getValueType();
-        Map map = new HashMap();
-        for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
-          map.put(new Utf8(Bytes.toString(e.getKey())), 
-              fromBytes(valueSchema, e.getValue()));
-        }
-        setField(persistent, field, map);
-      } else {
-        byte[] val =
-          result.getValue(col.getFamily(), col.getQualifier());
-        if (val == null) {
-          continue;
-        }
-        setField(persistent, field, val);
+      switch(fieldSchema.getType()) {
+        case MAP:
+          NavigableMap<byte[], byte[]> qualMap =
+            result.getNoVersionMap().get(col.getFamily());
+          if (qualMap == null) {
+            continue;
+          }
+          Schema valueSchema = fieldSchema.getValueType();
+          Map map = new HashMap();
+          for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
+            map.put(new Utf8(Bytes.toString(e.getKey())), 
+                fromBytes(valueSchema, e.getValue()));
+          }
+          setField(persistent, field, map);
+          break;
+        case ARRAY:
+          qualMap = result.getFamilyMap(col.getFamily());
+          if (qualMap == null) {
+            continue;
+          }
+          valueSchema = fieldSchema.getElementType();
+          ListGenericArray list = new ListGenericArray<T>(valueSchema);
+          for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
+            list.add(fromBytes(valueSchema, e.getKey()));
+          }
+          setField(persistent, field, list);
+          break;    
+        default:
+          byte[] val =
+            result.getValue(col.getFamily(), col.getQualifier());
+          if (val == null) {
+            continue;
+          }
+          setField(persistent, field, val);   
+          break;
       }
     }
     stateManager.clearDirty(persistent);
@@ -363,14 +404,19 @@ implements Configurable {
 
 
   @SuppressWarnings("unchecked")
-  private void setField(T row, Field field, Map map) {
-    row.set(field.pos(), new StatefulHashMap(map));
+  private void setField(T persistent, Field field, Map map) {
+    persistent.set(field.pos(), new StatefulHashMap(map));
   }
 
-  private void setField(T row, Field field, byte[] val) {
-    row.set(field.pos(), fromBytes(field.schema(), val));
+  private void setField(T persistent, Field field, byte[] val) {
+    persistent.set(field.pos(), fromBytes(field.schema(), val));
   }
 
+  @SuppressWarnings("unchecked")
+  private void setField(T persistent, Field field, GenericArray list) {
+    persistent.set(field.pos(), list);
+  }
+  
   @SuppressWarnings("unchecked")
   private void parseMapping(String fileName)
   throws ClassNotFoundException, InstantiationException, IllegalAccessException,

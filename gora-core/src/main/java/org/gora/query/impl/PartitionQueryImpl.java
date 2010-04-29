@@ -74,7 +74,7 @@ public class PartitionQueryImpl<K, T extends Persistent>
   }
   
   @Override
-  public Long getLimit() {
+  public long getLimit() {
     return baseQuery.getLimit();
   }
   

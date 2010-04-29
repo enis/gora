@@ -309,7 +309,7 @@
   <!-- ================================================================== -->
   <!-- target: publish-local-test                                         -->
   <!-- ================================================================== -->
-  <target name="publish-local-test" depends="local-version, publish-local, test-jar" description="--> publish this project in the local ivy repository">
+  <target name="publish-local-test" depends="local-version, test-jar" description="--> publish this project in the local ivy repository">
     <ivy:publish artifactspattern="${build.dir}/[artifact]-${version}.[ext]"
                                 resolver="local"
                                 pubrevision="${version}"

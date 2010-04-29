@@ -89,9 +89,9 @@ public interface Query<K, T extends Persistent> extends Writable {
 
   /**
    * Returns the maximum number of results
-   * @return the limit if it is set, otherwise null
+   * @return the limit if it is set, otherwise a negative number
    */
-  public abstract Long getLimit();
+  public abstract long getLimit();
 
   /* parameters */
   /*

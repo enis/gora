@@ -1,8 +1,6 @@
 
 package org.gora.hbase.query;
 
-import static org.gora.hbase.util.HBaseByteInterface.fromBytes;
-
 import java.io.IOException;
 
 import org.apache.hadoop.hbase.client.Result;
@@ -18,7 +16,7 @@ public class HBaseScannerResult<K, T extends Persistent>
 
   private final ResultScanner scanner;
   private long offset = 0;
-  private Long limit;
+  private long limit;
   
   public HBaseScannerResult(HBaseStore<K,T> dataStore, HBaseQuery<K, T> query, 
       ResultScanner scanner) {
@@ -34,12 +32,11 @@ public class HBaseScannerResult<K, T extends Persistent>
       return false;
     }
   
-    if(limit != null && offset++ > limit) {
+    if(limit > 0 && offset++ > limit) {
       return false;
     }
     
-    key = fromBytes(getKeyClass(), result.getRow());
-    persistent = getDataStore().newInstance(result, query.getFields());
+    readNext(result);
     
     return true;
   }
@@ -51,6 +48,7 @@ public class HBaseScannerResult<K, T extends Persistent>
   
   @Override
   public float getProgress() throws IOException {
+    //TODO: if limit is set, we know how far we have gone 
     return 0;
   }
   

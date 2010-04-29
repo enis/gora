@@ -27,35 +27,46 @@ import org.junit.Test;
  * Test case for HBaseStore.
  */
 public class TestHBaseStore extends HBaseClusterTestCase {
- 
-  private HBaseStore<String, Employee> store;
+
+  private HBaseStore<String, Employee> employeeStore;
+  private HBaseStore<String, WebPage> webPageStore;
   
-  @Override
   @Before
+  @Override
   public void setUp() throws Exception {
     super.setUp();
-    this.store = (HBaseStore<String, Employee>) DataStoreFactory.getDataStore(
-        HBaseStore.class, String.class, Employee.class);    
+   employeeStore = (HBaseStore<String, Employee>) DataStoreFactory.getDataStore(
+        HBaseStore.class, String.class, Employee.class);
+  
+   webPageStore = (HBaseStore<String, WebPage>) DataStoreFactory.getDataStore(
+        HBaseStore.class, String.class, WebPage.class);
   }
-
+  
+  @Override
+  protected void tearDown() throws Exception {
+    super.tearDown();
+    employeeStore.close();
+    webPageStore.close();
+  }
+  
   @Test
   public void testNewInstance() throws IOException {
-    DataStoreTestUtil.testNewInstance(store);
+    DataStoreTestUtil.testNewInstance(employeeStore);
   }
   
   @Test
   public void testCreateTable() throws IOException {
-    store.createTable();
+    employeeStore.createTable();
   }
   
   @Test
   public void testPut() throws IOException {
-    DataStoreTestUtil.testPutEmployee(store);
+    DataStoreTestUtil.testPutEmployee(employeeStore);
   }
   
   @Test
   public void testGet() throws IOException {
-    DataStoreTestUtil.testGetEmployee(store);
+    DataStoreTestUtil.testGetEmployee(employeeStore);
   }
  
   @Test
@@ -152,4 +163,26 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     admin.deleteTable(tableName);
   }
   
+  @Test
+  public void testGetWebPage() throws IOException {
+    DataStoreTestUtil.testGetWebPage(webPageStore);
+  }
+  
+  //TODO: fixme
+//  @Test
+//  public void tetGetWebPageDefaultFields(DataStore<String, WebPage> store) 
+//  throws IOException {
+//    DataStoreTestUtil.testGetWebPageDefaultFields(webPageStore);
+//  }
+  
+  @Test
+  public void testQueryWebPageSingleKey() throws IOException {
+    DataStoreTestUtil.testQueryWebPageSingleKey(webPageStore);
+  }
+  
+  //TODO: fixme
+//  @Test
+//  public void testQueryWebPageSingleKeyDefaultFields() throws IOException { 
+//    DataStoreTestUtil.testQueryWebPageSingleKeyDefaultFields(webPageStore);
+//  }
 }

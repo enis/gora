@@ -9,6 +9,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.WritableUtils;
 import org.gora.persistency.Persistent;
 import org.gora.query.Query;
 import org.gora.query.Result;
@@ -30,12 +31,12 @@ implements Query<K,T> {
   protected K startKey;
   protected K endKey;
   
-  protected Long startTime;
-  protected Long endTime;
+  protected long startTime = -1;
+  protected long endTime = -1;
   
   protected String filter;
   
-  protected Long limit;
+  protected long limit = -1;
   
   protected boolean isCompiled = false;
 
@@ -142,22 +143,17 @@ implements Query<K,T> {
   
   @Override
   public long getTimestamp() {
-    if(startTime != null && endTime != null) {
-      if(startTime.longValue() == endTime.longValue()) {
-        return startTime;
-      }
-    }
-    return -1;
+    return startTime == endTime ? startTime : -1;
   }
   
   @Override
   public long getStartTime() {
-    return startTime == null ? -1 : startTime;
+    return startTime;
   }
   
   @Override
   public long getEndTime() {
-    return endTime == null ? -1 : endTime;
+    return endTime;
   }
   
 //  @Override
@@ -176,7 +172,7 @@ implements Query<K,T> {
   }
   
   @Override
-  public Long getLimit() {
+  public long getLimit() {
     return limit;
   }
   
@@ -206,14 +202,16 @@ implements Query<K,T> {
       endKey = IOUtils.deserialize(null, in, null, dataStore.getKeyClass());
     if(!nullFields[4])
       filter = Text.readString(in);
-    if(!nullFields[5])
-      limit = in.readLong();
+    
+    startTime = WritableUtils.readVLong(in);
+    endTime = WritableUtils.readVLong(in);
+    limit = WritableUtils.readVLong(in);
   }
   
   @Override
   public void write(DataOutput out) throws IOException {
     IOUtils.writeNullFieldsInfo(out, queryString, (fields)
-        , startKey, endKey, filter, limit);
+        , startKey, endKey, filter);
     
     Text.writeString(out, dataStore.getClass().getCanonicalName());
     Text.writeString(out, dataStore.getKeyClass().getCanonicalName());
@@ -229,8 +227,10 @@ implements Query<K,T> {
       IOUtils.serialize(null, out, endKey, dataStore.getKeyClass());
     if(filter != null)
       Text.writeString(out, filter);
-    if(limit != null)
-      out.writeLong(limit);
+    
+    WritableUtils.writeVLong(out, getStartTime());
+    WritableUtils.writeVLong(out, getEndTime());
+    WritableUtils.writeVLong(out, getLimit());
   }
   
   @SuppressWarnings("unchecked")
