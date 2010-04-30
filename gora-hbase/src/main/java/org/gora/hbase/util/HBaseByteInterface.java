@@ -15,6 +15,8 @@ import org.apache.hadoop.hbase.util.Bytes;
  */
 public class HBaseByteInterface {
   
+  public static final byte[] EMPTY_BYTES = new byte[0]; 
+  
   @SuppressWarnings("unchecked")
   public static Object fromBytes(Schema schema, byte[] val) {
     Type type = schema.getType();

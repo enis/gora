@@ -3,6 +3,7 @@ package org.gora.persistency;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericArray;
@@ -12,8 +13,13 @@ import org.apache.avro.generic.GenericArray;
  */
 public class ListGenericArray<T> implements GenericArray<T> {
 
-  private ArrayList<T> list;
+  private List<T> list;
   private Schema schema;
+  
+  public ListGenericArray(Schema schema, List<T> list) {
+    this.schema = schema;
+    this.list = list;
+  }
   
   public ListGenericArray(Schema schema) {
     this.schema = schema;

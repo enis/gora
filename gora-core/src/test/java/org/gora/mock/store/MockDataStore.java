@@ -32,7 +32,7 @@ public class MockDataStore extends DataStoreBase<String, MockPersistent> {
   }
 
   @Override
-  public void createTable() throws IOException {
+  public void createSchema() throws IOException {
   }
 
   @Override

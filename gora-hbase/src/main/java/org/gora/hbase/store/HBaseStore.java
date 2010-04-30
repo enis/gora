@@ -55,6 +55,7 @@ import org.gora.persistency.StatefulMap;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.impl.PartitionQueryImpl;
+import org.gora.store.DataStoreFactory;
 import org.gora.store.impl.DataStoreBase;
 import org.gora.util.NodeWalker;
 import org.gora.util.XmlUtils;
@@ -88,6 +89,8 @@ implements Configurable {
 
   private Configuration conf;
   
+  private boolean autoCreateSchema = true;
+  
   static {
     try {
       docBuilder = 
@@ -104,24 +107,31 @@ implements Configurable {
 
   @Override
   public void initialize(Class<K> keyClass, Class<T> persistentClass,
-      Properties properties) {
+      Properties properties) throws IOException {
     super.initialize(keyClass, persistentClass, properties);
     this.conf = new HBaseConfiguration();
     columnMap = new HashMap<String, HbaseColumn>();
     colDescs = new ArrayList<HColumnDescriptor>();
+    autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
+
     try {
       parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEFAULT_FILE_NAME));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-    try {
-      table = new HTable(tableName);  
-    } catch (Exception ignore) { }
+    if(autoCreateSchema) {
+      createSchema();
+    } else {
+     table = new HTable(tableName);  
+    }
   }
   
   @Override
-  public void createTable() throws IOException {
+  public void createSchema() throws IOException {
     HBaseAdmin admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
+    if(admin.tableExists(tableName)) {
+      return;
+    }
     HTableDescriptor tableDesc = new HTableDescriptor(tableName);
     for (HColumnDescriptor colDesc : colDescs) {
       tableDesc.addFamily(colDesc);
@@ -191,9 +201,10 @@ implements Configurable {
         case ARRAY:
           if(o instanceof GenericArray) {
             GenericArray arr = (GenericArray) o;
+            int j=0;
             for(Object item : arr) {
               byte[] val = toBytes(item);
-              put.add(hcol.getFamily(), val, null);
+              put.add(hcol.getFamily(), Bytes.toBytes(j++), val);
               hasPuts = true;
             }
           }
@@ -248,8 +259,10 @@ implements Configurable {
     for (int i = 0; i < keys.getFirst().length; i++) {
       String regionLocation = table.getRegionLocation(keys.getFirst()[i]).
       getServerAddress().getHostname();
-      byte[] startRow = query.getStartKey() != null ? toBytes(query.getStartKey()) : HConstants.EMPTY_START_ROW;
-      byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey()) : HConstants.EMPTY_END_ROW;
+      byte[] startRow = query.getStartKey() != null ? toBytes(query.getStartKey()) 
+          : HConstants.EMPTY_START_ROW;
+      byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey()) 
+          : HConstants.EMPTY_END_ROW;
       // determine if the given start an stop key fall into the region
       if ((startRow.length == 0 || keys.getSecond()[i].length == 0 ||
           Bytes.compareTo(startRow, keys.getSecond()[i]) < 0) &&
@@ -314,10 +327,13 @@ implements Configurable {
     for (String f : fields) {
       HbaseColumn col = columnMap.get(f);
       Schema fieldSchema = fieldMap.get(f).schema();
-      if (fieldSchema.getType() == Type.MAP) {
-        get.addFamily(col.family);
-      } else {
-        get.addColumn(col.family, col.qualifier);
+      
+      switch (fieldSchema.getType()) {
+        case MAP: 
+        case ARRAY: 
+          get.addFamily(col.family); break;
+        default:
+          get.addColumn(col.family, col.qualifier);
       }
     }
   }
@@ -381,11 +397,12 @@ implements Configurable {
             continue;
           }
           valueSchema = fieldSchema.getElementType();
-          ListGenericArray list = new ListGenericArray<T>(valueSchema);
+          ArrayList<T> arrayList = new ArrayList<T>();
           for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
-            list.add(fromBytes(valueSchema, e.getKey()));
+            arrayList.add((T) fromBytes(valueSchema, e.getValue()));
           }
-          setField(persistent, field, list);
+          ListGenericArray arr = new ListGenericArray<T>(valueSchema, arrayList);
+          setField(persistent, field, arr);
           break;    
         default:
           byte[] val =

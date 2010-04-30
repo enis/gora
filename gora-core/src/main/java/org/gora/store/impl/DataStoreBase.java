@@ -24,7 +24,7 @@ implements DataStore<K, T> {
   
   @Override
   public void initialize(Class<K> keyClass, Class<T> persistentClass,
-      Properties properties) {
+      Properties properties) throws IOException {
     setKeyClass(keyClass);
     setPersistentClass(persistentClass);
   }

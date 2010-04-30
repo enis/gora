@@ -26,9 +26,10 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
    * @param keyClass the class of the keys
    * @param persistentClass the class of the persistent objects
    * @param properties extra metadata  
+   * @throws IOException 
    */
   public abstract void initialize(Class<K> keyClass, Class<T> persistentClass,
-      Properties properties);
+      Properties properties) throws IOException;
   
   /**
    * Sets the class of the keys
@@ -54,8 +55,13 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
    */
   public abstract Class<T> getPersistentClass();
   
-  
-  public abstract void createTable() throws IOException;
+  /**
+   * Creates the optional schema or table (or similar) in the datastore 
+   * to hold the objects. If the schema is already created previously, 
+   * or the underlying data model does not support 
+   * or need this operation, the operation is ignored. 
+   */
+  public abstract void createSchema() throws IOException;
 
   /**
    * Returns a new instance of the managed persistent object.

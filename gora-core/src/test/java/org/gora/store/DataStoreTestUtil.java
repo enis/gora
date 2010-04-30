@@ -99,9 +99,17 @@ public class DataStoreTestUtil {
     return employee;
   }
   
+  public static void testCreateEmployeeSchema(DataStore<String, Employee> dataStore) 
+  throws IOException {
+    dataStore.createSchema();
+    
+    //should not throw exception
+    dataStore.createSchema();
+  }
+  
   public static void testGetEmployee(DataStore<String, Employee> dataStore) 
     throws IOException {
-    dataStore.createTable();
+    dataStore.createSchema();
     Employee employee = DataStoreTestUtil.createEmployee(dataStore);
     String ssn = employee.getSsn().toString();
     dataStore.put(ssn, employee);
@@ -114,7 +122,7 @@ public class DataStoreTestUtil {
   
   public static void testPutEmployee(DataStore<String, Employee> dataStore) 
   throws IOException {
-    dataStore.createTable();
+    dataStore.createSchema();
     Employee employee = DataStoreTestUtil.createEmployee(dataStore);
     dataStore.put(employee.getSsn().toString(), employee);   
   }
@@ -123,7 +131,7 @@ public class DataStoreTestUtil {
   throws IOException {
     WebPage page;
     
-    dataStore.createTable();
+    dataStore.createSchema();
     
     for(int i=0; i<URLS.length; i++) {
       page = new WebPage();
@@ -138,6 +146,7 @@ public class DataStoreTestUtil {
       }
       
       dataStore.put(URLS[i], page);
+      dataStore.flush();
     }
   }
   
@@ -158,11 +167,15 @@ public class DataStoreTestUtil {
       Assert.assertEquals(tokens[j++], token.toString());
     }
     
-    Assert.assertNotNull(page.getOutlinks());
-    Assert.assertTrue(page.getOutlinks().size() > 0);
-    for(j=0; j<LINKS[i].length; j++) {
-      Assert.assertEquals(ANCHORS[i][j], 
-          page.getFromOutlinks(new Utf8(URLS[LINKS[i][j]])).toString());
+    if(LINKS[i].length > 0) {
+      Assert.assertNotNull(page.getOutlinks());
+      Assert.assertTrue(page.getOutlinks().size() > 0);
+      for(j=0; j<LINKS[i].length; j++) {
+        Assert.assertEquals(ANCHORS[i][j], 
+            page.getFromOutlinks(new Utf8(URLS[LINKS[i][j]])).toString());
+      }  
+    } else {
+      Assert.assertTrue(page.getOutlinks() == null || page.getOutlinks().isEmpty());
     }
   }
   

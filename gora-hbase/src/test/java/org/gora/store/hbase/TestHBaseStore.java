@@ -20,7 +20,6 @@ import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 import org.gora.store.DataStoreTestUtil;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -55,8 +54,15 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void testCreateTable() throws IOException {
-    employeeStore.createTable();
+  public void testCreateSchema() throws IOException {
+    DataStoreTestUtil.testCreateEmployeeSchema(employeeStore);
+    HBaseAdmin admin = new HBaseAdmin(conf);
+    Assert.assertTrue(admin.tableExists("Employee"));
+  }
+  
+  public void testAutoCreateSchema() throws IOException {
+    //should not throw exception
+    employeeStore.put("foo", new Employee());
   }
   
   @Test
@@ -70,12 +76,11 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
  
   @Test
-  @Ignore
   public void testPutArray() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
-    pageStore.createTable();
+    pageStore.createSchema();
     WebPage page = pageStore.newInstance();
     
     String[] tokens = {"example", "content", "in", "example.com"};
@@ -92,10 +97,11 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     org.apache.hadoop.hbase.client.Result result = table.get(get);
     
     Assert.assertEquals(result.getFamilyMap(Bytes.toBytes("parsedContent")).size(), 4);
-    Assert.assertTrue(result.containsColumn(Bytes.toBytes("parsedContent")
-        , Bytes.toBytes("example")));
-    Assert.assertTrue(result.containsColumn(Bytes.toBytes("parsedContent")
-        , Bytes.toBytes("example.com")));
+    Assert.assertTrue(Arrays.equals(result.getValue(Bytes.toBytes("parsedContent")
+        ,Bytes.toBytes(0)), Bytes.toBytes("example")));
+    
+    Assert.assertTrue(Arrays.equals(result.getValue(Bytes.toBytes("parsedContent")
+        ,Bytes.toBytes(3)), Bytes.toBytes("example.com")));
     table.close();
     
     deleteTable("WebPage");
@@ -106,7 +112,7 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
-    pageStore.createTable();
+    pageStore.createSchema();
     WebPage page = pageStore.newInstance();
     page.setUrl(new Utf8("http://example.com"));
     byte[] contentBytes = "example content in example.com".getBytes();
@@ -133,7 +139,7 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
-    pageStore.createTable();
+    pageStore.createSchema();
     
     WebPage page = pageStore.newInstance();
     
@@ -148,7 +154,8 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     Get get = new Get(Bytes.toBytes("com.example/http"));
     org.apache.hadoop.hbase.client.Result result = table.get(get);
     
-    byte[] anchor2Raw = result.getValue(Bytes.toBytes("outlinks"), Bytes.toBytes("http://example2.com"));
+    byte[] anchor2Raw = result.getValue(Bytes.toBytes("outlinks")
+        , Bytes.toBytes("http://example2.com"));
     Assert.assertNotNull(anchor2Raw);
     String anchor2 = Bytes.toString(anchor2Raw);
     Assert.assertEquals("anchor2", anchor2);

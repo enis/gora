@@ -143,7 +143,7 @@
   <!-- ================================================================== -->
   <!-- target: test-jar                                                   -->
   <!-- ================================================================== -->
-  <target name="test-jar" depends="version, compile-test" description="--> make a jar file for this project">
+  <target name="test-jar" depends="version, compile-test, jar" description="--> make a jar file for this project">
     <jar destfile="${test.jar.file}">
       <fileset dir="${test.build.classes.dir}" />
       <zipfileset dir="${conf.dir}" excludes="*.template"/>

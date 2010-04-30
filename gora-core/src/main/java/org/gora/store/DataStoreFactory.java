@@ -21,6 +21,12 @@ public class DataStoreFactory {
   public static final String GORA_DEFAULT_PROPERTIES_FILE = "gora.properties";
   
   public static final String GORA_DEFAULT_DATASTORE_KEY = "gora.datastore.default";
+
+  public static final String GORA = "gora";
+  
+  public static final String AUTO_CREATE_SCHEMA = "autocreateschema";
+  
+  public static final String GORA_AUTO_CREATE_SCHEMA_KEY = "gora.datastore."+AUTO_CREATE_SCHEMA;
   
   private static String propertiesFile = GORA_DEFAULT_PROPERTIES_FILE; 
   
@@ -29,6 +35,7 @@ public class DataStoreFactory {
   private static HashMap<Integer, DataStore<?,?>> dataStores;
   
   private static Properties properties;
+  private static boolean autoCreateSchema = true;
   
   static {
     dataStores = new HashMap<Integer, DataStore<?,?>>();
@@ -43,7 +50,7 @@ public class DataStoreFactory {
   
   private static <K, T extends Persistent> void initializeDataStore(
       DataStore<K, T> dataStore, Class<K> keyClass, Class<T> persistent
-      , Properties properties) {
+      , Properties properties) throws IOException {
     dataStore.initialize(keyClass, persistent, properties);
   }
   
@@ -134,8 +141,24 @@ public class DataStoreFactory {
     return null;
   }
   
+  private static String getClassname(DataStore<?,?> store) {
+    String classname = store.getClass().getName();
+    String[] parts = classname.split("\\.");
+    return parts[parts.length-1];
+  }
+  
+  public static boolean getAutoCreateSchema(Properties properties, DataStore<?,?> store) {
+    String storeCreate = properties.getProperty(GORA + "." + getClassname(store) + "." + AUTO_CREATE_SCHEMA);
+    if(storeCreate != null) {
+      return Boolean.parseBoolean(storeCreate);
+    }
+    return autoCreateSchema;
+  }
+  
   private static void setProperties(Properties properties) {
     defaultDataStoreClass = properties.getProperty(GORA_DEFAULT_DATASTORE_KEY);
+    autoCreateSchema = Boolean.parseBoolean(properties.getProperty(
+        GORA_AUTO_CREATE_SCHEMA_KEY, "true"));
     DataStoreFactory.properties = properties;
   }
   
