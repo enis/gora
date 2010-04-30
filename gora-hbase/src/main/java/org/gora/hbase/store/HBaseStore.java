@@ -292,7 +292,8 @@ implements Configurable {
 
     HBaseQuery<K, T> hQuery = (HBaseQuery<K, T>) query;
     
-    if(query.getStartKey().equals(query.getEndKey())) {
+    if(query.getStartKey()!=null && query.getStartKey().equals(
+        query.getEndKey())) {
       Get get = new Get(toBytes(query.getStartKey()));
       addFields(get, query.getFields());
       addTimeRange(get, hQuery);

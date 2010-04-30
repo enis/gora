@@ -1,8 +1,13 @@
 
 package org.gora.store;
 
+import static org.gora.example.WebPageDataCreator.ANCHORS;
+import static org.gora.example.WebPageDataCreator.CONTENTS;
+import static org.gora.example.WebPageDataCreator.LINKS;
+import static org.gora.example.WebPageDataCreator.URLS;
+import static org.gora.example.WebPageDataCreator.createWebPageData;
+
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import junit.framework.Assert;
@@ -21,61 +26,6 @@ import org.gora.query.Result;
 public class DataStoreTestUtil {
 
   public static final long YEAR_IN_MS = 365L * 24L * 60L * 60L * 1000L;
-  
-  public static final String[] EMPYLOYEE_FIELDS 
-    = {"name", "dateOfBirth", "ssn", "salary"};
-  
-  public static final String[] URLS = {
-    "http://foo.com/",
-    "http://foo.com/1.html",
-    "http://foo.com/2.html",
-    "http://bar.com/3.jsp",
-    "http://bar.com/1.html",
-    "http://bar.com/",
-    "http://baz.com/1.jsp&q=barbaz",
-    "http://baz.com/1.jsp&q=barbaz&p=foo",
-    "http://baz.com/1.jsp&q=foo",
-    "http://bazbar.com",
-  };
-  
-  public static final String[] CONTENTS = {
-    "foo baz bar",
-    "foo",
-    "foo1 bar1 baz1",
-    "a b c d e",
-    "aa bb cc dd ee",
-    "1",
-    "2 3",
-    "a b b b b b a",
-    "a a a",
-    "foo bar baz",
-  };
-  
-  public static final int[][] LINKS = {
-    {1, 2, 3, 9},
-    {3, 9},
-    {},
-    {9},
-    {5},
-    {1, 2, 3, 4, 6, 7, 8, 9},
-    {1},
-    {2},
-    {3},
-    {8, 1},
-  };
-  
-  public static final String[][] ANCHORS = {
-    {"foo", "foo", "foo", "foo"},
-    {"a1", "a2"},
-    {},
-    {"anchor1"},
-    {"bar"},
-    {"a1", "a2", "a3", "a4","a5", "a6", "a7", "a8", "a9"},
-    {"foo"},
-    {"baz"},
-    {"bazbar"},
-    {"baz", "bar"},
-  };
   
   public static <K, T extends Persistent> void testNewInstance(
       DataStore<K,T> dataStore) throws IOException {
@@ -115,7 +65,7 @@ public class DataStoreTestUtil {
     dataStore.put(ssn, employee);
     dataStore.flush();
     
-    Employee after = dataStore.get(ssn, DataStoreTestUtil.EMPYLOYEE_FIELDS);
+    Employee after = dataStore.get(ssn, Employee._ALL_FIELDS);
     
     Assert.assertEquals(employee, after);
   }
@@ -125,29 +75,6 @@ public class DataStoreTestUtil {
     dataStore.createSchema();
     Employee employee = DataStoreTestUtil.createEmployee(dataStore);
     dataStore.put(employee.getSsn().toString(), employee);   
-  }
-  
-  public static void createWebPageData(DataStore<String, WebPage> dataStore) 
-  throws IOException {
-    WebPage page;
-    
-    dataStore.createSchema();
-    
-    for(int i=0; i<URLS.length; i++) {
-      page = new WebPage();
-      page.setUrl(new Utf8(URLS[i]));
-      page.setContent(ByteBuffer.wrap(CONTENTS[i].getBytes()));
-      for(String token : CONTENTS[i].split(" ")) {
-        page.addToParsedContent(new Utf8(token));  
-      }
-      
-      for(int j=0; j<LINKS[i].length; j++) {
-        page.putToOutlinks(new Utf8(URLS[LINKS[i][j]]), new Utf8(ANCHORS[i][j]));
-      }
-      
-      dataStore.put(URLS[i], page);
-      dataStore.flush();
-    }
   }
   
   private static void assertWebPage(WebPage page, int i) {
@@ -224,4 +151,5 @@ public class DataStoreTestUtil {
       DataStore<String, WebPage> store) throws IOException { 
     testQueryWebPageSingleKey(store, null);
   }
+  
 }
