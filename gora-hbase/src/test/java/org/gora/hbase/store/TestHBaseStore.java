@@ -1,5 +1,5 @@
 
-package org.gora.store.hbase;
+package org.gora.hbase.store;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
