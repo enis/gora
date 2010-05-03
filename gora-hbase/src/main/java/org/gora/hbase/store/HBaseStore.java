@@ -142,6 +142,7 @@ implements Configurable {
 
   @Override
   public T get(K key, String[] fields) throws IOException {
+    fields = getFieldsToQuery(fields);
     Get get = new Get(toBytes(key));
     addFields(get, fields);
     Result result = table.get(get);
@@ -292,6 +293,9 @@ implements Configurable {
 
     HBaseQuery<K, T> hQuery = (HBaseQuery<K, T>) query;
     
+    //check if query.fields is null
+    query.setFields(getFieldsToQuery(query.getFields()));
+    
     if(query.getStartKey()!=null && query.getStartKey().equals(
         query.getEndKey())) {
       Get get = new Get(toBytes(query.getStartKey()));
@@ -369,7 +373,7 @@ implements Configurable {
   @SuppressWarnings("unchecked")
   public T newInstance(Result result, String[] fields)
   throws IOException {
-    T persistent = newInstance();
+    T persistent = newPersistent();
     StateManager stateManager = persistent.getStateManager();
     Schema schema = persistent.getSchema();
     Map<String, Field> fieldMap = schema.getFields();
@@ -398,11 +402,11 @@ implements Configurable {
             continue;
           }
           valueSchema = fieldSchema.getElementType();
-          ArrayList<T> arrayList = new ArrayList<T>();
+          ArrayList arrayList = new ArrayList();
           for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
-            arrayList.add((T) fromBytes(valueSchema, e.getValue()));
+            arrayList.add(fromBytes(valueSchema, e.getValue()));
           }
-          ListGenericArray arr = new ListGenericArray<T>(valueSchema, arrayList);
+          ListGenericArray arr = new ListGenericArray(valueSchema, arrayList);
           setField(persistent, field, arr);
           break;    
         default:

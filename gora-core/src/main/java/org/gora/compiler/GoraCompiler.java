@@ -203,30 +203,32 @@ public class GoraCompiler {
         line(1, "public static final Schema _SCHEMA = Schema.parse(\""
              +esc(schema)+"\");");
 
-        //static field information
+        //field information
+        line(1, "public static enum Field {");
+        int i=0;
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          line(1,"public static final String "+ toUpperCase(field.getKey()) 
-              + " = " + "\"" + field.getKey() + "\";");
+          line(2,toUpperCase(field.getKey())+"("+(i++)+ ",\"" + field.getKey() + "\"),");
         }
-        
-        String fieldName = "_FIELDS" ;
-        line(1, "public static final HashMap<String,Integer> " 
-            + fieldName + " = new HashMap<String,Integer>();");
-        line(1, "static {");
-        int fieldIndex = 0;
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          line(2, fieldName + ".put(" + toUpperCase(field.getKey()) +","  
-              + fieldIndex++ + ");");
-        }
-        line(1, "}");
+        line(2, ";");
+        line(2, "private int index;");
+        line(2, "private String name;");
+        line(2, "Field(int index, String name) {this.index=index;this.name=name;}");
+        line(2, "public int getIndex() {return index;}");
+        line(2, "public String getName() {return name;}");
+        line(2, "public String toString() {return name;}");
+        line(1, "};");
         
         StringBuilder builder = new StringBuilder(
-            "public static final String[] _ALL_FIELDS = {");
+        "public static final String[] _ALL_FIELDS = {");
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-           builder.append(toUpperCase(field.getKey())).append(",");
+          builder.append("\"").append(field.getKey()).append("\",");
         }
         builder.append("};");
         line(1, builder.toString());
+        
+        line(1, "static {");
+        line(2, "PersistentBase.registerFields(_ALL_FIELDS);");
+        line(1, "}");
         
         // field declations
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
@@ -251,7 +253,7 @@ public class GoraCompiler {
         // get method
         line(1, "public Object get(int _field) {");
         line(2, "switch (_field) {");
-        int i = 0;
+        i = 0;
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
           line(2, "case "+(i++)+": return "+field.getKey()+";");
         line(2, "default: throw new AvroRuntimeException(\"Bad index\");");
@@ -271,6 +273,7 @@ public class GoraCompiler {
         line(2, "default: throw new AvroRuntimeException(\"Bad index\");");
         line(2, "}");
         line(1, "}");
+        
         // java bean style getters and setters
         i = 0;
         for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {

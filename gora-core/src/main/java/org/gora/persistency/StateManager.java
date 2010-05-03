@@ -39,10 +39,10 @@ public interface StateManager {
   
   /**
    * Returns whether the field has been modified.
-   * @param fieldNum the offset of the field in the object
+   * @param fieldIndex the offset of the field in the object
    * @return whether the field has been modified.
    */
-  public boolean isDirty(Persistent persistent, int fieldNum);
+  public boolean isDirty(Persistent persistent, int fieldIndex);
   
   /**
    * Sets all the fields of the object as dirty.
@@ -51,10 +51,16 @@ public interface StateManager {
   
   /**
    * Sets the field as dirty.
-   * @param fieldNum the offset of the field in the object
+   * @param fieldIndex the offset of the field in the object
    */
-  public void setDirty(Persistent persistent, int fieldNum);
+  public void setDirty(Persistent persistent, int fieldIndex);
 
+  /**
+   * Clears the field as dirty.
+   * @param fieldIndex the offset of the field in the object
+   */
+  public void clearDirty(Persistent persistent, int fieldIndex);
+  
   /**
    * Clears the dirty state.
    */
@@ -62,17 +68,23 @@ public interface StateManager {
   
   /**
    * Returns whether the field has been loaded from the datastore. 
-   * @param fieldNum the offset of the field in the object
+   * @param fieldIndex the offset of the field in the object
    * @return whether the field has been loaded 
    */
-  public boolean isReadable(Persistent persistent, int fieldNum);
+  public boolean isReadable(Persistent persistent, int fieldIndex);
   
   /**
    * Sets the field as readable.
-   * @param fieldNum the offset of the field in the object
+   * @param fieldIndex the offset of the field in the object
    */
-  public void setReadable(Persistent persistent, int fieldNum);
+  public void setReadable(Persistent persistent, int fieldIndex);
 
+  /**
+   * Clears the field as readable.
+   * @param fieldIndex the offset of the field in the object
+   */
+  public void clearReadable(Persistent persistent, int fieldIndex);
+  
   /**
    * Clears the readable state.
    */

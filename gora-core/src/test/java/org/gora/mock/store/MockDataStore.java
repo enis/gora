@@ -79,11 +79,6 @@ public class MockDataStore extends DataStoreBase<String, MockPersistent> {
   }
 
   @Override
-  public MockPersistent newInstance() throws IOException {
-    return new MockPersistent();
-  }
-
-  @Override
   public MockQuery newQuery() {
     return new MockQuery(this);
   }

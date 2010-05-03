@@ -41,13 +41,13 @@ public class StateManagerImpl implements StateManager {
     this.isNew = false;
   }
   
-  public void setDirty(Persistent persistent, int fieldNum) {
-    dirtyBits.set(fieldNum);
-    readableBits.set(fieldNum);
+  public void setDirty(Persistent persistent, int fieldIndex) {
+    dirtyBits.set(fieldIndex);
+    readableBits.set(fieldIndex);
   }
   
-  public boolean isDirty(Persistent persistent, int fieldNum) {
-    return dirtyBits.get(fieldNum);
+  public boolean isDirty(Persistent persistent, int fieldIndex) {
+    return dirtyBits.get(fieldIndex);
   }
 
   public boolean isDirty(Persistent persistent) {
@@ -59,21 +59,29 @@ public class StateManagerImpl implements StateManager {
     dirtyBits.set(0, dirtyBits.size());
   }
   
-  public void setReadable(Persistent persistent, int fieldNum) {
-    readableBits.set(fieldNum);
+  @Override
+  public void clearDirty(Persistent persistent, int fieldIndex) {
+    dirtyBits.clear(fieldIndex);
   }
-
-  public boolean isReadable(Persistent persistent, int fieldNum) {
-    return readableBits.get(fieldNum);
-  }
-
+  
   public void clearDirty(Persistent persistent) {
     dirtyBits.clear();
   }
+  
+  public void setReadable(Persistent persistent, int fieldIndex) {
+    readableBits.set(fieldIndex);
+  }
 
+  public boolean isReadable(Persistent persistent, int fieldIndex) {
+    return readableBits.get(fieldIndex);
+  }
+
+  @Override
+  public void clearReadable(Persistent persistent, int fieldIndex) {
+    readableBits.clear(fieldIndex);
+  }
+  
   public void clearReadable(Persistent persistent) {
     readableBits.clear();
   }
-
-
 }

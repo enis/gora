@@ -15,7 +15,6 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.gora.example.generated.Employee;
 import org.gora.example.generated.WebPage;
-import org.gora.hbase.store.HBaseStore;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 import org.gora.store.DataStoreTestUtil;
@@ -49,39 +48,40 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void testNewInstance() throws IOException {
-    DataStoreTestUtil.testNewInstance(employeeStore);
+  public void _testNewInstance() throws IOException {
+    DataStoreTestUtil.testNewPersistent(employeeStore);
   }
   
   @Test
-  public void testCreateSchema() throws IOException {
+  public void _testCreateSchema() throws IOException {
     DataStoreTestUtil.testCreateEmployeeSchema(employeeStore);
     HBaseAdmin admin = new HBaseAdmin(conf);
     Assert.assertTrue(admin.tableExists("Employee"));
   }
   
-  public void testAutoCreateSchema() throws IOException {
+  @Test
+  public void _testAutoCreateSchema() throws IOException {
     //should not throw exception
     employeeStore.put("foo", new Employee());
   }
   
   @Test
-  public void testPut() throws IOException {
+  public void _testPut() throws IOException {
     DataStoreTestUtil.testPutEmployee(employeeStore);
   }
   
   @Test
-  public void testGet() throws IOException {
+  public void _testGet() throws IOException {
     DataStoreTestUtil.testGetEmployee(employeeStore);
   }
  
   @Test
-  public void testPutArray() throws IOException {
+  public void _testPutArray() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
     pageStore.createSchema();
-    WebPage page = pageStore.newInstance();
+    WebPage page = pageStore.newPersistent();
     
     String[] tokens = {"example", "content", "in", "example.com"};
     
@@ -108,12 +108,12 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void testPutBytes() throws IOException {
+  public void _testPutBytes() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
     pageStore.createSchema();
-    WebPage page = pageStore.newInstance();
+    WebPage page = pageStore.newPersistent();
     page.setUrl(new Utf8("http://example.com"));
     byte[] contentBytes = "example content in example.com".getBytes();
     ByteBuffer buff = ByteBuffer.wrap(contentBytes);
@@ -135,13 +135,13 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void testPutMap() throws IOException {
+  public void _testPutMap() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
     pageStore.createSchema();
     
-    WebPage page = pageStore.newInstance();
+    WebPage page = pageStore.newPersistent();
     
     page.setUrl(new Utf8("http://example.com"));
     page.putToOutlinks(new Utf8("http://example2.com"), new Utf8("anchor2"));
@@ -171,25 +171,22 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void testGetWebPage() throws IOException {
+  public void _testGetWebPage() throws IOException {
     DataStoreTestUtil.testGetWebPage(webPageStore);
   }
   
-  //TODO: fixme
-//  @Test
-//  public void tetGetWebPageDefaultFields(DataStore<String, WebPage> store) 
-//  throws IOException {
-//    DataStoreTestUtil.testGetWebPageDefaultFields(webPageStore);
-//  }
+  @Test
+  public void _testGetWebPageDefaultFields() throws IOException {
+    DataStoreTestUtil.testGetWebPageDefaultFields(webPageStore);
+  }
   
   @Test
-  public void testQueryWebPageSingleKey() throws IOException {
+  public void _testQueryWebPageSingleKey() throws IOException {
     DataStoreTestUtil.testQueryWebPageSingleKey(webPageStore);
   }
   
-  //TODO: fixme
-//  @Test
-//  public void testQueryWebPageSingleKeyDefaultFields() throws IOException { 
-//    DataStoreTestUtil.testQueryWebPageSingleKeyDefaultFields(webPageStore);
-//  }
+  @Test
+  public void testQueryWebPageSingleKeyDefaultFields() throws IOException { 
+    DataStoreTestUtil.testQueryWebPageSingleKeyDefaultFields(webPageStore);
+  }
 }

@@ -27,11 +27,11 @@ public class DataStoreTestUtil {
 
   public static final long YEAR_IN_MS = 365L * 24L * 60L * 60L * 1000L;
   
-  public static <K, T extends Persistent> void testNewInstance(
+  public static <K, T extends Persistent> void testNewPersistent(
       DataStore<K,T> dataStore) throws IOException {
     
-    T obj1 = dataStore.newInstance();
-    T obj2 = dataStore.newInstance();
+    T obj1 = dataStore.newPersistent();
+    T obj2 = dataStore.newPersistent();
     
     Assert.assertNotNull(obj1);
     Assert.assertNotNull(obj2);
@@ -41,7 +41,7 @@ public class DataStoreTestUtil {
   public static <K> Employee createEmployee(
       DataStore<K, Employee> dataStore) throws IOException {
     
-    Employee employee = dataStore.newInstance();
+    Employee employee = dataStore.newPersistent();
     employee.setName(new Utf8("Random Joe"));
     employee.setDateOfBirth( System.currentTimeMillis() - 42L *  YEAR_IN_MS );
     employee.setSalary(100000);

@@ -4,22 +4,20 @@ package org.gora.store.impl;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.gora.persistency.BeanFactory;
 import org.gora.persistency.Persistent;
+import org.gora.persistency.impl.BeanFactoryImpl;
 import org.gora.store.DataStore;
-import org.gora.util.ReflectionUtils;
 
 public abstract class DataStoreBase<K, T extends Persistent> 
 implements DataStore<K, T> {
 
+  protected BeanFactory<K, T> beanFactory;
+  
   protected Class<K> keyClass;
   protected Class<T> persistentClass;
   
   public DataStoreBase() {
-  }
-  
-  public DataStoreBase(Class<K> keyClass, Class<T> persistentClass) {
-    this.keyClass = keyClass;
-    this.persistentClass = persistentClass;
   }
   
   @Override
@@ -27,6 +25,8 @@ implements DataStore<K, T> {
       Properties properties) throws IOException {
     setKeyClass(keyClass);
     setPersistentClass(persistentClass);
+    if(this.beanFactory == null)
+      this.beanFactory = new BeanFactoryImpl<K, T>(keyClass, persistentClass);
   }
   
   @Override
@@ -51,12 +51,43 @@ implements DataStore<K, T> {
   }
   
   @Override
-  public T newInstance() throws IOException {
+  public K newKey() throws IOException {
     try {
-      return ReflectionUtils.newInstance(getPersistentClass());
+      return beanFactory.newKey();
     } catch (Exception ex) {
       throw new IOException(ex);
     }
+  }
+  
+  @Override
+  public T newPersistent() throws IOException {
+    try {
+      return beanFactory.newPersistent();
+    } catch (Exception ex) {
+      throw new IOException(ex);
+    }
+  }
+  
+  @Override
+  public void setBeanFactory(BeanFactory<K, T> beanFactory) {
+    this.beanFactory = beanFactory;
+  }
+  
+  @Override
+  public BeanFactory<K, T> getBeanFactory() {
+    return beanFactory;
+  }
+  
+  /**
+   * Checks whether the fields argument is null, and if so 
+   * returns all the fields of the Persistent object, else returns the 
+   * argument.
+   */
+  protected String[] getFieldsToQuery(String[] fields) {
+    if(fields != null) {
+      return fields;
+    }
+    return beanFactory.getCachedPersistent().getFields();
   }
   
 }

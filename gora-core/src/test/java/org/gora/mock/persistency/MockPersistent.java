@@ -24,11 +24,6 @@ public class MockPersistent extends PersistentBase {
   }
   
   @Override
-  public Persistent newInstance(StateManager stateManager) {
-    return new MockPersistent();
-  }
-
-  @Override
   public Object get(int field) {
     switch(field) {
       case 0: return foo;
@@ -65,5 +60,24 @@ public class MockPersistent extends PersistentBase {
   public int getBaz() {
     return baz;
   }
-  
+
+  @Override
+  public String getField(int index) {
+    return null;
+  }
+
+  @Override
+  public int getFieldIndex(String field) {
+    return 0;
+  }
+
+  @Override
+  public String[] getFields() {
+    return null;
+  }
+
+  @Override
+  public Persistent newInstance(StateManager stateManager) {
+    return new MockPersistent(stateManager);
+  }
 }

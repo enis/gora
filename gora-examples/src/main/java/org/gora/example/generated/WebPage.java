@@ -24,18 +24,23 @@ import org.gora.persistency.ListGenericArray;
 @SuppressWarnings("all")
 public class WebPage extends PersistentBase {
   public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"WebPage\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"content\",\"type\":\"bytes\"},{\"name\":\"parsedContent\",\"type\":{\"type\":\"array\",\"items\":\"string\"}},{\"name\":\"outlinks\",\"type\":{\"type\":\"map\",\"values\":\"string\"}}]}");
-  public static final String URL = "url";
-  public static final String CONTENT = "content";
-  public static final String PARSED_CONTENT = "parsedContent";
-  public static final String OUTLINKS = "outlinks";
-  public static final HashMap<String,Integer> _FIELDS = new HashMap<String,Integer>();
+  public static enum Field {
+    URL(0,"url"),
+    CONTENT(1,"content"),
+    PARSED_CONTENT(2,"parsedContent"),
+    OUTLINKS(3,"outlinks"),
+    ;
+    private int index;
+    private String name;
+    Field(int index, String name) {this.index=index;this.name=name;}
+    public int getIndex() {return index;}
+    public String getName() {return name;}
+    public String toString() {return name;}
+  };
+  public static final String[] _ALL_FIELDS = {"url","content","parsedContent","outlinks",};
   static {
-    _FIELDS.put(URL,0);
-    _FIELDS.put(CONTENT,1);
-    _FIELDS.put(PARSED_CONTENT,2);
-    _FIELDS.put(OUTLINKS,3);
+    PersistentBase.registerFields(_ALL_FIELDS);
   }
-  public static final String[] _ALL_FIELDS = {URL,CONTENT,PARSED_CONTENT,OUTLINKS,};
   private Utf8 url;
   private ByteBuffer content;
   private GenericArray<Utf8> parsedContent;

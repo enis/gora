@@ -24,18 +24,23 @@ import org.gora.persistency.ListGenericArray;
 @SuppressWarnings("all")
 public class Employee extends PersistentBase {
   public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"Employee\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"dateOfBirth\",\"type\":\"long\"},{\"name\":\"ssn\",\"type\":\"string\"},{\"name\":\"salary\",\"type\":\"int\"}]}");
-  public static final String NAME = "name";
-  public static final String DATE_OF_BIRTH = "dateOfBirth";
-  public static final String SSN = "ssn";
-  public static final String SALARY = "salary";
-  public static final HashMap<String,Integer> _FIELDS = new HashMap<String,Integer>();
+  public static enum Field {
+    NAME(0,"name"),
+    DATE_OF_BIRTH(1,"dateOfBirth"),
+    SSN(2,"ssn"),
+    SALARY(3,"salary"),
+    ;
+    private int index;
+    private String name;
+    Field(int index, String name) {this.index=index;this.name=name;}
+    public int getIndex() {return index;}
+    public String getName() {return name;}
+    public String toString() {return name;}
+  };
+  public static final String[] _ALL_FIELDS = {"name","dateOfBirth","ssn","salary",};
   static {
-    _FIELDS.put(NAME,0);
-    _FIELDS.put(DATE_OF_BIRTH,1);
-    _FIELDS.put(SSN,2);
-    _FIELDS.put(SALARY,3);
+    PersistentBase.registerFields(_ALL_FIELDS);
   }
-  public static final String[] _ALL_FIELDS = {NAME,DATE_OF_BIRTH,SSN,SALARY,};
   private Utf8 name;
   private long dateOfBirth;
   private Utf8 ssn;

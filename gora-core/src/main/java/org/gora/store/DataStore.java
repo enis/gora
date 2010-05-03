@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
+import org.gora.persistency.BeanFactory;
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
@@ -64,10 +65,16 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
   public abstract void createSchema() throws IOException;
 
   /**
+   * Returns a new instance of the key object.
+   * @return a new instance of the key object.
+   */
+  public abstract K newKey() throws IOException;
+  
+  /**
    * Returns a new instance of the managed persistent object.
    * @return a new instance of the managed persistent object.
    */
-  public abstract T newInstance() throws IOException;
+  public abstract T newPersistent() throws IOException;
 
   /**
    * Returns the 
@@ -118,6 +125,18 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
    * Forces the write caches to be flushed.
    */
   public abstract void flush() throws IOException;
+  
+  /**
+   * Sets the {@link BeanFactory} to use by the DataStore.
+   * @param beanFactory the BeanFactory to use
+   */
+  public abstract void setBeanFactory(BeanFactory<K,T> beanFactory);
+  
+  /**
+   * Returns the BeanFactory used by the DataStore
+   * @return the BeanFactory used by the DataStore
+   */
+  public abstract BeanFactory<K,T> getBeanFactory();
   
   @Override
   public abstract void close() throws IOException;

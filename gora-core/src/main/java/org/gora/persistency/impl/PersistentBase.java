@@ -1,5 +1,8 @@
 package org.gora.persistency.impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.avro.specific.SpecificRecord;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.StateManager;
@@ -9,6 +12,10 @@ import org.gora.persistency.StateManager;
  * classes.
  */
 public abstract class PersistentBase implements Persistent {
+  
+  protected static Map<String, Integer> FIELD_MAP;
+  
+  protected static String[] FIELDS = null;
   
   private StateManager stateManager;
   
@@ -21,9 +28,38 @@ public abstract class PersistentBase implements Persistent {
     stateManager.setManagedPersistent(this);
   }
 
+  /** Subclasses should call this function for all the persistable fields 
+   * in the class to register them.
+   * @param field the name of the field
+   * @param index the index of the field
+   */
+  protected static void registerFields(String... fields) {
+    FIELDS = fields;
+    FIELD_MAP = new HashMap<String, Integer>(FIELDS.length);
+    
+    for(int i=0; i < FIELDS.length; i++) {
+      FIELD_MAP.put(fields[i], i);
+    }
+  }
+  
   @Override
   public StateManager getStateManager() {
     return stateManager;
+  }
+  
+  @Override
+  public String[] getFields() {
+    return FIELDS;
+  }
+  
+  @Override
+  public String getField(int index) {
+    return FIELDS[index];
+  }
+  
+  @Override
+  public int getFieldIndex(String field) {
+    return FIELD_MAP.get(field);
   }
   
   @Override
@@ -47,8 +83,13 @@ public abstract class PersistentBase implements Persistent {
   }
   
   @Override
-  public boolean isDirty(int fieldNum) {
-    return getStateManager().isDirty(this, fieldNum);
+  public boolean isDirty(int fieldIndex) {
+    return getStateManager().isDirty(this, fieldIndex);
+  }
+  
+  @Override
+  public boolean isDirty(String field) {
+    return isDirty(getFieldIndex(field));
   }
   
   @Override
@@ -57,8 +98,23 @@ public abstract class PersistentBase implements Persistent {
   }
   
   @Override
-  public void setDirty(int fieldNum) {
-    getStateManager().setDirty(this, fieldNum);
+  public void setDirty(int fieldIndex) {
+    getStateManager().setDirty(this, fieldIndex);
+  }
+  
+  @Override
+  public void setDirty(String field) {
+    setDirty(getFieldIndex(field));
+  }
+  
+  @Override
+  public void clearDirty(int fieldIndex) {
+    getStateManager().clearDirty(this, fieldIndex);
+  }
+  
+  @Override
+  public void clearDirty(String field) {
+    clearDirty(getFieldIndex(field));
   }
   
   @Override
@@ -67,18 +123,38 @@ public abstract class PersistentBase implements Persistent {
   }
   
   @Override
-  public boolean isReadable(int fieldNum) {
-    return getStateManager().isReadable(this, fieldNum);
+  public boolean isReadable(int fieldIndex) {
+    return getStateManager().isReadable(this, fieldIndex);
   }
   
   @Override
-  public void setReadable(int fieldNum) {
-    getStateManager().setReadable(this, fieldNum);
+  public boolean isReadable(String field) {
+    return isReadable(getFieldIndex(field));
+  }
+  
+  @Override
+  public void setReadable(int fieldIndex) {
+    getStateManager().setReadable(this, fieldIndex);
+  }
+  
+  @Override
+  public void setReadable(String field) {
+    setReadable(getFieldIndex(field));
   }
   
   @Override
   public void clearReadable() {
     getStateManager().clearReadable(this);
+  }
+  
+  @Override
+  public void clearReadable(int fieldIndex) {
+    getStateManager().clearReadable(this, fieldIndex);
+  }
+  
+  @Override
+  public void clearReadable(String field) {
+    clearReadable(getFieldIndex(field));
   }
   
   @Override

@@ -24,6 +24,26 @@ public interface Persistent extends SpecificRecord {
   public Persistent newInstance(StateManager stateManager);
 
   /**
+   * Returns sorted field names of the object
+   * @return the field names of the object as a String[]
+   */
+  public String[] getFields();
+  
+  /**
+   * Returns the field name with the given index
+   * @param index the index of the field  
+   * @return the name of the field
+   */
+  public String getField(int index);
+  
+  /**
+   * Returns the index of the field with the given name
+   * @param field the name of the field
+   * @return the index of the field
+   */
+  public int getFieldIndex(String field);
+  
+  /**
    * Returns whether the object is newly constructed.
    * @return true if the object is newly constructed, false if
    * retrieved from a datastore. 
@@ -49,11 +69,18 @@ public interface Persistent extends SpecificRecord {
   
   /**
    * Returns whether the field has been modified.
-   * @param fieldNum the offset of the field in the object
+   * @param fieldIndex the offset of the field in the object
    * @return whether the field has been modified.
    */
-  public boolean isDirty(int fieldNum);
+  public boolean isDirty(int fieldIndex);
 
+  /**
+   * Returns whether the field has been modified.
+   * @param field the name of the field
+   * @return whether the field has been modified.
+   */
+  public boolean isDirty(String field);
+  
   /**
    * Sets all the fields of the object as dirty.
    */
@@ -61,10 +88,28 @@ public interface Persistent extends SpecificRecord {
   
   /**
    * Sets the field as dirty.
-   * @param fieldNum the offset of the field in the object
+   * @param fieldIndex the offset of the field in the object
    */
-  public void setDirty(int fieldNum);
+  public void setDirty(int fieldIndex);
  
+  /**
+   * Sets the field as dirty.
+   * @param field the name of the field
+   */
+  public void setDirty(String field);
+  
+  /**
+   * Clears the field as dirty.
+   * @param fieldIndex the offset of the field in the object
+   */
+  public void clearDirty(int fieldIndex);
+  
+  /**
+   * Clears the field as dirty.
+   * @param field the name of the field
+   */
+  public void clearDirty(String field);
+  
   /**
    * Clears the dirty state.
    */
@@ -72,19 +117,45 @@ public interface Persistent extends SpecificRecord {
   
   /**
    * Returns whether the field has been loaded from the datastore. 
-   * @param fieldNum the offset of the field in the object
+   * @param fieldIndex the offset of the field in the object
    * @return whether the field has been loaded 
    */
-  public boolean isReadable(int fieldNum);
+  public boolean isReadable(int fieldIndex);
+
+  /**
+   * Returns whether the field has been loaded from the datastore. 
+   * @param field the name of the field
+   * @return whether the field has been loaded 
+   */
+  public boolean isReadable(String field);
+  
+  /**
+   * Sets the field as readable.
+   * @param fieldIndex the offset of the field in the object
+   */
+  public void setReadable(int fieldIndex);
 
   /**
    * Sets the field as readable.
-   * @param fieldNum the offset of the field in the object
+   * @param field the name of the field
    */
-  public void setReadable(int fieldNum);
+  public void setReadable(String field);
 
+  /**
+   * Clears the field as readable.
+   * @param fieldIndex the offset of the field in the object
+   */
+  public void clearReadable(int fieldIndex);
+  
+  /**
+   * Sets the field as readable.
+   * @param field the name of the field
+   */
+  public void clearReadable(String field);
+  
   /**
    * Clears the readable state.
    */
   public void clearReadable();
+  
 }
