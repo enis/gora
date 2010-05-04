@@ -148,7 +148,7 @@ public class DataStoreFactory {
   }
   
   public static boolean getAutoCreateSchema(Properties properties, DataStore<?,?> store) {
-    String storeCreate = properties.getProperty(GORA + "." + getClassname(store) + "." + AUTO_CREATE_SCHEMA);
+    String storeCreate = getProperty(properties, GORA + "." + getClassname(store) + "." + AUTO_CREATE_SCHEMA);
     if(storeCreate != null) {
       return Boolean.parseBoolean(storeCreate);
     }
@@ -156,10 +156,24 @@ public class DataStoreFactory {
   }
   
   private static void setProperties(Properties properties) {
-    defaultDataStoreClass = properties.getProperty(GORA_DEFAULT_DATASTORE_KEY);
-    autoCreateSchema = Boolean.parseBoolean(properties.getProperty(
+    defaultDataStoreClass = getProperty(properties, GORA_DEFAULT_DATASTORE_KEY);
+    autoCreateSchema = Boolean.parseBoolean(getProperty(properties,
         GORA_AUTO_CREATE_SCHEMA_KEY, "true"));
     DataStoreFactory.properties = properties;
   }
-  
+
+  private static String getProperty(Properties properties, String key) {
+    return getProperty(properties, key, null);
+  }
+
+  private static String getProperty(Properties properties, String key, String defaultValue) {
+    if (properties == null) {
+      return defaultValue;
+    }
+    String result = properties.getProperty(key);
+    if (result == null) {
+      return defaultValue;
+    }
+    return result;
+  }
 }

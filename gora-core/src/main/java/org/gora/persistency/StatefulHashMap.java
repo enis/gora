@@ -2,7 +2,6 @@ package org.gora.persistency;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 @SuppressWarnings("serial")
 public class StatefulHashMap<K, V> extends HashMap<K, V> 
