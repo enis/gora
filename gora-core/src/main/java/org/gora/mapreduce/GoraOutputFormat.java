@@ -12,12 +12,14 @@ import org.gora.persistency.Persistent;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 
-public class GoraOutputFormat<K, R extends Persistent>
-extends OutputFormat<K, R>{
+public class GoraOutputFormat<K, T extends Persistent>
+extends OutputFormat<K, T>{
 
-  public static final String REDUCE_KEY_CLASS   = "storage.reduce.key.class";
+  public static final String DATA_STORE_CLASS = "gora.outputformat.datastore.class";
+  
+  public static final String REDUCE_KEY_CLASS   = "gora.outputformat.reduce.key.class";
 
-  public static final String REDUCE_VALUE_CLASS = "storage.reduce.value.class";
+  public static final String REDUCE_VALUE_CLASS = "gora.outputformat.reduce.value.class";
 
   @Override
   public void checkOutputSpecs(JobContext context)
@@ -31,15 +33,17 @@ extends OutputFormat<K, R>{
 
   @SuppressWarnings("unchecked")
   @Override
-  public RecordWriter<K, R> getRecordWriter(TaskAttemptContext context)
+  public RecordWriter<K, T> getRecordWriter(TaskAttemptContext context)
       throws IOException, InterruptedException {
     Configuration conf = context.getConfiguration();
+    Class<? extends DataStore<K,T>> dataStoreClass 
+      = (Class<? extends DataStore<K,T>>) conf.getClass(DATA_STORE_CLASS, null);
     Class<K> keyClass = (Class<K>) conf.getClass(REDUCE_KEY_CLASS, null);
-    Class<R> rowClass = (Class<R>) conf.getClass(REDUCE_VALUE_CLASS, null);
-    final DataStore<K, R> store =
-      DataStoreFactory.getDataStore(keyClass, rowClass);
+    Class<T> rowClass = (Class<T>) conf.getClass(REDUCE_VALUE_CLASS, null);
+    final DataStore<K, T> store =
+      DataStoreFactory.getDataStore(dataStoreClass, keyClass, rowClass);
     
-    return new RecordWriter<K, R>() {
+    return new RecordWriter<K, T>() {
       @Override
       public void close(TaskAttemptContext context) throws IOException,
           InterruptedException {
@@ -47,7 +51,7 @@ extends OutputFormat<K, R>{
       }
 
       @Override
-      public void write(K key, R value)
+      public void write(K key, T value)
       throws IOException, InterruptedException {
         store.put(key, value);
       }
