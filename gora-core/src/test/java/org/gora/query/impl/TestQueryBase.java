@@ -2,6 +2,8 @@
 
 package org.gora.query.impl;
 
+import junit.framework.Assert;
+
 import org.gora.mock.query.MockQuery;
 import org.gora.mock.store.MockDataStore;
 import org.gora.util.TestIOUtils;
@@ -30,6 +32,8 @@ public class TestQueryBase {
     query.setFields(FIELDS);
     query.setKeyRange(START_KEY, END_KEY);
     TestIOUtils.testSerializeDeserialize(query);
+    
+    Assert.assertNotNull(query.getDataStore());
   }
   
   @Test
@@ -38,5 +42,7 @@ public class TestQueryBase {
     query.setTimeRange(0, System.currentTimeMillis());
     TestIOUtils.testSerializeDeserialize(query);
   }
+  
+  
   
 }
