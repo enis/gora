@@ -48,35 +48,35 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void _testNewInstance() throws IOException {
+  public void testNewInstance() throws IOException {
     DataStoreTestUtil.testNewPersistent(employeeStore);
   }
   
   @Test
-  public void _testCreateSchema() throws IOException {
+  public void testCreateSchema() throws IOException {
     DataStoreTestUtil.testCreateEmployeeSchema(employeeStore);
     HBaseAdmin admin = new HBaseAdmin(conf);
     Assert.assertTrue(admin.tableExists("Employee"));
   }
   
   @Test
-  public void _testAutoCreateSchema() throws IOException {
+  public void testAutoCreateSchema() throws IOException {
     //should not throw exception
     employeeStore.put("foo", new Employee());
   }
   
   @Test
-  public void _testPut() throws IOException {
+  public void testPut() throws IOException {
     DataStoreTestUtil.testPutEmployee(employeeStore);
   }
   
   @Test
-  public void _testGet() throws IOException {
+  public void testGet() throws IOException {
     DataStoreTestUtil.testGetEmployee(employeeStore);
   }
  
   @Test
-  public void _testPutArray() throws IOException {
+  public void testPutArray() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
@@ -108,7 +108,7 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void _testPutBytes() throws IOException {
+  public void testPutBytes() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
@@ -135,7 +135,7 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void _testPutMap() throws IOException {
+  public void testPutMap() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
     
@@ -171,17 +171,17 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
-  public void _testGetWebPage() throws IOException {
+  public void testGetWebPage() throws IOException {
     DataStoreTestUtil.testGetWebPage(webPageStore);
   }
   
   @Test
-  public void _testGetWebPageDefaultFields() throws IOException {
+  public void testGetWebPageDefaultFields() throws IOException {
     DataStoreTestUtil.testGetWebPageDefaultFields(webPageStore);
   }
   
   @Test
-  public void _testQueryWebPageSingleKey() throws IOException {
+  public void testQueryWebPageSingleKey() throws IOException {
     DataStoreTestUtil.testQueryWebPageSingleKey(webPageStore);
   }
   

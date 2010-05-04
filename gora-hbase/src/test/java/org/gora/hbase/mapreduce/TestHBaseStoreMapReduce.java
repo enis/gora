@@ -35,4 +35,9 @@ public class TestHBaseStoreMapReduce extends HBaseClusterTestCase{
     MapReduceTestUtils.testCountQuery(webPageStore, conf);
   }
   
+  @Test
+  public void testWordCount() throws Exception {
+    MapReduceTestUtils.testCountQuery(webPageStore, conf);
+  }
+  
 }

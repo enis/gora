@@ -27,4 +27,15 @@
     <field name="outlinks" family="outlinks"/>
   </fields>
 </table>
+
+
+<table name="TokenDatum" keyClass="java.lang.String" persistentClass="org.gora.example.generated.TokenDatum">
+  <description>
+    <family name="common"/>
+  </description>
+  <fields>
+    <field name="count" family="common" qualifier="count"/>
+  </fields>
+</table>
+
 </gora-orm>

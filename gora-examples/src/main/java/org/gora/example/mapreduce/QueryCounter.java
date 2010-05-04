@@ -62,7 +62,7 @@ public class QueryCounter<K, T extends Persistent> extends Configured implements
     job.setJobName("QueryCounter");
     job.setNumReduceTasks(0);
     job.setJarByClass(getClass());
-    /* Mapper are initialized with GoraMapper.initMapper()*/
+    /* Mappers are initialized with GoraMapper.initMapper()*/
     GoraMapper.initMapperJob(job, query, dataStore, NullWritable.class
         , NullWritable.class, QueryCounterMapper.class, true);
     
