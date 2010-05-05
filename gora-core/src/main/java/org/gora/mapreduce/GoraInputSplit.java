@@ -24,7 +24,8 @@ public class GoraInputSplit extends InputSplit
   public GoraInputSplit() {
   }
   
-  public GoraInputSplit(PartitionQuery<?,?> query) {
+  public GoraInputSplit(Configuration conf, PartitionQuery<?,?> query) {
+    setConf(conf);
     this.query = query;
   }
   

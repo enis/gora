@@ -8,6 +8,7 @@ import java.io.IOException;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableUtils;
 import org.gora.persistency.Persistent;
@@ -39,6 +40,8 @@ implements Query<K,T> {
   protected long limit = -1;
   
   protected boolean isCompiled = false;
+
+  private Configuration conf;
 
   public QueryBase(DataStore<K,T> dataStore) {
     this.dataStore = dataStore;
@@ -175,6 +178,16 @@ implements Query<K,T> {
   public long getLimit() {
     return limit;
   }
+
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
+
+  @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+  }
   
   @SuppressWarnings("unchecked")
   @Override
@@ -222,9 +235,9 @@ implements Query<K,T> {
     if(fields != null)
       IOUtils.writeStringArray(out, fields);
     if(startKey != null)
-      IOUtils.serialize(null, out, startKey, dataStore.getKeyClass());
+      IOUtils.serialize(getConf(), out, startKey, dataStore.getKeyClass());
     if(endKey != null)
-      IOUtils.serialize(null, out, endKey, dataStore.getKeyClass());
+      IOUtils.serialize(getConf(), out, endKey, dataStore.getKeyClass());
     if(filter != null)
       Text.writeString(out, filter);
     
