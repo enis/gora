@@ -43,6 +43,10 @@
     <subant target="compile" buildpathref="build-path" />
   </target>
 
+  <target name="jar" depends="-buildlist">
+    <subant target="jar" buildpathref="build-path" />
+  </target>
+
   <target name="compile-test" depends="-buildlist">
     <subant target="compile-test" buildpathref="build-path" />
   </target>

@@ -129,7 +129,7 @@
   <!-- ================================================================== -->
   <!-- target: jar                                                        -->
   <!-- ================================================================== -->
-  <target name="jar" depends="version, compile" description="--> make a jar file for this project">
+  <target name="jar" depends="compile, version" description="--> make a jar file for this project">
     <jar destfile="${jar.file}">
       <fileset dir="${build.classes.dir}" />
       <zipfileset dir="${conf.dir}" excludes="*.template"/>
@@ -251,7 +251,7 @@
     <property name="module.version.prefix" value="${module.version.target}-dev-b" />
 	
     <!-- asks to ivy an available version number -->
-    <ivy:info file="${ivy.file}" />
+    <ivy:info file="${ivy.dir}/${ivy.file}" />
       <ivy:buildnumber organisation="${ivy.organisation}" module="${ivy.module}"
                        revision="${module.version.prefix}" defaultBuildNumber="1" revSep=""/>
   </target>
@@ -325,7 +325,7 @@
   <!-- target: clean-local                                                -->
   <!-- ================================================================== -->
   <target name="clean-local" depends="" description="--> cleans the local repository for the current module">
-    <ivy:info file="${ivy.file}" />
+    <ivy:info file="${ivy.dir}/${ivy.file}" />
       <delete dir="${ivy.local.default.root}/${ivy.organisation}/${ivy.module}"/>
   </target>
 
