@@ -34,10 +34,6 @@ public class GoraInputFormat<K, T extends Persistent>
   public static final String QUERY_KEY   = "gora.inputformat.query";
   
   public static final String QUERY_CLASS_KEY = "gora.inputformat.query.class";
-  
-  public static final String MAP_KEY_CLASS   = "gora.inputformat.map.key.class";
-
-  public static final String MAP_VALUE_CLASS = "gora.inputformat.map.value.class";
 
   private DataStore<K, T> dataStore;
 
@@ -110,11 +106,6 @@ public class GoraInputFormat<K, T extends Persistent>
     
     job.setInputFormatClass(GoraInputFormat.class);
     GoraInputFormat.setQuery(job, query);
-    
-    conf.setClass(GoraInputFormat.MAP_KEY_CLASS,
-        dataStore.getKeyClass(), Object.class);
-    conf.setClass(GoraInputFormat.MAP_VALUE_CLASS,
-        dataStore.getPersistentClass(), Persistent.class);
   }
   
 }
