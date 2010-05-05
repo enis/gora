@@ -1,6 +1,5 @@
 package org.gora.mapreduce;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.gora.persistency.Persistent;
@@ -23,17 +22,8 @@ extends Reducer<K1, V1, K2, V2> {
       Class<? extends GoraReducer<K1, V1, K2, V2>> reducerClass,
           boolean reuseObjects) {
     
-    Configuration conf = job.getConfiguration();
+    GoraOutputFormat.setOutput(job, dataStore, reuseObjects);
     
-    GoraMapReduceUtils.setIOSerializations(conf, reuseObjects);
-    
-    job.setOutputFormatClass(GoraOutputFormat.class);
     job.setReducerClass(reducerClass);
-    conf.setClass(GoraOutputFormat.DATA_STORE_CLASS
-        , dataStore.getClass(), DataStore.class);
-    conf.setClass(GoraOutputFormat.REDUCE_KEY_CLASS,
-        dataStore.getKeyClass(), Object.class);
-    conf.setClass(GoraOutputFormat.REDUCE_VALUE_CLASS, 
-        dataStore.getPersistentClass(), Persistent.class);
   }
 }

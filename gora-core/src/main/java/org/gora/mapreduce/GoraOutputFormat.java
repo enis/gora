@@ -60,9 +60,9 @@ extends OutputFormat<K, T>{
   }
 
   /**
-   * Sets the input parameters for the job 
+   * Sets the output parameters for the job 
    * @param job the job to set the properties for
-   * @param dataStore the datastore as the input
+   * @param dataStore the datastore as the output
    * @param reuseObjects whether to reuse objects in serialization
    */
   public static <K2, V2 extends Persistent> void setOutput(Job job, 
