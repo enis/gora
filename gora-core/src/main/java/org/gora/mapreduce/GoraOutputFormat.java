@@ -3,6 +3,7 @@ package org.gora.mapreduce;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.OutputFormat;
@@ -58,4 +59,25 @@ extends OutputFormat<K, T>{
     };
   }
 
+  /**
+   * Sets the input parameters for the job 
+   * @param job the job to set the properties for
+   * @param dataStore the datastore as the input
+   * @param reuseObjects whether to reuse objects in serialization
+   */
+  public static <K2, V2 extends Persistent> void setOutput(Job job, 
+      DataStore<K2,V2> dataStore, boolean reuseObjects) {
+    
+    Configuration conf = job.getConfiguration();
+    
+    GoraMapReduceUtils.setIOSerializations(conf, reuseObjects);
+    
+    job.setOutputFormatClass(GoraOutputFormat.class);
+    conf.setClass(GoraOutputFormat.DATA_STORE_CLASS
+        , dataStore.getClass(), DataStore.class);
+    conf.setClass(GoraOutputFormat.REDUCE_KEY_CLASS,
+        dataStore.getKeyClass(), Object.class);
+    conf.setClass(GoraOutputFormat.REDUCE_VALUE_CLASS, 
+        dataStore.getPersistentClass(), Persistent.class);
+  }
 }

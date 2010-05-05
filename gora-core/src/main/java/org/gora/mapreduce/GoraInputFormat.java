@@ -91,4 +91,30 @@ public class GoraInputFormat<K, T extends Persistent>
     job.getConfiguration().set(QUERY_CLASS_KEY, query.getClass().getCanonicalName());
     DefaultStringifier.store(job.getConfiguration(), query, QUERY_KEY);
   }
+  
+  /**
+   * Sets the input parameters for the job 
+   * @param job the job to set the properties for
+   * @param query the query to get the inputs from
+   * @param dataStore the datastore as the input
+   * @param reuseObjects whether to reuse objects in serialization
+   * @throws IOException
+   */
+  public static <K1, V1 extends Persistent> void setInput(Job job
+      , Query<K1,V1> query, DataStore<K1,V1> dataStore, boolean reuseObjects) 
+  throws IOException {
+    
+    Configuration conf = job.getConfiguration();
+    
+    GoraMapReduceUtils.setIOSerializations(conf, reuseObjects);
+    
+    job.setInputFormatClass(GoraInputFormat.class);
+    GoraInputFormat.setQuery(job, query);
+    
+    conf.setClass(GoraInputFormat.MAP_KEY_CLASS,
+        dataStore.getKeyClass(), Object.class);
+    conf.setClass(GoraInputFormat.MAP_VALUE_CLASS,
+        dataStore.getPersistentClass(), Persistent.class);
+  }
+  
 }

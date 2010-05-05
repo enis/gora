@@ -25,7 +25,7 @@ extends Reducer<K1, V1, K2, V2> {
     
     Configuration conf = job.getConfiguration();
     
-    GoraMapper.setIOSerializations(conf, reuseObjects);
+    GoraMapReduceUtils.setIOSerializations(conf, reuseObjects);
     
     job.setOutputFormatClass(GoraOutputFormat.class);
     job.setReducerClass(reducerClass);
