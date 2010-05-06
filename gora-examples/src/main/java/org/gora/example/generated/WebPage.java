@@ -2,24 +2,16 @@ package org.gora.example.generated;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.HashMap;
-import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
+
 import org.apache.avro.AvroRuntimeException;
-import org.apache.avro.Protocol;
-import org.apache.avro.util.Utf8;
-import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericArray;
-import org.apache.avro.specific.SpecificExceptionBase;
-import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.avro.specific.SpecificRecord;
-import org.apache.avro.specific.SpecificFixed;
-import org.apache.avro.reflect.FixedSize;
+import org.apache.avro.util.Utf8;
+import org.gora.persistency.ListGenericArray;
 import org.gora.persistency.StateManager;
+import org.gora.persistency.StatefulHashMap;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
-import org.gora.persistency.StatefulHashMap;
-import org.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")
 public class WebPage extends PersistentBase {
@@ -50,6 +42,8 @@ public class WebPage extends PersistentBase {
   }
   public WebPage(StateManager stateManager) {
     super(stateManager);
+    parsedContent = new ListGenericArray<Utf8>(getSchema());
+    outlinks = new StatefulHashMap<Utf8,Utf8>();
   }
   public WebPage newInstance(StateManager stateManager) {
     return new WebPage(stateManager);
@@ -91,9 +85,6 @@ public class WebPage extends PersistentBase {
     return (GenericArray<Utf8>) get(2);
   }
   public void addToParsedContent(Utf8 element) {
-    if (parsedContent == null) {
-      parsedContent = new ListGenericArray<Utf8>(getSchema());
-    }
     getStateManager().setDirty(this, 2);
     parsedContent.add(element);
   }
@@ -105,9 +96,6 @@ public class WebPage extends PersistentBase {
     return outlinks.get(key);
   }
   public void putToOutlinks(Utf8 key, Utf8 value) {
-    if (outlinks == null) {
-      outlinks = new StatefulHashMap<Utf8,Utf8>();
-    }
     getStateManager().setDirty(this, 3);
     outlinks.put(key, value);
   }

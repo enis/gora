@@ -241,6 +241,18 @@ public class GoraCompiler {
         line(1, "}");
         line(1, "public " + type + "(StateManager stateManager) {");
         line(2, "super(stateManager);");
+        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
+          Schema fieldSchema = field.getValue();
+          switch (fieldSchema.getType()) {
+          case ARRAY:
+            String valueType = type(fieldSchema.getElementType());
+            line(2, field.getKey()+" = new ListGenericArray<"+valueType+">(getSchema());");
+            break;
+          case MAP:
+            valueType = type(fieldSchema.getValueType());
+            line(2, field.getKey()+" = new StatefulHashMap<Utf8,"+valueType+">();");
+          }
+        }
         line(1, "}");
         
         //newInstance(StateManager)
@@ -298,9 +310,6 @@ public class GoraCompiler {
             line(2, "return (GenericArray<"+unboxed+">) get("+i+");");
             line(1, "}");
             line(1, "public void addTo"+camelKey+"("+unboxed+" element) {");
-            line(2, "if ("+field.getKey()+" == null) {");
-            line(3, field.getKey()+" = new ListGenericArray<"+valueType+">(getSchema());");
-            line(2, "}");
             line(2, "getStateManager().setDirty(this, "+i+");");
             line(2, field.getKey()+".add(element);");
             line(1, "}");
@@ -316,9 +325,6 @@ public class GoraCompiler {
             line(2, "return "+field.getKey()+".get(key);");
             line(1, "}");
             line(1, "public void putTo"+camelKey+"(Utf8 key, "+unboxed+" value) {");
-            line(2, "if ("+field.getKey()+" == null) {");
-            line(3, field.getKey()+" = new StatefulHashMap<Utf8,"+valueType+">();");
-            line(2, "}");
             line(2, "getStateManager().setDirty(this, "+i+");");
             line(2, field.getKey()+".put(key, value);");
             line(1, "}");
