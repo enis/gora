@@ -20,9 +20,16 @@ public abstract class ResultBase<K, T extends Persistent>
   
   protected T persistent;
   
+  /** Query limit */
+  protected long limit;
+  
+  /** How far we have proceeded*/
+  protected long offset = 0;
+  
   public ResultBase(DataStore<K,T> dataStore, Query<K,T> query) {
     this.dataStore = dataStore;
     this.query = query;
+    this.limit = query.getLimit();
   }
   
   @Override
@@ -53,6 +60,16 @@ public abstract class ResultBase<K, T extends Persistent>
   @Override
   public Class<T> getPersistentClass() {
     return getDataStore().getPersistentClass();
+  }
+  
+  /**
+   * Returns whether the limit for the query is reached. 
+   */
+  protected boolean isLimitReached() {
+    if(limit > 0 && offset++ > limit) {
+      return true;
+    }
+    return false;
   }
   
 }

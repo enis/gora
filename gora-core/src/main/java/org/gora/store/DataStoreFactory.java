@@ -34,7 +34,7 @@ public class DataStoreFactory {
   
   private static HashMap<Integer, DataStore<?,?>> dataStores;
   
-  private static Properties properties;
+  public static Properties properties;
   private static boolean autoCreateSchema = true;
   
   static {

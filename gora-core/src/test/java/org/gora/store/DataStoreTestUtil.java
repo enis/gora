@@ -5,6 +5,7 @@ import static org.gora.example.WebPageDataCreator.ANCHORS;
 import static org.gora.example.WebPageDataCreator.CONTENTS;
 import static org.gora.example.WebPageDataCreator.LINKS;
 import static org.gora.example.WebPageDataCreator.URLS;
+import static org.gora.example.WebPageDataCreator.URL_INDEXES;
 import static org.gora.example.WebPageDataCreator.createWebPageData;
 
 import java.io.IOException;
@@ -49,6 +50,12 @@ public class DataStoreTestUtil {
     return employee;
   }
   
+  public static void testAutoCreateSchema(DataStore<String,Employee> dataStore) 
+  throws IOException {
+    //should not throw exception
+    dataStore.put("foo", createEmployee(dataStore));
+  }
+  
   public static void testCreateEmployeeSchema(DataStore<String, Employee> dataStore) 
   throws IOException {
     dataStore.createSchema();
@@ -77,11 +84,13 @@ public class DataStoreTestUtil {
     dataStore.put(employee.getSsn().toString(), employee);   
   }
   
-  private static void assertWebPage(WebPage page, int i) {
+  public static void assertWebPage(WebPage page, int i) {
     Assert.assertNotNull(page);
     
     Assert.assertEquals(page.getUrl().toString(), URLS[i]);
-    Assert.assertTrue(Arrays.equals(page.getContent().array()
+    Assert.assertTrue("content error:" + new String(page.getContent().array()) + 
+        " actual=" + CONTENTS[i] + " i=" + i
+    , Arrays.equals(page.getContent().array()
         , CONTENTS[i].getBytes()));
     
     GenericArray<Utf8> parsedContent = page.getParsedContent();
@@ -150,6 +159,22 @@ public class DataStoreTestUtil {
   public static void testQueryWebPageSingleKeyDefaultFields(
       DataStore<String, WebPage> store) throws IOException { 
     testQueryWebPageSingleKey(store, null);
+  }
+  
+  public static void testQueryWebPages(DataStore<String, WebPage> store) 
+    throws IOException {
+    createWebPageData(store);
+    
+    Query<String, WebPage> query = store.newQuery();
+    Result<String, WebPage> result = query.execute();
+    
+    int i=0;
+    while(result.next()) {
+      WebPage page = result.get();
+      assertWebPage(page, URL_INDEXES.get(page.getUrl().toString()));
+      i++;
+    }
+    Assert.assertEquals(i, URLS.length);
   }
   
 }

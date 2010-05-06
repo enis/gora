@@ -4,6 +4,7 @@ package org.gora.store.impl;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.apache.avro.Schema;
 import org.gora.persistency.BeanFactory;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.impl.BeanFactoryImpl;
@@ -17,6 +18,9 @@ implements DataStore<K, T> {
   protected Class<K> keyClass;
   protected Class<T> persistentClass;
   
+  /** The schema of the persistent class*/
+  protected Schema schema;
+  
   public DataStoreBase() {
   }
   
@@ -27,6 +31,7 @@ implements DataStore<K, T> {
     setPersistentClass(persistentClass);
     if(this.beanFactory == null)
       this.beanFactory = new BeanFactoryImpl<K, T>(keyClass, persistentClass);
+    schema = this.beanFactory.getCachedPersistent().getSchema();
   }
   
   @Override

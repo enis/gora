@@ -3,6 +3,7 @@ package org.gora.example;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 
 import org.apache.avro.util.Utf8;
 import org.gora.example.generated.WebPage;
@@ -26,6 +27,14 @@ public class WebPageDataCreator {
     "http://baz.com/1.jsp&q=foo",
     "http://bazbar.com",
   };
+  
+  public static HashMap<String, Integer> URL_INDEXES = new HashMap<String, Integer>();
+  
+  static {
+    for(int i=0; i<URLS.length; i++) {
+      URL_INDEXES.put(URLS[i], i);
+    }  
+  }
   
   public static final String[] CONTENTS = {
     "foo baz bar",

@@ -15,24 +15,21 @@ public class HBaseScannerResult<K, T extends Persistent>
   extends HBaseResult<K, T> {
 
   private final ResultScanner scanner;
-  private long offset = 0;
-  private long limit;
   
   public HBaseScannerResult(HBaseStore<K,T> dataStore, HBaseQuery<K, T> query, 
       ResultScanner scanner) {
     super(dataStore, query);
     this.scanner = scanner;
-    this.limit = query.getLimit();
   }
   
   @Override
   public boolean next() throws IOException {
-    Result result = scanner.next();
-    if (result == null) {
+    if(isLimitReached()) { 
       return false;
     }
-  
-    if(limit > 0 && offset++ > limit) {
+    
+    Result result = scanner.next();
+    if (result == null) {
       return false;
     }
     
