@@ -18,7 +18,6 @@
   <dependencies>
 
     <dependency org="commons-logging" name="commons-logging" rev="1.1.1" conf="*->default"/>
-    <dependency org="commons-httpclient" name="commons-httpclient" rev="3.0.1" conf="*->master"/>
     <dependency org="log4j" name="log4j" rev="1.2.15" conf="*->master"/>
     <dependency org="commons-lang" name="commons-lang" rev="2.5"/>
     
@@ -29,7 +28,9 @@
       <exclude org="org.eclipse.jdt" name="core"/>
       <exclude org="org.mortbay.jetty" name="jsp-*"/>
     </dependency>
-    <dependency org="org.apache.hadoop" name="avro" rev="1.2.0" conf="*->default"/>
+    <dependency org="org.apache.hadoop" name="avro" rev="1.2.0" conf="*->default">
+      <exclude org="ant" name="ant"/>
+    </dependency>
 
     <!-- test dependencies -->
     <dependency org="org.apache.hadoop" name="hadoop-test" rev="0.20.2" conf="test->default"/>
