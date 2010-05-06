@@ -3,6 +3,7 @@ package org.gora.query;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.io.Writable;
 import org.gora.persistency.Persistent;
 import org.gora.store.DataStore;
@@ -11,7 +12,7 @@ import org.gora.store.DataStore;
  * A query to a data store to retrive objects. Queries are constructed by 
  * the DataStore implementation via {@link DataStore#newQuery()}.
  */
-public interface Query<K, T extends Persistent> extends Writable {
+public interface Query<K, T extends Persistent> extends Writable, Configurable {
 
   /**
    * Returns the DataStore, that this Query is associated with.

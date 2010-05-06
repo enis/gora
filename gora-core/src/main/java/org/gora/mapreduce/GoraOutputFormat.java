@@ -18,9 +18,9 @@ extends OutputFormat<K, T>{
 
   public static final String DATA_STORE_CLASS = "gora.outputformat.datastore.class";
   
-  public static final String REDUCE_KEY_CLASS   = "gora.outputformat.reduce.key.class";
+  public static final String OUTPUT_KEY_CLASS   = "gora.outputformat.key.class";
 
-  public static final String REDUCE_VALUE_CLASS = "gora.outputformat.reduce.value.class";
+  public static final String OUTPUT_VALUE_CLASS = "gora.outputformat.value.class";
 
   @Override
   public void checkOutputSpecs(JobContext context)
@@ -39,8 +39,8 @@ extends OutputFormat<K, T>{
     Configuration conf = context.getConfiguration();
     Class<? extends DataStore<K,T>> dataStoreClass 
       = (Class<? extends DataStore<K,T>>) conf.getClass(DATA_STORE_CLASS, null);
-    Class<K> keyClass = (Class<K>) conf.getClass(REDUCE_KEY_CLASS, null);
-    Class<T> rowClass = (Class<T>) conf.getClass(REDUCE_VALUE_CLASS, null);
+    Class<K> keyClass = (Class<K>) conf.getClass(OUTPUT_KEY_CLASS, null);
+    Class<T> rowClass = (Class<T>) conf.getClass(OUTPUT_VALUE_CLASS, null);
     final DataStore<K, T> store =
       DataStoreFactory.getDataStore(dataStoreClass, keyClass, rowClass);
     
@@ -75,9 +75,9 @@ extends OutputFormat<K, T>{
     job.setOutputFormatClass(GoraOutputFormat.class);
     conf.setClass(GoraOutputFormat.DATA_STORE_CLASS
         , dataStore.getClass(), DataStore.class);
-    conf.setClass(GoraOutputFormat.REDUCE_KEY_CLASS,
+    conf.setClass(GoraOutputFormat.OUTPUT_KEY_CLASS,
         dataStore.getKeyClass(), Object.class);
-    conf.setClass(GoraOutputFormat.REDUCE_VALUE_CLASS, 
+    conf.setClass(GoraOutputFormat.OUTPUT_VALUE_CLASS,
         dataStore.getPersistentClass(), Persistent.class);
   }
 }

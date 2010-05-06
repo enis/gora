@@ -55,7 +55,7 @@ public class GoraInputFormat<K, T extends Persistent>
     List<InputSplit> splits = new ArrayList<InputSplit>(queries.size());
     
     for(PartitionQuery<K,T> query : queries) {
-      splits.add(new GoraInputSplit(query));
+      splits.add(new GoraInputSplit(context.getConfiguration(), query));
     }
     
     return splits;
