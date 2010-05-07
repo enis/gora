@@ -6,6 +6,7 @@ import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.TestWritable;
 import org.gora.mock.persistency.MockPersistent;
 import org.gora.mock.query.MockQuery;
@@ -18,6 +19,8 @@ import org.junit.Test;
  */
 public class TestGoraInputSplit {
 
+  private Configuration conf = new Configuration();
+  
   private List<PartitionQuery<String, MockPersistent>> 
     getPartitions() throws IOException {
     MockDataStore store = MockDataStore.get();
@@ -35,7 +38,7 @@ public class TestGoraInputSplit {
 
     int i=0;;
     for(PartitionQuery<String, MockPersistent> partition : partitions) {
-      GoraInputSplit split = new GoraInputSplit(partition);
+      GoraInputSplit split = new GoraInputSplit(conf, partition);
       Assert.assertEquals(split.getLocations().length, 1);
       Assert.assertEquals(split.getLocations()[0], MockDataStore.LOCATIONS[i++]);
     }
@@ -48,7 +51,7 @@ public class TestGoraInputSplit {
       getPartitions();
 
     for(PartitionQuery<String, MockPersistent> partition : partitions) {
-      GoraInputSplit split = new GoraInputSplit(partition);
+      GoraInputSplit split = new GoraInputSplit(conf, partition);
       TestWritable.testWritable(split);
     }
   }
