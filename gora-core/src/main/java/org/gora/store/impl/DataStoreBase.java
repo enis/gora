@@ -83,6 +83,10 @@ implements DataStore<K, T> {
     return beanFactory;
   }
   
+  public T get(K key) throws IOException {
+    return get(key, null);
+  };
+  
   /**
    * Checks whether the fields argument is null, and if so 
    * returns all the fields of the Persistent object, else returns the 

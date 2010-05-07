@@ -77,11 +77,17 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
   public abstract T newPersistent() throws IOException;
 
   /**
-   * Returns the 
-   * @param key
-   * @param fields
-   * @return
-   * @throws IOException
+   * Returns the object corresponding to the given key fetching all the fields.  
+   * @param key the key of the object
+   * @return the Object corresponding to the key or null if it cannot be found
+   */
+  public abstract T get(K key) throws IOException;
+  
+  /**
+   * Returns the object corresponding to the given key.  
+   * @param key the key of the object
+   * @param fields the fields required in the object. Pass null, to retrieve all fields
+   * @return the Object corresponding to the key or null if it cannot be found
    */
   public abstract T get(K key, String[] fields) throws IOException;
   
