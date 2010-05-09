@@ -1,11 +1,18 @@
 
 package org.gora.hbase.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.hbase.util.Bytes;
 
@@ -16,9 +23,15 @@ import org.apache.hadoop.hbase.util.Bytes;
 public class HBaseByteInterface {
   
   public static final byte[] EMPTY_BYTES = new byte[0]; 
-  
+
+  private static final SpecificDatumWriter writer =
+    new SpecificDatumWriter();
+
+  private static final SpecificDatumReader reader =
+    new SpecificDatumReader();
+
   @SuppressWarnings("unchecked")
-  public static Object fromBytes(Schema schema, byte[] val) {
+  public static Object fromBytes(Schema schema, byte[] val) throws IOException {
     Type type = schema.getType();
     switch (type) {
     case ENUM:
@@ -31,6 +44,12 @@ public class HBaseByteInterface {
     case FLOAT:   return Bytes.toFloat(val);
     case DOUBLE:  return Bytes.toDouble(val);
     case BOOLEAN: return val[0] != 0;
+    case RECORD:
+      // TODO: This is TOO SLOW... OPTIMIZE
+      reader.setSchema(schema);
+      reader.setExpected(schema);
+      BinaryDecoder decoder = new BinaryDecoder(new ByteArrayInputStream(val));
+      return reader.read(null, decoder);
     default: throw new RuntimeException("Unknown type: "+type);
     }
   }
@@ -85,7 +104,7 @@ public class HBaseByteInterface {
     throw new RuntimeException("Can't parse data as class: " + clazz);
   }
 
-  public static byte[] toBytes(Object o, Schema schema) {
+  public static byte[] toBytes(Object o, Schema schema) throws IOException {
     Type type = schema.getType();
     switch (type) {
     case STRING:  return Bytes.toBytes(((Utf8)o).toString()); // TODO: maybe ((Utf8)o).getBytes(); ?
@@ -96,6 +115,14 @@ public class HBaseByteInterface {
     case DOUBLE:  return Bytes.toBytes((Double)o);
     case BOOLEAN: return (Boolean)o ? new byte[] {1} : new byte[] {0};
     case ENUM:    return new byte[] { (byte)((Enum<?>) o).ordinal() };
+    case RECORD:
+      // TODO: This is TOO SLOW... OPTIMIZE
+      writer.setSchema(schema);
+      ByteArrayOutputStream os = new ByteArrayOutputStream();
+      BinaryEncoder encoder = new BinaryEncoder(os);
+      writer.write(o, encoder);
+      encoder.flush();
+      return os.toByteArray();
     default: throw new RuntimeException("Unknown type: "+type);
     }
   }

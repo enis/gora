@@ -293,7 +293,7 @@ public class GoraCompiler {
           Schema fieldSchema = field.getValue();
           switch (fieldSchema.getType()) {
           case INT:case LONG:case FLOAT:case DOUBLE:
-          case BOOLEAN:case BYTES:case STRING: case ENUM:
+          case BOOLEAN:case BYTES:case STRING: case ENUM: case RECORD:
             String unboxed = unbox(fieldSchema);
             line(1, "public "+unboxed+" get" +camelKey+"() {");
             line(2, "return ("+type(field.getValue())+") get("+i+");");
@@ -303,7 +303,6 @@ public class GoraCompiler {
             line(1, "}");
             break;
           case ARRAY:
-            String valueType = type(fieldSchema.getElementType());
             unboxed = unbox(fieldSchema.getElementType());
             
             line(1, "public GenericArray<"+unboxed+"> get"+camelKey+"() {");
@@ -315,7 +314,7 @@ public class GoraCompiler {
             line(1, "}");
             break;
           case MAP:
-            valueType = type(fieldSchema.getValueType());
+            String valueType = type(fieldSchema.getValueType());
             unboxed = unbox(fieldSchema.getValueType());
             line(1, "public Map<Utf8, "+unboxed+"> get"+camelKey+"() {");
             line(2, "return (Map<Utf8, "+unboxed+">) get("+i+");");

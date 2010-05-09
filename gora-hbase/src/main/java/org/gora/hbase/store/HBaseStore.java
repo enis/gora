@@ -430,7 +430,8 @@ implements Configurable {
     persistent.set(field.pos(), new StatefulHashMap(map));
   }
 
-  private void setField(T persistent, Field field, byte[] val) {
+  private void setField(T persistent, Field field, byte[] val)
+  throws IOException {
     persistent.set(field.pos(), fromBytes(field.schema(), val));
   }
 
