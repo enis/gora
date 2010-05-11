@@ -9,7 +9,11 @@ import static org.gora.example.WebPageDataCreator.URL_INDEXES;
 import static org.gora.example.WebPageDataCreator.createWebPageData;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -20,6 +24,7 @@ import org.gora.example.generated.WebPage;
 import org.gora.persistency.Persistent;
 import org.gora.query.Query;
 import org.gora.query.Result;
+import org.gora.util.StringUtils;
 
 /**
  * Test utilities for DataStores
@@ -34,6 +39,8 @@ public class DataStoreTestUtil {
     T obj1 = dataStore.newPersistent();
     T obj2 = dataStore.newPersistent();
     
+    Assert.assertEquals(dataStore.getPersistentClass(), 
+        obj1.getClass());
     Assert.assertNotNull(obj1);
     Assert.assertNotNull(obj2);
     Assert.assertFalse( obj1 == obj2 );
@@ -77,17 +84,38 @@ public class DataStoreTestUtil {
     Assert.assertEquals(employee, after);
   }
   
-  public static void testPutEmployee(DataStore<String, Employee> dataStore) 
+  public static void testGetEmployeeWithFields(DataStore<String, Employee> dataStore) 
+    throws IOException {
+    Employee employee = DataStoreTestUtil.createEmployee(dataStore);
+    String ssn = employee.getSsn().toString();
+    dataStore.put(ssn, employee);
+    dataStore.flush();
+    
+    String[] fields = employee.getFields();
+    for(Set<String> subset : StringUtils.powerset(fields)) {
+      Employee after = dataStore.get(ssn, subset.toArray(new String[subset.size()]));
+      Employee expected = new Employee();
+      for(String field:subset) {
+        int index = expected.getFieldIndex(field);
+        expected.set(index, employee.get(index));
+      }
+      
+      Assert.assertEquals(expected, after);
+    }
+  }
+  
+  public static Employee testPutEmployee(DataStore<String, Employee> dataStore) 
   throws IOException {
     dataStore.createSchema();
     Employee employee = DataStoreTestUtil.createEmployee(dataStore);
-    dataStore.put(employee.getSsn().toString(), employee);   
+    dataStore.put(employee.getSsn().toString(), employee);
+    return employee;
   }
   
   public static void assertWebPage(WebPage page, int i) {
     Assert.assertNotNull(page);
     
-    Assert.assertEquals(page.getUrl().toString(), URLS[i]);
+    Assert.assertEquals(URLS[i], page.getUrl().toString());
     Assert.assertTrue("content error:" + new String(page.getContent().array()) + 
         " actual=" + CONTENTS[i] + " i=" + i
     , Arrays.equals(page.getContent().array()
@@ -160,21 +188,68 @@ public class DataStoreTestUtil {
       DataStore<String, WebPage> store) throws IOException { 
     testQueryWebPageSingleKey(store, null);
   }
-  
-  public static void testQueryWebPages(DataStore<String, WebPage> store) 
-    throws IOException {
+    
+  public static void testQueryWebPageKeyRange(DataStore<String, WebPage> store, 
+      boolean setStartKeys, boolean setEndKeys) 
+  throws IOException {
     createWebPageData(store);
     
-    Query<String, WebPage> query = store.newQuery();
-    Result<String, WebPage> result = query.execute();
-    
-    int i=0;
-    while(result.next()) {
-      WebPage page = result.get();
-      assertWebPage(page, URL_INDEXES.get(page.getUrl().toString()));
-      i++;
+    //create sorted set of urls
+    List<String> sortedUrls = new ArrayList<String>(); 
+    for(String url: URLS) {
+      sortedUrls.add(url);
     }
-    Assert.assertEquals(i, URLS.length);
+    Collections.sort(sortedUrls);
+    
+    //try all ranges
+    for(int i=0; i<sortedUrls.size(); i++) {
+      for(int j=i; j<sortedUrls.size(); j++) {
+        Query<String, WebPage> query = store.newQuery();
+        if(setStartKeys)
+          query.setStartKey(sortedUrls.get(i));
+        if(setEndKeys)
+          query.setEndKey(sortedUrls.get(j));
+        Result<String, WebPage> result = query.execute();
+        
+        int r=0;
+        while(result.next()) {
+          WebPage page = result.get();
+          assertWebPage(page, URL_INDEXES.get(page.getUrl().toString()));
+          r++;
+        }
+        
+        int expectedLength = (setEndKeys ? j+1: sortedUrls.size()) - 
+                             (setStartKeys ? i: 0);
+        Assert.assertEquals(expectedLength, r);
+        if(!setEndKeys)
+          break;
+      }
+      if(!setStartKeys)
+        break;
+    }
   }
   
+  public static void testQueryWebPages(DataStore<String, WebPage> store) 
+  throws IOException {
+    System.out.println("testQueryWebPages");
+    testQueryWebPageKeyRange(store, false, false);
+  }
+  
+  public static void testQueryWebPageStartKey(DataStore<String, WebPage> store) 
+  throws IOException {
+    System.out.println("testQueryWebPageStartKey");
+    testQueryWebPageKeyRange(store, true, false);
+  }
+  
+  public static void testQueryWebPageEndKey(DataStore<String, WebPage> store) 
+  throws IOException {
+    System.out.println("testQueryWebPageEndKey");
+    testQueryWebPageKeyRange(store, false, true);
+  }
+  
+  public static void testQueryWebPageKeyRange(DataStore<String, WebPage> store) 
+  throws IOException {
+    System.out.println("testQueryWebPageKeyRange");
+    testQueryWebPageKeyRange(store, true, true);
+  }
 }

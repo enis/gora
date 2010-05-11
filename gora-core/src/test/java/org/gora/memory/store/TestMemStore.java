@@ -1,0 +1,24 @@
+
+package org.gora.memory.store;
+
+import org.gora.example.generated.Employee;
+import org.gora.example.generated.WebPage;
+import org.gora.store.DataStore;
+import org.gora.store.DataStoreFactory;
+import org.gora.store.DataStoreTestBase;
+
+/**
+ * Test case for {@link MemStore}.
+ */
+public class TestMemStore extends DataStoreTestBase {
+
+  @Override
+  protected DataStore<String, Employee> createEmployeeDataStore() {
+    return DataStoreFactory.getDataStore(MemStore.class, String.class, Employee.class);
+  }
+
+  @Override
+  protected DataStore<String, WebPage> createWebPageDataStore() {
+    return DataStoreFactory.getDataStore(MemStore.class, String.class, WebPage.class);
+  }
+}
