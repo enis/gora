@@ -227,7 +227,7 @@ public class GoraCompiler {
         line(1, builder.toString());
         
         line(1, "static {");
-        line(2, "PersistentBase.registerFields(_ALL_FIELDS);");
+        line(2, "PersistentBase.registerFields("+type+".class, _ALL_FIELDS);");
         line(1, "}");
         
         // field declations

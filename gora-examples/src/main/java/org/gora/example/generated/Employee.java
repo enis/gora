@@ -39,7 +39,7 @@ public class Employee extends PersistentBase {
   };
   public static final String[] _ALL_FIELDS = {"name","dateOfBirth","ssn","salary",};
   static {
-    PersistentBase.registerFields(_ALL_FIELDS);
+    PersistentBase.registerFields(Employee.class, _ALL_FIELDS);
   }
   private Utf8 name;
   private long dateOfBirth;

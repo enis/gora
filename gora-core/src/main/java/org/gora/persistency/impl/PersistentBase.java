@@ -13,9 +13,11 @@ import org.gora.persistency.StateManager;
  */
 public abstract class PersistentBase implements Persistent {
   
-  protected static Map<String, Integer> FIELD_MAP;
+  protected static Map<Class<?>, Map<String, Integer>> FIELD_MAP =
+    new HashMap<Class<?>, Map<String,Integer>>();
   
-  protected static String[] FIELDS = null;
+  protected static Map<Class<?>, String[]> FIELDS = 
+    new HashMap<Class<?>, String[]>();
   
   private StateManager stateManager;
   
@@ -33,13 +35,15 @@ public abstract class PersistentBase implements Persistent {
    * @param field the name of the field
    * @param index the index of the field
    */
-  protected static void registerFields(String... fields) {
-    FIELDS = fields;
-    FIELD_MAP = new HashMap<String, Integer>(FIELDS.length);
+  protected static void registerFields(Class<?> clazz, String... fields) {
+    FIELDS.put(clazz, fields);
+    int fieldsLength = fields == null ? 0 :fields.length;
+    HashMap<String, Integer> map = new HashMap<String, Integer>(fieldsLength);
     
-    for(int i=0; i < FIELDS.length; i++) {
-      FIELD_MAP.put(fields[i], i);
+    for(int i=0; i < fieldsLength; i++) {
+      map.put(fields[i], i);
     }
+    FIELD_MAP.put(clazz, map);
   }
   
   @Override
@@ -49,17 +53,17 @@ public abstract class PersistentBase implements Persistent {
   
   @Override
   public String[] getFields() {
-    return FIELDS;
+    return FIELDS.get(getClass());
   }
   
   @Override
   public String getField(int index) {
-    return FIELDS[index];
+    return FIELDS.get(getClass())[index];
   }
   
   @Override
   public int getFieldIndex(String field) {
-    return FIELD_MAP.get(field);
+    return FIELD_MAP.get(getClass()).get(field);
   }
   
   @Override

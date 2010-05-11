@@ -36,7 +36,7 @@ public class TokenDatum extends PersistentBase {
   };
   public static final String[] _ALL_FIELDS = {"count",};
   static {
-    PersistentBase.registerFields(_ALL_FIELDS);
+    PersistentBase.registerFields(TokenDatum.class, _ALL_FIELDS);
   }
   private int count;
   public TokenDatum() {

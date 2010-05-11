@@ -2,16 +2,24 @@ package org.gora.example.generated;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
-
-import org.apache.avro.AvroRuntimeException;
+import java.util.HashMap;
+import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericArray;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Protocol;
 import org.apache.avro.util.Utf8;
-import org.gora.persistency.ListGenericArray;
+import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.generic.GenericArray;
+import org.apache.avro.specific.SpecificExceptionBase;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.avro.specific.SpecificRecord;
+import org.apache.avro.specific.SpecificFixed;
+import org.apache.avro.reflect.FixedSize;
 import org.gora.persistency.StateManager;
-import org.gora.persistency.StatefulHashMap;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
+import org.gora.persistency.StatefulHashMap;
+import org.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")
 public class WebPage extends PersistentBase {
@@ -31,7 +39,7 @@ public class WebPage extends PersistentBase {
   };
   public static final String[] _ALL_FIELDS = {"url","content","parsedContent","outlinks",};
   static {
-    PersistentBase.registerFields(_ALL_FIELDS);
+    PersistentBase.registerFields(WebPage.class, _ALL_FIELDS);
   }
   private Utf8 url;
   private ByteBuffer content;
