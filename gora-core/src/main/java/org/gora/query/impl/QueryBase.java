@@ -11,11 +11,11 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableUtils;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.gora.persistency.Persistent;
 import org.gora.query.Query;
 import org.gora.query.Result;
 import org.gora.store.DataStore;
-import org.gora.store.DataStoreFactory;
 import org.gora.util.IOUtils;
 
 /**
@@ -59,6 +59,11 @@ implements Query<K,T> {
 //      isCompiled = true;
 //    }
 //  }
+  
+  @Override
+  public void setDataStore(DataStore<K, T> dataStore) {
+    this.dataStore = dataStore;
+  }
   
   @Override
   public DataStore<K, T> getDataStore() {
@@ -189,21 +194,19 @@ implements Query<K,T> {
     this.conf = conf;
   }
   
-  @SuppressWarnings("unchecked")
   @Override
+  @SuppressWarnings("unchecked")
   public void readFields(DataInput in) throws IOException {
-    boolean[] nullFields = IOUtils.readNullFieldsInfo(in);
-    
     String dataStoreClass = Text.readString(in);
-    String keyClass = Text.readString(in);
-    String persistentClass = Text.readString(in);
     try {
-      DataStore store = DataStoreFactory.getDataStore(dataStoreClass
-          , keyClass, persistentClass);
-      this.dataStore = store;
+      dataStore = (DataStore<K, T>) ReflectionUtils.newInstance(
+          Class.forName(dataStoreClass), conf);
+      dataStore.readFields(in);
     } catch (ClassNotFoundException ex) {
       throw new IOException(ex);
     }
+    
+    boolean[] nullFields = IOUtils.readNullFieldsInfo(in);
     
     if(!nullFields[0]) 
       queryString = Text.readString(in);
@@ -223,12 +226,12 @@ implements Query<K,T> {
   
   @Override
   public void write(DataOutput out) throws IOException {
+    //write datastore
+    Text.writeString(out, dataStore.getClass().getCanonicalName());
+    dataStore.write(out);
+    
     IOUtils.writeNullFieldsInfo(out, queryString, (fields)
         , startKey, endKey, filter);
-    
-    Text.writeString(out, dataStore.getClass().getCanonicalName());
-    Text.writeString(out, dataStore.getKeyClass().getCanonicalName());
-    Text.writeString(out, dataStore.getPersistentClass().getCanonicalName());
     
     if(queryString != null)
       Text.writeString(out, queryString);
@@ -257,7 +260,7 @@ implements Query<K,T> {
       builder.append(fields, that.fields);
       builder.append(startKey, that.startKey);
       builder.append(endKey, that.endKey);
-      builder.append(filter, filter);
+      builder.append(filter, that.filter);
       builder.append(limit, that.limit);
       return builder.isEquals();
     }
@@ -289,5 +292,4 @@ implements Query<K,T> {
     
     return builder.toString();
   }
-  
 }

@@ -14,7 +14,6 @@ import org.apache.avro.specific.SpecificExceptionBase;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificFixed;
-import org.apache.avro.reflect.FixedSize;
 import org.gora.persistency.StateManager;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
@@ -65,7 +64,7 @@ public class Employee extends PersistentBase {
     }
   }
   @SuppressWarnings(value="unchecked")
-  public void set(int _field, Object _value) {
+  public void put(int _field, Object _value) {
     getStateManager().setDirty(this, _field);
     switch (_field) {
     case 0:name = (Utf8)_value; break;
@@ -79,24 +78,24 @@ public class Employee extends PersistentBase {
     return (Utf8) get(0);
   }
   public void setName(Utf8 value) {
-    set(0, value);
+    put(0, value);
   }
   public long getDateOfBirth() {
     return (Long) get(1);
   }
   public void setDateOfBirth(long value) {
-    set(1, value);
+    put(1, value);
   }
   public Utf8 getSsn() {
     return (Utf8) get(2);
   }
   public void setSsn(Utf8 value) {
-    set(2, value);
+    put(2, value);
   }
   public int getSalary() {
     return (Integer) get(3);
   }
   public void setSalary(int value) {
-    set(3, value);
+    put(3, value);
   }
 }

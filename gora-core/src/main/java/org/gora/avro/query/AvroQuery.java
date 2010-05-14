@@ -12,6 +12,10 @@ import org.gora.query.impl.QueryBase;
  */
 public class AvroQuery<K, T extends Persistent> extends QueryBase<K,T> {
 
+  public AvroQuery() {
+    super(null);
+  }
+  
   public AvroQuery(AvroStore<K,T> dataStore) {
     super(dataStore);
   }

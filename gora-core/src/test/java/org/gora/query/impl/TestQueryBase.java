@@ -42,7 +42,5 @@ public class TestQueryBase {
     query.setTimeRange(0, System.currentTimeMillis());
     TestIOUtils.testSerializeDeserialize(query);
   }
-  
-  
-  
+
 }

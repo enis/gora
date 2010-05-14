@@ -1,10 +1,15 @@
 package org.gora.store;
 
 import java.io.Closeable;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.Writable;
 import org.gora.persistency.BeanFactory;
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
@@ -20,7 +25,8 @@ import org.gora.query.Result;
  * @param <K> the class of keys in the datastore
  * @param <T> the class of persistent objects in the datastore
  */
-public interface DataStore<K, T extends Persistent> extends Closeable {
+public interface DataStore<K, T extends Persistent> extends Closeable, 
+  Writable, Configurable {
 
   /**
    * Initializes this DataStore.
@@ -146,4 +152,17 @@ public interface DataStore<K, T extends Persistent> extends Closeable {
   
   @Override
   public abstract void close() throws IOException;
+  
+  @Override
+  public Configuration getConf();
+  
+  @Override
+  public void setConf(Configuration conf);
+  
+  @Override
+  public void readFields(DataInput in) throws IOException;
+  
+  @Override
+  public void write(DataOutput out) throws IOException;
+  
 }

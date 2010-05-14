@@ -26,7 +26,7 @@ public class TestGoraInputFormat {
     
     MockQuery query = store.newQuery();
     query.setFields(Employee._ALL_FIELDS);
-    GoraInputFormat.setQuery(job, query);
+    GoraInputFormat.setInput(job, query, false);
     
     GoraInputFormat<String, MockPersistent> inputFormat 
       = new GoraInputFormat<String, MockPersistent>(); 

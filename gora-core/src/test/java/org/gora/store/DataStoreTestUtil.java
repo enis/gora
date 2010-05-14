@@ -97,7 +97,7 @@ public class DataStoreTestUtil {
       Employee expected = new Employee();
       for(String field:subset) {
         int index = expected.getFieldIndex(field);
-        expected.set(index, employee.get(index));
+        expected.put(index, employee.get(index));
       }
       
       Assert.assertEquals(expected, after);

@@ -13,6 +13,7 @@ import java.util.Set;
 import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificData;
 
 /** Generate specific Java interfaces and classes for protocols and schemas. */
@@ -73,8 +74,8 @@ public class GoraCompiler {
     switch (schema.getType()) {
     case RECORD:
       queue.add(schema);
-      for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-        enqueue(field.getValue());
+      for (Field field : schema.getFields())
+        enqueue(field.schema());
       break;
     case MAP:
       enqueue(schema.getValueType());
@@ -153,7 +154,6 @@ public class GoraCompiler {
     line(0, "import org.apache.avro.specific.SpecificRecordBase;");
     line(0, "import org.apache.avro.specific.SpecificRecord;");
     line(0, "import org.apache.avro.specific.SpecificFixed;");
-    line(0, "import org.apache.avro.reflect.FixedSize;");
     line(0, "import org.gora.persistency.StateManager;");
     line(0, "import org.gora.persistency.impl.PersistentBase;");
     line(0, "import org.gora.persistency.impl.StateManagerImpl;");
@@ -171,11 +171,10 @@ public class GoraCompiler {
   private String params(Schema request) throws IOException {
     StringBuilder b = new StringBuilder();
     int count = 0;
-    for (Map.Entry<String, Schema> param : request.getFieldSchemas()) {
-      String paramName = param.getKey();
-      b.append(unbox(param.getValue()));
+    for (Field field : request.getFields()) {
+      b.append(unbox(field.schema()));
       b.append(" ");
-      b.append(paramName);
+      b.append(field.name());
       if (++count < request.getFields().size())
         b.append(", ");
     }
@@ -206,8 +205,8 @@ public class GoraCompiler {
         //field information
         line(1, "public static enum Field {");
         int i=0;
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          line(2,toUpperCase(field.getKey())+"("+(i++)+ ",\"" + field.getKey() + "\"),");
+        for (Field field : schema.getFields()) {
+          line(2,toUpperCase(field.name())+"("+(i++)+ ",\"" + field.name() + "\"),");
         }
         line(2, ";");
         line(2, "private int index;");
@@ -220,8 +219,8 @@ public class GoraCompiler {
         
         StringBuilder builder = new StringBuilder(
         "public static final String[] _ALL_FIELDS = {");
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          builder.append("\"").append(field.getKey()).append("\",");
+        for (Field field : schema.getFields()) {
+          builder.append("\"").append(field.name()).append("\",");
         }
         builder.append("};");
         line(1, builder.toString());
@@ -231,8 +230,8 @@ public class GoraCompiler {
         line(1, "}");
         
         // field declations
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          line(1,"private "+unbox(field.getValue())+" "+field.getKey()+";");
+        for (Field field : schema.getFields()) {
+          line(1,"private "+unbox(field.schema())+" "+field.name()+";");
         }
         
         //constructors
@@ -241,16 +240,16 @@ public class GoraCompiler {
         line(1, "}");
         line(1, "public " + type + "(StateManager stateManager) {");
         line(2, "super(stateManager);");
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          Schema fieldSchema = field.getValue();
+        for (Field field : schema.getFields()) {
+          Schema fieldSchema = field.schema();
           switch (fieldSchema.getType()) {
           case ARRAY:
             String valueType = type(fieldSchema.getElementType());
-            line(2, field.getKey()+" = new ListGenericArray<"+valueType+">(getSchema());");
+            line(2, field.name()+" = new ListGenericArray<"+valueType+">(getSchema());");
             break;
           case MAP:
             valueType = type(fieldSchema.getValueType());
-            line(2, field.getKey()+" = new StatefulHashMap<Utf8,"+valueType+">();");
+            line(2, field.name()+" = new StatefulHashMap<Utf8,"+valueType+">();");
           }
         }
         line(1, "}");
@@ -266,20 +265,21 @@ public class GoraCompiler {
         line(1, "public Object get(int _field) {");
         line(2, "switch (_field) {");
         i = 0;
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas())
-          line(2, "case "+(i++)+": return "+field.getKey()+";");
+        for (Field field : schema.getFields()) {
+          line(2, "case "+(i++)+": return "+field.name()+";");
+        }
         line(2, "default: throw new AvroRuntimeException(\"Bad index\");");
         line(2, "}");
         line(1, "}");
-        // set method
+        // put method
         line(1, "@SuppressWarnings(value=\"unchecked\")");
-        line(1, "public void set(int _field, Object _value) {");
+        line(1, "public void put(int _field, Object _value) {");
         line(2, "getStateManager().setDirty(this, _field);");
         line(2, "switch (_field) {");
         i = 0;
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          line(2, "case "+i+":"+field.getKey()+" = ("+
-               type(field.getValue())+")_value; break;");
+        for (Field field : schema.getFields()) {
+          line(2, "case "+i+":"+field.name()+" = ("+
+               type(field.schema())+")_value; break;");
           i++;
         }
         line(2, "default: throw new AvroRuntimeException(\"Bad index\");");
@@ -288,18 +288,18 @@ public class GoraCompiler {
         
         // java bean style getters and setters
         i = 0;
-        for (Map.Entry<String, Schema> field : schema.getFieldSchemas()) {
-          String camelKey = camelCasify(field.getKey());
-          Schema fieldSchema = field.getValue();
+        for (Field field : schema.getFields()) {
+          String camelKey = camelCasify(field.name());
+          Schema fieldSchema = field.schema();
           switch (fieldSchema.getType()) {
           case INT:case LONG:case FLOAT:case DOUBLE:
           case BOOLEAN:case BYTES:case STRING: case ENUM: case RECORD:
             String unboxed = unbox(fieldSchema);
             line(1, "public "+unboxed+" get" +camelKey+"() {");
-            line(2, "return ("+type(field.getValue())+") get("+i+");");
+            line(2, "return ("+type(field.schema())+") get("+i+");");
             line(1, "}");
             line(1, "public void set"+camelKey+"("+unboxed+" value) {");
-            line(2, "set("+i+", value);");
+            line(2, "put("+i+", value);");
             line(1, "}");
             break;
           case ARRAY:
@@ -310,7 +310,7 @@ public class GoraCompiler {
             line(1, "}");
             line(1, "public void addTo"+camelKey+"("+unboxed+" element) {");
             line(2, "getStateManager().setDirty(this, "+i+");");
-            line(2, field.getKey()+".add(element);");
+            line(2, field.name()+".add(element);");
             line(1, "}");
             break;
           case MAP:
@@ -320,17 +320,17 @@ public class GoraCompiler {
             line(2, "return (Map<Utf8, "+unboxed+">) get("+i+");");
             line(1, "}");
             line(1, "public "+unboxed+" getFrom"+camelKey+"(Utf8 key) {");
-            line(2, "if ("+field.getKey()+" == null) { return null; }");
-            line(2, "return "+field.getKey()+".get(key);");
+            line(2, "if ("+field.name()+" == null) { return null; }");
+            line(2, "return "+field.name()+".get(key);");
             line(1, "}");
             line(1, "public void putTo"+camelKey+"(Utf8 key, "+unboxed+" value) {");
             line(2, "getStateManager().setDirty(this, "+i+");");
-            line(2, field.getKey()+".put(key, value);");
+            line(2, field.name()+".put(key, value);");
             line(1, "}");
             line(1, "public "+unboxed+" removeFrom"+camelKey+"(Utf8 key) {");
-            line(2, "if ("+field.getKey()+" == null) { return null; }");
+            line(2, "if ("+field.name()+" == null) { return null; }");
             line(2, "getStateManager().setDirty(this, "+i+");");
-            line(2, "return "+field.getKey()+".remove(key);");
+            line(2, "return "+field.name()+".remove(key);");
             line(1, "}");
           }
           i++;

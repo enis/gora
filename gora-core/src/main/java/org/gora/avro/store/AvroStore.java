@@ -1,9 +1,12 @@
 
 package org.gora.avro.store;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -22,12 +25,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.gora.avro.query.AvroQuery;
 import org.gora.avro.query.AvroResult;
+import org.gora.mapreduce.GoraMapReduceUtils;
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.Result;
+import org.gora.query.impl.FileSplitPartitionQuery;
 import org.gora.store.impl.DataStoreBase;
 import org.gora.util.OperationNotSupportedException;
 
@@ -157,6 +165,10 @@ public class AvroStore<K, T extends Persistent>
     }
     IOUtils.closeStream(inputStream);
     IOUtils.closeStream(outputStream);
+    encoder = null;
+    decoder = null;
+    inputStream = null;
+    outputStream = null;
   }
 
   @Override
@@ -165,25 +177,59 @@ public class AvroStore<K, T extends Persistent>
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Result<K, T> execute(Query<K, T> query) throws IOException {
-    return new AvroResult<K,T>(this, (AvroQuery<K,T>) query, getDatumReader(), getDecoder());
+    if(query instanceof FileSplitPartitionQuery) {
+        FileSplit split = ((FileSplitPartitionQuery)query).getSplit();
+        long start = split.getStart();
+        long end = start + split.getLength();
+        return executePartial((AvroQuery<K, T>)query, start, end);
+    } else {
+      return executeQuery((AvroQuery<K, T>) query);
+    }
+  }
+  
+  /**
+   * Executes a normal Query reading the whole data. #execute() calls this function
+   * for non-PartitionQuery's.
+   */
+  protected Result<K,T> executeQuery(AvroQuery<K,T> query) throws IOException {
+    return new AvroResult<K,T>(this, query, 
+        getDatumReader(), getDecoder());  
+  }
+  
+  /**
+   * Executes a PartitialQuery, reading the data between start and end.
+   */
+  protected Result<K,T> executePartial(AvroQuery<K,T> query, long start, long end) 
+  throws IOException {
+    throw new OperationNotSupportedException("Not yet implemented");
   }
 
   @Override
   public void flush() throws IOException {
-    outputStream.flush();
-    encoder.flush();
+    if(outputStream != null)
+      outputStream.flush();
+    if(encoder != null)
+      encoder.flush();
   }
 
   @Override
   public T get(K key, String[] fields) throws IOException {
-    return null;
+    throw new OperationNotSupportedException();
   }
 
   @Override
   public List<PartitionQuery<K, T>> getPartitions(Query<K, T> query)
       throws IOException {
-    return null;
+    List<InputSplit> splits = GoraMapReduceUtils.getSplits(getConf(), inputPath);
+    List<PartitionQuery<K, T>> queries = new ArrayList<PartitionQuery<K,T>>(splits.size());
+    
+    for(InputSplit split : splits) {
+      queries.add(new FileSplitPartitionQuery<K, T>(query, (FileSplit) split));
+    }
+    
+    return queries; 
   }
 
   @Override
@@ -275,12 +321,12 @@ public class AvroStore<K, T extends Persistent>
     return null;
   }
   
-  protected DatumWriter createDatumWriter() {
-    return new SpecificDatumWriter(schema);
+  protected DatumWriter<T> createDatumWriter() {
+    return new SpecificDatumWriter<T>(schema);
   }
   
-  protected DatumReader createDatumReader() {
-    return new SpecificDatumReader(schema);
+  protected DatumReader<T> createDatumReader() {
+    return new SpecificDatumReader<T>(schema);
   }
   
   @Override
@@ -294,5 +340,25 @@ public class AvroStore<K, T extends Persistent>
       conf = new Configuration();
     }
     return conf;
+  }
+  
+  @Override
+  public void write(DataOutput out) throws IOException {
+    super.write(out);
+    org.gora.util.IOUtils.writeNullFieldsInfo(out, inputPath, outputPath);
+    if(inputPath != null)
+      Text.writeString(out, inputPath);
+    if(outputPath != null)
+      Text.writeString(out, outputPath);
+  }
+  
+  @Override
+  public void readFields(DataInput in) throws IOException {
+    super.readFields(in);
+    boolean[] nullFields = org.gora.util.IOUtils.readNullFieldsInfo(in);
+    if(!nullFields[0]) 
+      inputPath = Text.readString(in);
+    if(!nullFields[1]) 
+      outputPath = Text.readString(in);
   }
 }

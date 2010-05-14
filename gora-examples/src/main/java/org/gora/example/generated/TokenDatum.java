@@ -14,7 +14,6 @@ import org.apache.avro.specific.SpecificExceptionBase;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificFixed;
-import org.apache.avro.reflect.FixedSize;
 import org.gora.persistency.StateManager;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
@@ -56,7 +55,7 @@ public class TokenDatum extends PersistentBase {
     }
   }
   @SuppressWarnings(value="unchecked")
-  public void set(int _field, Object _value) {
+  public void put(int _field, Object _value) {
     getStateManager().setDirty(this, _field);
     switch (_field) {
     case 0:count = (Integer)_value; break;
@@ -67,6 +66,6 @@ public class TokenDatum extends PersistentBase {
     return (Integer) get(0);
   }
   public void setCount(int value) {
-    set(0, value);
+    put(0, value);
   }
 }

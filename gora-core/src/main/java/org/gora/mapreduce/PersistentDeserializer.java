@@ -2,8 +2,8 @@ package org.gora.mapreduce;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -57,18 +57,17 @@ implements Deserializer<Persistent> {
     }
     setSchema(persistent.getSchema());
 
-    Map<String, Field> fieldMap = persistent.getSchema().getFields();
-    boolean[] isDirty = new boolean[fieldMap.size()];
+    List<Field> fields= persistent.getSchema().getFields();
+    boolean[] isDirty = new boolean[fields.size()];
 
     int i = 0;
-    for (Entry<String, Field> e : fieldMap.entrySet()) {
+    for (Field field : fields) {
       boolean isReadable = decoder.readBoolean();
       isDirty[i++] = decoder.readBoolean();
-      Field field = e.getValue();
       if (isReadable) {
-        Object o = read(null, field.schema(), field.schema(), decoder);
+        Object o = read(null, decoder);
         o = readExtraInformation(field.schema(), o, decoder);
-        persistent.set(field.pos(), o);
+        persistent.put(field.pos(), o);
       }
     }
 

@@ -15,6 +15,14 @@ import org.gora.store.DataStore;
 public interface Query<K, T extends Persistent> extends Writable, Configurable {
 
   /**
+   * Sets the dataStore of this query. Under normal operation, this call 
+   * is not necassary and it is potentially dangereous. So use this 
+   * method only if you know what you are doing.
+   * @param dataStore the dataStore of the query
+   */
+  public abstract void setDataStore(DataStore<K,T> dataStore);
+  
+  /**
    * Returns the DataStore, that this Query is associated with.
    * @return the DataStore of the Query
    */

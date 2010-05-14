@@ -108,7 +108,7 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     T newObj = (T) obj.newInstance(new StateManagerImpl());
     for(String field:fields) {
       int index = newObj.getFieldIndex(field);
-      newObj.set(index, obj.get(index));
+      newObj.put(index, obj.get(index));
     }
     return newObj;
   }

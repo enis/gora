@@ -37,8 +37,7 @@ implements Serializer<Persistent> {
     setSchema(persistent.getSchema());
 
     StateManager stateManager = persistent.getStateManager();
-    for (Entry<String, Field> e : persistent.getSchema().getFields().entrySet()) {
-      Field field = e.getValue();
+    for (Field field : persistent.getSchema().getFields()) {
       // TODO: This is extremely inefficient. Read and write bitsets
       // directly. Right now, a readable bit is unnecessarily an INTEGER.
       encoder.writeBoolean(stateManager.isReadable(persistent, field.pos()));

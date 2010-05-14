@@ -17,6 +17,7 @@ import java.util.List;
 import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.ipc.ByteBufferOutputStream;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.DefaultStringifier;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.io.serializer.Deserializer;
@@ -280,4 +281,36 @@ public class IOUtils {
     return arr;
   }
   
+  /**
+   * Stores the given object in the configuration under the given dataKey 
+   * @param obj the object to store
+   * @param conf the configuration to store the object into
+   * @param dataKey the key to store the data
+   */
+  public static<T> void storeToConf(T obj, Configuration conf, String dataKey) 
+    throws IOException {
+    String classKey = dataKey + "._class";
+    conf.set(classKey, obj.getClass().getCanonicalName());
+    DefaultStringifier.store(conf, obj, dataKey);
+  }
+  
+  /**
+   * Loads the object stored by {@link #storeToConf(Object, Configuration, String)}
+   * method from the configuration under the given dataKey.
+   * @param conf the configuration to read from
+   * @param dataKey the key to get the data from
+   * @return the store object
+   */
+  @SuppressWarnings("unchecked")
+  public static<T> T loadFromConf(Configuration conf, String dataKey) 
+    throws IOException {
+    String classKey = dataKey + "._class";
+    String className = conf.get(classKey);
+    try {
+      T obj = (T) DefaultStringifier.load(conf, dataKey, Class.forName(className));
+      return obj;
+    } catch (Exception ex) {
+      throw new IOException();
+    }
+  }
 }

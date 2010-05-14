@@ -184,5 +184,4 @@ public class TestIOUtils {
       testSerializeDeserialize(new StringArrayWrapper(arr));
     }
   }
-  
 }

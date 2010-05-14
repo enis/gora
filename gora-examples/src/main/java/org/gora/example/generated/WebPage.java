@@ -14,7 +14,6 @@ import org.apache.avro.specific.SpecificExceptionBase;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificFixed;
-import org.apache.avro.reflect.FixedSize;
 import org.gora.persistency.StateManager;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
@@ -67,7 +66,7 @@ public class WebPage extends PersistentBase {
     }
   }
   @SuppressWarnings(value="unchecked")
-  public void set(int _field, Object _value) {
+  public void put(int _field, Object _value) {
     getStateManager().setDirty(this, _field);
     switch (_field) {
     case 0:url = (Utf8)_value; break;
@@ -81,13 +80,13 @@ public class WebPage extends PersistentBase {
     return (Utf8) get(0);
   }
   public void setUrl(Utf8 value) {
-    set(0, value);
+    put(0, value);
   }
   public ByteBuffer getContent() {
     return (ByteBuffer) get(1);
   }
   public void setContent(ByteBuffer value) {
-    set(1, value);
+    put(1, value);
   }
   public GenericArray<Utf8> getParsedContent() {
     return (GenericArray<Utf8>) get(2);

@@ -85,8 +85,6 @@ implements Configurable {
 
   private HTable table;
 
-  private Schema schema;
-
   private Configuration conf;
   
   private boolean autoCreateSchema = true;
@@ -159,16 +157,15 @@ implements Configurable {
     Delete delete = new Delete(keyRaw);
     boolean hasPuts = false;
     boolean hasDeletes = false;
-    Iterator<Entry<String, Schema>> iter =
-      schema.getFieldSchemas().iterator();
+    Iterator<Field> iter = schema.getFields().iterator();
     for (int i = 0; iter.hasNext(); i++) {
-      Entry<String, Schema> field = iter.next();
+      Field field = iter.next();
       if (!stateManager.isDirty(persistent, i)) {
         continue;
       }
-      Type type = field.getValue().getType();
+      Type type = field.schema().getType();
       Object o = persistent.get(i);
-      HbaseColumn hcol = columnMap.get(field.getKey());
+      HbaseColumn hcol = columnMap.get(field.name());
       switch(type) {
         case MAP:
           if(o instanceof StatefulMap) {
@@ -178,7 +175,7 @@ implements Configurable {
               switch (e.getValue()) {
                 case DIRTY:
                   byte[] qual = Bytes.toBytes(mapKey.toString());
-                  byte[] val = toBytes(map.get(mapKey), field.getValue().getValueType());
+                  byte[] val = toBytes(map.get(mapKey), field.schema().getValueType());
                   put.add(hcol.getFamily(), qual, val);
                   hasPuts = true;
                   break;
@@ -211,7 +208,7 @@ implements Configurable {
           }
           break;
         default:
-          put.add(hcol.getFamily(), hcol.getQualifier(), toBytes(o, field.getValue()));
+          put.add(hcol.getFamily(), hcol.getQualifier(), toBytes(o, field.schema()));
           hasPuts = true;
           break;
       }
@@ -327,9 +324,8 @@ implements Configurable {
     return table.getScanner(scan);
   }
 
-  private void addFields(Get get, String[] fields) {
-    Map<String, Field> fieldMap = schema.getFields();
-    for (String f : fields) {
+  private void addFields(Get get, String[] fieldNames) {
+    for (String f : fieldNames) {
       HbaseColumn col = columnMap.get(f);
       Schema fieldSchema = fieldMap.get(f).schema();
       
@@ -346,7 +342,6 @@ implements Configurable {
   private void addFields(Scan scan, HBaseQuery<K,T> query)
   throws IOException {
     String[] fields = query.getFields();
-    Map<String, Field> fieldMap = schema.getFields();
     for (String f : fields) {
       HbaseColumn col = columnMap.get(f);
       Schema fieldSchema = fieldMap.get(f).schema();
@@ -375,8 +370,6 @@ implements Configurable {
   throws IOException {
     T persistent = newPersistent();
     StateManager stateManager = persistent.getStateManager();
-    Schema schema = persistent.getSchema();
-    Map<String, Field> fieldMap = schema.getFields();
     for (String f : fields) {
       HbaseColumn col = columnMap.get(f);
       Field field = fieldMap.get(f);
@@ -427,17 +420,17 @@ implements Configurable {
 
   @SuppressWarnings("unchecked")
   private void setField(T persistent, Field field, Map map) {
-    persistent.set(field.pos(), new StatefulHashMap(map));
+    persistent.put(field.pos(), new StatefulHashMap(map));
   }
 
   private void setField(T persistent, Field field, byte[] val)
   throws IOException {
-    persistent.set(field.pos(), fromBytes(field.schema(), val));
+    persistent.put(field.pos(), fromBytes(field.schema(), val));
   }
 
   @SuppressWarnings("unchecked")
   private void setField(T persistent, Field field, GenericArray list) {
-    persistent.set(field.pos(), list);
+    persistent.put(field.pos(), list);
   }
   
   @SuppressWarnings("unchecked")

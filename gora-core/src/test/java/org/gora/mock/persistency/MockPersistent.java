@@ -33,7 +33,7 @@ public class MockPersistent extends PersistentBase {
   }
 
   @Override
-  public void set(int field, Object value) {
+  public void put(int field, Object value) {
     switch(field) {
       case 0:  foo = (Integer)value;
       case 1:  baz = (Integer)value;

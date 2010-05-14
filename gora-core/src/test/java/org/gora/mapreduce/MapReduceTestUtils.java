@@ -22,12 +22,16 @@ public class MapReduceTestUtils {
       , Configuration conf) 
   throws Exception {
     
+    dataStore.setConf(conf);
+    
     //create input
     WebPageDataCreator.createWebPageData(dataStore);
     
     QueryCounter<String,WebPage> counter = new QueryCounter<String,WebPage>(conf);
     Query<String,WebPage> query = dataStore.newQuery();
     query.setFields(WebPage._ALL_FIELDS);
+    
+    dataStore.close();
     
     //run the job
     long result = counter.countQuery(dataStore, query);
@@ -39,9 +43,12 @@ public class MapReduceTestUtils {
   public static void testWordCount(Configuration conf, 
       DataStore<String,WebPage> inStore, DataStore<String, 
       TokenDatum> outStore) throws Exception {
+    inStore.setConf(conf);
+    outStore.setConf(conf);
     
     //create input
     WebPageDataCreator.createWebPageData(inStore);
+    inStore.close();
     
     //run the job
     WordCount wordCount = new WordCount(conf);

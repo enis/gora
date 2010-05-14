@@ -6,19 +6,17 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.DefaultStringifier;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.util.StringUtils;
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.store.DataStore;
-import org.mortbay.log.Log;
+import org.gora.util.IOUtils;
 
 /**
  * {@link InputFormat} to fetch the input from gora data stores. The 
@@ -32,8 +30,6 @@ public class GoraInputFormat<K, T extends Persistent>
   extends InputFormat<K, T> implements Configurable {
 
   public static final String QUERY_KEY   = "gora.inputformat.query";
-  
-  public static final String QUERY_CLASS_KEY = "gora.inputformat.query.class";
 
   private DataStore<K, T> dataStore;
 
@@ -66,26 +62,36 @@ public class GoraInputFormat<K, T extends Persistent>
     return conf;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
-    
-    String queryClass = conf.get(QUERY_CLASS_KEY);
     try {
-      query = (Query<K, T>) DefaultStringifier.load(conf, 
-          QUERY_KEY, Class.forName(queryClass));
+      this.query = getQuery(conf);
+      this.dataStore = query.getDataStore();
     } catch (Exception ex) {
-      Log.warn(StringUtils.stringifyException(ex));
       throw new RuntimeException(ex);
     }
-    this.dataStore = query.getDataStore();
   }
   
   public static<K, T extends Persistent> void setQuery(Job job
       , Query<K, T> query) throws IOException {
-    job.getConfiguration().set(QUERY_CLASS_KEY, query.getClass().getCanonicalName());
-    DefaultStringifier.store(job.getConfiguration(), query, QUERY_KEY);
+    IOUtils.storeToConf(query, job.getConfiguration(), QUERY_KEY);
+  }
+    
+  public Query<K, T> getQuery(Configuration conf) throws IOException {
+    return IOUtils.loadFromConf(conf, QUERY_KEY);
+  }
+  
+  /**
+   * Sets the input parameters for the job 
+   * @param job the job to set the properties for
+   * @param query the query to get the inputs from
+   * @param reuseObjects whether to reuse objects in serialization
+   * @throws IOException
+   */
+  public static <K1, V1 extends Persistent> void setInput(Job job
+      , Query<K1,V1> query, boolean reuseObjects) throws IOException {
+    setInput(job, query, query.getDataStore(), reuseObjects);
   }
   
   /**
@@ -107,5 +113,4 @@ public class GoraInputFormat<K, T extends Persistent>
     job.setInputFormatClass(GoraInputFormat.class);
     GoraInputFormat.setQuery(job, query);
   }
-  
 }
