@@ -36,6 +36,7 @@ import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.Result;
 import org.gora.query.impl.FileSplitPartitionQuery;
+import org.gora.store.DataStoreFactory;
 import org.gora.store.impl.DataStoreBase;
 import org.gora.util.OperationNotSupportedException;
 
@@ -49,21 +50,9 @@ public class AvroStore<K, T extends Persistent>
 
   private Configuration conf;
   
-  /**
-   * The property key for the input path. The file under this path is opened 
-   * for reading  using Hadoop {@link FileSystem} API.
-   */
-  public static final String INPUT_PATH_KEY = "gora.avrostore.input.path";
-  
-  /**
-   * The property key for the output path. The file under this path is opened 
-   * for writing  using Hadoop {@link FileSystem} API.
-   */
-  public static final String OUTPUT_PATH_KEY = "gora.avrostore.output.path";
-  
   /** The property key specifying avro encoder/decoder type to use. Can take values
    * "BINARY" or "JSON". */
-  public static final String CODEC_TYPE_KEY = "gora.avrostore.codec.type";
+  public static final String CODEC_TYPE_KEY = "codec.type";
   
   /**
    * The type of the avro Encoder/Decoder.
@@ -97,15 +86,16 @@ public class AvroStore<K, T extends Persistent>
    
     if(properties != null) {
       if(this.codecType == null) {
-        String codecType = properties.getProperty(CODEC_TYPE_KEY, "BINARY");
+        String codecType = DataStoreFactory.findProperty(
+            properties, this, CODEC_TYPE_KEY, "BINARY");
         this.codecType = CodecType.valueOf(codecType);
       }
       
       if(this.inputPath == null) {
-        this.inputPath = properties.getProperty(INPUT_PATH_KEY);
+        this.inputPath = DataStoreFactory.getInputPath(properties, this);
       }
       if(this.outputPath == null) {
-        this.outputPath = properties.getProperty(OUTPUT_PATH_KEY);
+        this.outputPath = DataStoreFactory.getOutputPath(properties, this);
       }
     }
   }

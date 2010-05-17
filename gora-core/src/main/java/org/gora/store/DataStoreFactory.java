@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.StringUtils;
 import org.gora.persistency.Persistent;
+import org.gora.store.impl.DataStoreBase;
 import org.gora.util.ReflectionUtils;
 
 /**
@@ -24,9 +25,13 @@ public class DataStoreFactory {
 
   public static final String GORA = "gora";
   
+  public static final String DATASTORE = "datastore";
+  
   public static final String AUTO_CREATE_SCHEMA = "autocreateschema";
   
-  public static final String GORA_AUTO_CREATE_SCHEMA_KEY = "gora.datastore."+AUTO_CREATE_SCHEMA;
+  public static final String INPUT_PATH  = "input.path";
+  
+  public static final String OUTPUT_PATH = "output.path";
   
   private static String propertiesFile = GORA_DEFAULT_PROPERTIES_FILE; 
   
@@ -35,7 +40,6 @@ public class DataStoreFactory {
   private static HashMap<Integer, DataStore<?,?>> dataStores;
   
   public static Properties properties;
-  private static boolean autoCreateSchema = true;
   
   static {
     dataStores = new HashMap<Integer, DataStore<?,?>>();
@@ -141,24 +145,80 @@ public class DataStoreFactory {
     return null;
   }
   
-  private static String getClassname(DataStore<?,?> store) {
-    String classname = store.getClass().getName();
+  private static String getClassname(Class<?> clazz) {
+    String classname = clazz.getName();
     String[] parts = classname.split("\\.");
     return parts[parts.length-1];
   }
   
-  public static boolean getAutoCreateSchema(Properties properties, DataStore<?,?> store) {
-    String storeCreate = getProperty(properties, GORA + "." + getClassname(store) + "." + AUTO_CREATE_SCHEMA);
-    if(storeCreate != null) {
-      return Boolean.parseBoolean(storeCreate);
+  /**
+   * Tries to find a property with the given baseKey. First the property 
+   * key constructed as "gora.&lt;classname&gt;.&lt;baseKey&gt;" is searched. 
+   * If not found, the property keys for all superclasses is recursively 
+   * tested. Lastly, the property key constructed as 
+   * "gora.datastore.&lt;baseKey&gt;" is searched.  
+   * @return the first found value, or defaultValue
+   */
+  public static String findProperty(Properties properties
+      , DataStore<?, ?> store, String baseKey, String defaultValue) {
+    
+    //recursively try the class names until the base class
+    Class<?> clazz = store.getClass();
+    while(true) {
+      String fullKey = GORA + "." + getClassname(clazz) + "." + baseKey;
+      String value = getProperty(properties, fullKey);
+      if(value != null) {
+        return value;
+      }
+      //try once with lowercase
+      value = getProperty(properties, fullKey.toLowerCase());
+      if(value != null) {
+        return value;
+      }
+      
+      if(clazz.equals(DataStoreBase.class)) {
+        break;
+      }
+      clazz = clazz.getSuperclass();
+      if(clazz == null) {
+        break;
+      }
     }
-    return autoCreateSchema;
+    //try with "datastore"
+    String fullKey = GORA + "." + DATASTORE + "." + baseKey;
+    String value = getProperty(properties, fullKey);
+    if(value != null) {
+      return value;
+    }
+    return defaultValue;
+  }
+  
+  public static boolean findBooleanProperty(Properties properties
+      , DataStore<?, ?> store, String baseKey, String defaultValue) {
+    return Boolean.parseBoolean(findProperty(properties, store, baseKey, defaultValue));
+  }
+  
+  public static boolean getAutoCreateSchema(Properties properties
+      , DataStore<?,?> store) {
+    return findBooleanProperty(properties, store, AUTO_CREATE_SCHEMA, "true");
+  }
+  
+  /**
+   * Returns the input path as read from the properties for file-backed data stores.
+   */
+  public static String getInputPath(Properties properties, DataStore<?,?> store) {
+    return findProperty(properties, store, INPUT_PATH, null);
+  }
+  
+  /**
+   * Returns the output path as read from the properties for file-backed data stores.
+   */
+  public static String getOutputPath(Properties properties, DataStore<?,?> store) {
+    return findProperty(properties, store, OUTPUT_PATH, null);
   }
   
   private static void setProperties(Properties properties) {
     defaultDataStoreClass = getProperty(properties, GORA_DEFAULT_DATASTORE_KEY);
-    autoCreateSchema = Boolean.parseBoolean(getProperty(properties,
-        GORA_AUTO_CREATE_SCHEMA_KEY, "true"));
     DataStoreFactory.properties = properties;
   }
 

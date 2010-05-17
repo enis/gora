@@ -1,8 +1,11 @@
 
 package org.gora.store;
 
+import java.util.Properties;
+
 import junit.framework.Assert;
 
+import org.gora.avro.store.DataFileAvroStore;
 import org.gora.mock.persistency.MockPersistent;
 import org.gora.mock.store.MockDataStore;
 import org.junit.Before;
@@ -56,6 +59,25 @@ public class TestDataStoreFactory {
     DataStore<?,?> dataStore = DataStoreFactory.getDataStore(String.class, MockPersistent.class);
     Assert.assertNotNull(dataStore);
     Assert.assertEquals(MockDataStore.class, dataStore.getClass());
+  }
+  
+  @Test
+  public void testFindProperty() {
+    Properties properties = DataStoreFactory.properties;
+    
+    DataStore<String, MockPersistent> store = new DataFileAvroStore<String,MockPersistent>();
+    
+    String fooValue = DataStoreFactory.findProperty(properties, store
+        , "foo_property", "foo_default");
+    Assert.assertEquals("foo_value", fooValue);
+    
+    String bazValue = DataStoreFactory.findProperty(properties, store
+        , "baz_property", "baz_default");
+    Assert.assertEquals("baz_value", bazValue);
+    
+    String barValue = DataStoreFactory.findProperty(properties, store
+        , "bar_property", "bar_default");
+    Assert.assertEquals("bar_value", barValue);
   }
   
 }
