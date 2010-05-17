@@ -86,7 +86,7 @@ public class QueryCounter<K, T extends Persistent> extends Configured implements
    * {@link #getQuery(DataStore)} method.
    */
   public long countQuery(DataStore<K,T> dataStore) throws Exception {
-    Query<K,T> query = dataStore.newQuery();
+    Query<K,T> query = getQuery(dataStore);
     
     Job job = createJob(dataStore, query);
     job.waitForCompletion(true);

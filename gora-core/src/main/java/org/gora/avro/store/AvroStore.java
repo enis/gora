@@ -180,10 +180,7 @@ public class AvroStore<K, T extends Persistent>
   @SuppressWarnings("unchecked")
   public Result<K, T> execute(Query<K, T> query) throws IOException {
     if(query instanceof FileSplitPartitionQuery) {
-        FileSplit split = ((FileSplitPartitionQuery)query).getSplit();
-        long start = split.getStart();
-        long end = start + split.getLength();
-        return executePartial((AvroQuery<K, T>)query, start, end);
+        return executePartial((FileSplitPartitionQuery<K, T>) query);
     } else {
       return executeQuery((AvroQuery<K, T>) query);
     }
@@ -201,7 +198,7 @@ public class AvroStore<K, T extends Persistent>
   /**
    * Executes a PartitialQuery, reading the data between start and end.
    */
-  protected Result<K,T> executePartial(AvroQuery<K,T> query, long start, long end) 
+  protected Result<K,T> executePartial(FileSplitPartitionQuery<K,T> query) 
   throws IOException {
     throw new OperationNotSupportedException("Not yet implemented");
   }

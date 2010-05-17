@@ -38,9 +38,12 @@ public class GoraInputFormat<K, T extends Persistent>
   private Query<K, T> query;
   
   @Override
+  @SuppressWarnings("unchecked")
   public RecordReader<K, T> createRecordReader(InputSplit split,
       TaskAttemptContext context) throws IOException, InterruptedException {
-    return new GoraRecordReader<K, T>(query);
+    PartitionQuery<K,T> partitionQuery = (PartitionQuery<K, T>) 
+      ((GoraInputSplit)split).getQuery();
+    return new GoraRecordReader<K, T>(partitionQuery);
   }
 
   @Override

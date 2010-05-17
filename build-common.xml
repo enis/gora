@@ -22,6 +22,7 @@
   <property name="src.dir" value="${basedir}/src/main/java" />
   <property name="conf.dir" value="${basedir}/conf" />
   <property name="jar.file" value="${build.dir}/${module.name}.jar" />
+  <property name="job.file" value="${build.dir}/${module.name}.job" />
   <property name="dist.dir" value="${build.dir}/${final.name}" />
   
   <property name="test.src.dir" value="${basedir}/src/test/java" />

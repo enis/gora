@@ -11,6 +11,7 @@ import org.gora.avro.query.AvroQuery;
 import org.gora.avro.query.DataFileAvroResult;
 import org.gora.persistency.Persistent;
 import org.gora.query.Result;
+import org.gora.query.impl.FileSplitPartitionQuery;
 import org.gora.util.OperationNotSupportedException;
 
 /**
@@ -47,11 +48,12 @@ public class DataFileAvroStore<K, T extends Persistent> extends AvroStore<K, T> 
   }
  
   @Override
-  protected Result<K,T> executePartial(AvroQuery<K,T> query, long start, long end) 
+  protected Result<K,T> executePartial(FileSplitPartitionQuery<K,T> query) 
     throws IOException {
     FsInput fsInput = createFsInput();
     DataFileReader<T> reader = createReader(fsInput);
-    return new DataFileAvroResult<K, T>(this, query, reader, fsInput, start, end);
+    return new DataFileAvroResult<K, T>(this, query, reader, fsInput
+        , query.getStart(), query.getLength());
   }
   
   private DataFileReader<T> createReader(FsInput fsInput) throws IOException {

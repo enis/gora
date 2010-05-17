@@ -27,14 +27,15 @@ public class DataFileAvroResult<K, T extends Persistent> extends ResultBase<K, T
   }
   
   public DataFileAvroResult(DataStore<K, T> dataStore, Query<K, T> query
-      , DataFileReader<T> reader, SeekableInput in, long start, long end) 
+      , DataFileReader<T> reader, SeekableInput in, long start, long length) 
   throws IOException {
     super(dataStore, query);
     this.reader = reader;
     this.start = start;
-    this.end = end;
+    this.end = start + length;
+    this.in = in;
     if(start > 0) {
-      reader.seek(start);
+      reader.sync(start);
     }
   }
 

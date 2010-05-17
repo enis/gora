@@ -103,6 +103,11 @@ fi
 for f in $GORA_HOME/$MODULE/lib/*.jar; do
   CLASSPATH=${CLASSPATH}:$f;
 done
+
+for f in $GORA_HOME/$MODULE/build/*.job; do
+  CLASSPATH=${CLASSPATH}:$f;
+done
+
 CLASSPATH=$CLASSPATH:$GORA_HOME/$MODULE/build/classes
 CLASSPATH=${CLASSPATH}:$GORA_HOME/$MODULE/build/test/classes
 

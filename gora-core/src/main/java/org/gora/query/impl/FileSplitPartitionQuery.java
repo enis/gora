@@ -33,6 +33,14 @@ public class FileSplitPartitionQuery<K, T extends Persistent>
     return split;
   }
   
+  public long getLength() {
+    return split.getLength();
+  }
+  
+  public long getStart() {
+    return split.getStart();
+  }
+  
   @Override
   public void write(DataOutput out) throws IOException {
     super.write(out);
