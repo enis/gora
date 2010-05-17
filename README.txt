@@ -62,6 +62,23 @@ separately. First start with gora-core, File -> New -> Project -> Java Project
 from Existing Ant Buildfile -> select gora-core/build.xml. Repeat for every 
 module you wish to develop. Also add dependency to the gora-core project. 
 
+Gora development 
+----------------
+
+Gora is currently developed by a small team. However, we encourage all kinds of help 
+from the community. More information can be found at
+http://wiki.github.com/enis/gora/how-to-contribute
+
+Mailing list
+------------
+Gora mailing list is hosted at google groups. Please direct any questions, feature requests, 
+and project releted announcements to the mailing list.
+
+Current web address:
+http://groups.google.com/group/gora-dev
+
+Current email address:
+gora-dev@googlegroups.com
 
 License
 -------
