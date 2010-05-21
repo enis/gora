@@ -20,12 +20,10 @@ extends RecordReader<K,T> {
   protected Result<K,T> result;
   
   public GoraRecordReader(Query<K,T> query) {
-    System.out.println("grr:" + query);
     this.query = query;
   }
 
   public void executeQuery() throws IOException {
-    System.out.println("execute:" + query);
     this.result = query.execute();
   }
   
