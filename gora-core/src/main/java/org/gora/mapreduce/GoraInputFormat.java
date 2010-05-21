@@ -12,10 +12,13 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
+import org.gora.query.impl.FileSplitPartitionQuery;
 import org.gora.store.DataStore;
+import org.gora.store.FileBackedDataStore;
 import org.gora.util.IOUtils;
 
 /**
@@ -37,12 +40,26 @@ public class GoraInputFormat<K, T extends Persistent>
 
   private Query<K, T> query;
   
+  @SuppressWarnings("unchecked")
+  private void setInputPath(PartitionQuery<K,T> partitionQuery
+      , TaskAttemptContext context) throws IOException {
+    //if the data store is file based
+    if(partitionQuery instanceof FileSplitPartitionQuery) {
+      FileSplit split = ((FileSplitPartitionQuery<K,T>)partitionQuery).getSplit();
+      //set the input path to FileSplit's path.
+      ((FileBackedDataStore)partitionQuery.getDataStore()).setInputPath(
+          split.getPath().toString());
+    }
+  }
+  
   @Override
   @SuppressWarnings("unchecked")
   public RecordReader<K, T> createRecordReader(InputSplit split,
       TaskAttemptContext context) throws IOException, InterruptedException {
     PartitionQuery<K,T> partitionQuery = (PartitionQuery<K, T>) 
       ((GoraInputSplit)split).getQuery();
+    
+    setInputPath(partitionQuery, context);
     return new GoraRecordReader<K, T>(partitionQuery);
   }
 

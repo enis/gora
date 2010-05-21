@@ -7,9 +7,9 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.hadoop.fs.Path;
 import org.gora.avro.mapreduce.FsInput;
-import org.gora.avro.query.AvroQuery;
 import org.gora.avro.query.DataFileAvroResult;
 import org.gora.persistency.Persistent;
+import org.gora.query.Query;
 import org.gora.query.Result;
 import org.gora.query.impl.FileSplitPartitionQuery;
 import org.gora.util.OperationNotSupportedException;
@@ -21,6 +21,9 @@ import org.gora.util.OperationNotSupportedException;
  */
 public class DataFileAvroStore<K, T extends Persistent> extends AvroStore<K, T> {
 
+  public DataFileAvroStore() {
+  }
+  
   private DataFileWriter<T> writer;
   
   @Override
@@ -37,14 +40,15 @@ public class DataFileAvroStore<K, T extends Persistent> extends AvroStore<K, T> 
   private DataFileWriter<T> getWriter() throws IOException {
     if(writer == null) {
       writer = new DataFileWriter<T>(getDatumWriter());
-      writer.create(schema, getOutputStream());
+      writer.create(schema, getOrCreateOutputStream());
     }
     return writer;
   }
   
   @Override
-  protected Result<K, T> executeQuery(AvroQuery<K, T> query) throws IOException {
-    return new DataFileAvroResult<K, T>(this, query, createReader(createFsInput()));
+  protected Result<K, T> executeQuery(Query<K, T> query) throws IOException {
+    return new DataFileAvroResult<K, T>(this, query
+        , createReader(createFsInput()));
   }
  
   @Override

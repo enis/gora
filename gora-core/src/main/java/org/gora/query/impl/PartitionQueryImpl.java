@@ -36,6 +36,7 @@ public class PartitionQueryImpl<K, T extends Persistent>
     this.locations = locations;
     setStartKey(startKey);
     setEndKey(endKey);
+    this.dataStore = baseQuery.getDataStore();
   }
   
   public String[] getLocations() {
@@ -124,6 +125,10 @@ public class PartitionQueryImpl<K, T extends Persistent>
       throw new IOException(ex);
     }
     locations = IOUtils.readStringArray(in);
+    //we should override the data store as basequery's data store
+    //also we may not call super.readFields so that temporary this.dataStore
+    //is not created at all
+    this.dataStore = baseQuery.getDataStore(); 
   }
   
   @Override

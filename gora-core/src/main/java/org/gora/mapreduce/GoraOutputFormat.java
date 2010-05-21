@@ -3,18 +3,21 @@ package org.gora.mapreduce;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.gora.persistency.Persistent;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
+import org.gora.store.FileBackedDataStore;
 
 public class GoraOutputFormat<K, T extends Persistent>
-extends OutputFormat<K, T>{
+  extends OutputFormat<K, T> {
 
   public static final String DATA_STORE_CLASS = "gora.outputformat.datastore.class";
   
@@ -33,7 +36,24 @@ extends OutputFormat<K, T>{
   }
 
   @SuppressWarnings("unchecked")
+  private void setOutputPath(DataStore<K,T> store, TaskAttemptContext context) {
+    if(store instanceof FileBackedDataStore) {
+      FileBackedDataStore<K, T> fileStore = (FileBackedDataStore<K, T>) store;
+      String uniqueName = FileOutputFormat.getUniqueFile(context, "part", "");
+      
+      //if file store output is not set, then get the output from FileOutputFormat 
+      if(fileStore.getOutputPath() == null) {
+        fileStore.setOutputPath(FileOutputFormat.getOutputPath(context).toString());
+      }
+      
+      //set the unique name of the data file
+      String path = fileStore.getOutputPath();
+      fileStore.setOutputPath( path + Path.SEPARATOR  + uniqueName);
+    } 
+  }
+  
   @Override
+  @SuppressWarnings("unchecked")
   public RecordWriter<K, T> getRecordWriter(TaskAttemptContext context)
       throws IOException, InterruptedException {
     Configuration conf = context.getConfiguration();
@@ -43,6 +63,8 @@ extends OutputFormat<K, T>{
     Class<T> rowClass = (Class<T>) conf.getClass(OUTPUT_VALUE_CLASS, null);
     final DataStore<K, T> store =
       DataStoreFactory.getDataStore(dataStoreClass, keyClass, rowClass);
+    
+    setOutputPath(store, context);
     
     return new RecordWriter<K, T>() {
       @Override
