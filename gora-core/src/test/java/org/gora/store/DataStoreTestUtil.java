@@ -84,6 +84,12 @@ public class DataStoreTestUtil {
     Assert.assertEquals(employee, after);
   }
   
+  public static void testGetEmployeeNonExisting(DataStore<String, Employee> dataStore) 
+    throws IOException {
+    Employee employee = dataStore.get("_NON_EXISTING_SSN_FOR_EMPLOYEE_");
+    Assert.assertNull(employee);
+  }
+  
   public static void testGetEmployeeWithFields(DataStore<String, Employee> dataStore) 
     throws IOException {
     Employee employee = DataStoreTestUtil.createEmployee(dataStore);

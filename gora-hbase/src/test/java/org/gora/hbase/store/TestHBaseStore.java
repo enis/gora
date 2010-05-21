@@ -33,10 +33,10 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-   employeeStore = (HBaseStore<String, Employee>) DataStoreFactory.getDataStore(
+   employeeStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, Employee.class);
   
-   webPageStore = (HBaseStore<String, WebPage>) DataStoreFactory.getDataStore(
+   webPageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
   }
   
@@ -75,6 +75,11 @@ public class TestHBaseStore extends HBaseClusterTestCase {
     DataStoreTestUtil.testGetEmployee(employeeStore);
   }
  
+  @Test 
+  public void testGetNonExisting() throws Exception {
+    DataStoreTestUtil.testGetEmployeeNonExisting(employeeStore);
+  }
+  
   @Test
   public void testPutArray() throws IOException {
     DataStore<String,WebPage> pageStore = DataStoreFactory.getDataStore(

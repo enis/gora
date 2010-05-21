@@ -368,6 +368,9 @@ implements Configurable {
   @SuppressWarnings("unchecked")
   public T newInstance(Result result, String[] fields)
   throws IOException {
+    if(result == null || result.isEmpty())
+      return null;
+    
     T persistent = newPersistent();
     StateManager stateManager = persistent.getStateManager();
     for (String f : fields) {
