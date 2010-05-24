@@ -7,6 +7,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.gora.hbase.store.HBaseStore;
 import org.gora.persistency.Persistent;
+import org.gora.query.Query;
 
 /**
  * Result of a query based on an HBase scanner.
@@ -16,7 +17,7 @@ public class HBaseScannerResult<K, T extends Persistent>
 
   private final ResultScanner scanner;
   
-  public HBaseScannerResult(HBaseStore<K,T> dataStore, HBaseQuery<K, T> query, 
+  public HBaseScannerResult(HBaseStore<K,T> dataStore, Query<K, T> query, 
       ResultScanner scanner) {
     super(dataStore, query);
     this.scanner = scanner;

@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 
 import org.apache.avro.util.Utf8;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.gora.example.generated.WebPage;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
@@ -15,6 +17,8 @@ import org.gora.store.DataStoreFactory;
  */
 public class WebPageDataCreator {
 
+  private static final Log log = LogFactory.getLog(WebPageDataCreator.class);
+  
   public static final String[] URLS = {
     "http://foo.com/",
     "http://foo.com/1.html",
@@ -78,6 +82,7 @@ public class WebPageDataCreator {
   public static void createWebPageData(DataStore<String, WebPage> dataStore) 
   throws IOException {
     WebPage page;
+    log.info("creating web page data");
     
     for(int i=0; i<URLS.length; i++) {
       page = new WebPage();
@@ -94,6 +99,7 @@ public class WebPageDataCreator {
       dataStore.put(URLS[i], page);
     }
     dataStore.flush();
+    log.info("finished creating web page data");
   }
   
   public int run(String[] args) throws Exception {

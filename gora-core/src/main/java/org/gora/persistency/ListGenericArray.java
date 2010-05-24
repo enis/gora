@@ -7,11 +7,13 @@ import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericData;
 
 /**
  * An {@link ArrayList} based implementation of Avro {@link GenericArray}.
  */
-public class ListGenericArray<T> implements GenericArray<T> {
+public class ListGenericArray<T> implements GenericArray<T>
+  , Comparable<ListGenericArray<T>> {
 
   private List<T> list;
   private Schema schema;
@@ -54,5 +56,26 @@ public class ListGenericArray<T> implements GenericArray<T> {
   @Override
   public Schema getSchema() {
     return schema;
+  }
+  
+  @Override
+  public int hashCode() {
+    return GenericData.get().hashCode(this, schema);
+  }
+  
+  @SuppressWarnings("unchecked")
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) return true;                 
+    if (!(obj instanceof ListGenericArray)) return false;    
+    ListGenericArray that = (ListGenericArray)obj;
+    if (!schema.equals(that.schema))
+      return false;                             
+    return this.compareTo(that) == 0;
+  }
+
+  @Override
+  public int compareTo(ListGenericArray<T> o) {
+    return GenericData.get().compare(this, o, schema);
   }
 }

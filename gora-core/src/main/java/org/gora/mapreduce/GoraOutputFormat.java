@@ -70,7 +70,7 @@ public class GoraOutputFormat<K, T extends Persistent>
       @Override
       public void close(TaskAttemptContext context) throws IOException,
           InterruptedException {
-        store.flush();
+        store.close();
       }
 
       @Override

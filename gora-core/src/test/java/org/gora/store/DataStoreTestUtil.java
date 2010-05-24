@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
@@ -22,6 +24,7 @@ import org.apache.avro.util.Utf8;
 import org.gora.example.generated.Employee;
 import org.gora.example.generated.WebPage;
 import org.gora.persistency.Persistent;
+import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.Result;
 import org.gora.util.StringUtils;
@@ -237,25 +240,91 @@ public class DataStoreTestUtil {
   
   public static void testQueryWebPages(DataStore<String, WebPage> store) 
   throws IOException {
-    System.out.println("testQueryWebPages");
     testQueryWebPageKeyRange(store, false, false);
   }
   
   public static void testQueryWebPageStartKey(DataStore<String, WebPage> store) 
   throws IOException {
-    System.out.println("testQueryWebPageStartKey");
     testQueryWebPageKeyRange(store, true, false);
   }
   
   public static void testQueryWebPageEndKey(DataStore<String, WebPage> store) 
   throws IOException {
-    System.out.println("testQueryWebPageEndKey");
     testQueryWebPageKeyRange(store, false, true);
   }
   
   public static void testQueryWebPageKeyRange(DataStore<String, WebPage> store) 
   throws IOException {
-    System.out.println("testQueryWebPageKeyRange");
     testQueryWebPageKeyRange(store, true, true);
+  }
+  
+  public static void testGetPartitions(DataStore<String, WebPage> store) 
+  throws IOException {
+    createWebPageData(store);
+    testGetPartitions(store, store.newQuery());
+  }
+  
+  public static void testGetPartitions(DataStore<String, WebPage> store
+      , Query<String, WebPage> query) throws IOException {
+    List<PartitionQuery<String, WebPage>> partitions = store.getPartitions(query);
+    
+    Assert.assertNotNull(partitions);
+    Assert.assertTrue(partitions.size() > 0);
+    
+    for(PartitionQuery<String, WebPage> partition:partitions) {
+      Assert.assertNotNull(partition);
+    }
+    
+    assertPartitions(store, query, partitions);
+  }
+  
+  public static void assertPartitions(DataStore<String, WebPage> store, 
+      Query<String, WebPage> query, List<PartitionQuery<String,WebPage>> partitions) 
+  throws IOException {
+    
+    int count = 0, partitionsCount = 0;
+    Map<String, Integer> results = new HashMap<String, Integer>();
+    Map<String, Integer> partitionResults = new HashMap<String, Integer>();
+    
+    //execute query and count results
+    Result<String, WebPage> result = store.execute(query);
+    Assert.assertNotNull(result);
+    
+    while(result.next()) {
+      Assert.assertNotNull(result.getKey());
+      Assert.assertNotNull(result.get());
+      results.put(result.getKey(), result.get().hashCode()); //keys are not reused, so this is safe
+      count++;
+    }
+    result.close();
+    
+    Assert.assertTrue(count > 0); //assert that results is not empty
+    Assert.assertEquals(count, results.size()); //assert that keys are unique
+    
+    for(PartitionQuery<String, WebPage> partition:partitions) {
+      Assert.assertNotNull(partition);
+      
+      result = store.execute(partition);
+      Assert.assertNotNull(result);
+      
+      while(result.next()) {
+        Assert.assertNotNull(result.getKey());
+        Assert.assertNotNull(result.get());
+        partitionResults.put(result.getKey(), result.get().hashCode());
+        partitionsCount++;
+      }
+      result.close();
+      
+      Assert.assertEquals(partitionsCount, partitionResults.size()); //assert that keys are unique
+    }
+    
+    Assert.assertTrue(partitionsCount > 0);
+    Assert.assertEquals(count, partitionsCount);
+    
+    for(Map.Entry<String, Integer> r : results.entrySet()) {
+      Integer p = partitionResults.get(r.getKey());
+      Assert.assertNotNull(p);
+      Assert.assertEquals(r.getValue(), p);
+    }
   }
 }

@@ -2,6 +2,7 @@
 package org.gora.hbase.mapreduce;
 
 import org.apache.hadoop.hbase.HBaseClusterTestCase;
+import org.gora.example.generated.TokenDatum;
 import org.gora.example.generated.WebPage;
 import org.gora.hbase.store.HBaseStore;
 import org.gora.mapreduce.MapReduceTestUtils;
@@ -15,13 +16,16 @@ import org.junit.Test;
 public class TestHBaseStoreMapReduce extends HBaseClusterTestCase{
 
   private HBaseStore<String, WebPage> webPageStore;
+  private HBaseStore<String, TokenDatum> tokenStore;
   
   @Before
   @Override
   public void setUp() throws Exception {
     super.setUp();
-   webPageStore = (HBaseStore<String, WebPage>) DataStoreFactory.getDataStore(
+    webPageStore = DataStoreFactory.getDataStore(
         HBaseStore.class, String.class, WebPage.class);
+    tokenStore = DataStoreFactory.getDataStore(HBaseStore.class, 
+        String.class, TokenDatum.class);
   }
   
   @Override
@@ -37,7 +41,12 @@ public class TestHBaseStoreMapReduce extends HBaseClusterTestCase{
   
   @Test
   public void testWordCount() throws Exception {
-    MapReduceTestUtils.testCountQuery(webPageStore, conf);
+    MapReduceTestUtils.testWordCount(conf, webPageStore, tokenStore);
   }
   
+  public static void main(String[] args) throws Exception {
+   TestHBaseStoreMapReduce test =  new TestHBaseStoreMapReduce();
+   test.setUp();
+   test.testCountQuery();
+  }
 }

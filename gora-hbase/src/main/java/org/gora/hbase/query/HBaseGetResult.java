@@ -7,6 +7,7 @@ import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Result;
 import org.gora.hbase.store.HBaseStore;
 import org.gora.persistency.Persistent;
+import org.gora.query.Query;
 
 /**
  * An {@link HBaseResult} based on the result of a HBase {@link Get} query.
@@ -15,7 +16,7 @@ public class HBaseGetResult<K, T extends Persistent> extends HBaseResult<K,T> {
 
   private Result result;
   
-  public HBaseGetResult(HBaseStore<K, T> dataStore, HBaseQuery<K, T> query
+  public HBaseGetResult(HBaseStore<K, T> dataStore, Query<K, T> query
       , Result result) {
     super(dataStore, query);
     this.result = result;

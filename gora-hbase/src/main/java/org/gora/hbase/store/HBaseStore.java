@@ -6,6 +6,7 @@ import static org.gora.hbase.util.HBaseByteInterface.toBytes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -261,24 +262,30 @@ implements Configurable {
           : HConstants.EMPTY_START_ROW;
       byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey()) 
           : HConstants.EMPTY_END_ROW;
+      
       // determine if the given start an stop key fall into the region
       if ((startRow.length == 0 || keys.getSecond()[i].length == 0 ||
           Bytes.compareTo(startRow, keys.getSecond()[i]) < 0) &&
           (stopRow.length == 0 || 
               Bytes.compareTo(stopRow, keys.getFirst()[i]) > 0)) {
-        byte[] splitStart = startRow.length == 0 || 
-        Bytes.compareTo(keys.getFirst()[i], startRow) >= 0 ? 
+
+        byte[] splitStart = (startRow.length == 0 || 
+          Bytes.compareTo(keys.getFirst()[i], startRow) >= 0) ? 
             keys.getFirst()[i] : startRow;
-            byte[] splitStop = stopRow.length == 0 || 
-            Bytes.compareTo(keys.getSecond()[i], stopRow) <= 0 ? 
-                keys.getSecond()[i] : stopRow;
-                
-                K startKey = HBaseByteInterface.fromBytes(keyClass, splitStart);
-                K endKey = HBaseByteInterface.fromBytes(keyClass, splitStop);
-                
-                PartitionQuery<K, T> partition = new PartitionQueryImpl<K, T>(
-                    query, startKey, endKey, regionLocation);
-                partitions.add(partition);
+            
+        byte[] splitStop = (stopRow.length == 0 || 
+            Bytes.compareTo(keys.getSecond()[i], stopRow) <= 0) ? 
+            keys.getSecond()[i] : stopRow;
+
+        K startKey = Arrays.equals(HConstants.EMPTY_START_ROW, splitStart) ? 
+            null : HBaseByteInterface.fromBytes(keyClass, splitStart);
+        K endKey = Arrays.equals(HConstants.EMPTY_END_ROW, splitStop) ?
+            null : HBaseByteInterface.fromBytes(keyClass, splitStop);
+
+        PartitionQuery<K, T> partition = new PartitionQueryImpl<K, T>(
+            query, startKey, endKey, regionLocation);
+        
+        partitions.add(partition);
       }
     }
     return partitions;
@@ -288,29 +295,27 @@ implements Configurable {
   public org.gora.query.Result<K, T> execute(Query<K, T> query)
       throws IOException {
 
-    HBaseQuery<K, T> hQuery = (HBaseQuery<K, T>) query;
-    
     //check if query.fields is null
     query.setFields(getFieldsToQuery(query.getFields()));
     
-    if(query.getStartKey()!=null && query.getStartKey().equals(
+    if(query.getStartKey() != null && query.getStartKey().equals(
         query.getEndKey())) {
       Get get = new Get(toBytes(query.getStartKey()));
       addFields(get, query.getFields());
-      addTimeRange(get, hQuery);
+      addTimeRange(get, query);
       Result result = table.get(get);
-      return new HBaseGetResult<K,T>(this, hQuery, result);
+      return new HBaseGetResult<K,T>(this, query, result);
     } else {
-      ResultScanner scanner = createScanner(hQuery);
+      ResultScanner scanner = createScanner(query);
       
       org.gora.query.Result<K,T> result 
-      = new HBaseScannerResult<K,T>(this,hQuery, scanner);
+      = new HBaseScannerResult<K,T>(this,query, scanner);
       
       return result; 
     }
   }
   
-  public ResultScanner createScanner(HBaseQuery<K, T> query) 
+  public ResultScanner createScanner(Query<K, T> query) 
   throws IOException {
     final Scan scan = new Scan();
     if (query.getStartKey() != null) {
@@ -334,21 +339,23 @@ implements Configurable {
         case ARRAY: 
           get.addFamily(col.family); break;
         default:
-          get.addColumn(col.family, col.qualifier);
+          get.addColumn(col.family, col.qualifier); break;
       }
     }
   }
 
-  private void addFields(Scan scan, HBaseQuery<K,T> query)
+  private void addFields(Scan scan, Query<K,T> query)
   throws IOException {
     String[] fields = query.getFields();
     for (String f : fields) {
       HbaseColumn col = columnMap.get(f);
       Schema fieldSchema = fieldMap.get(f).schema();
-      if (fieldSchema.getType() == Type.MAP) {
-        scan.addFamily(col.family);
-      } else {
-        scan.addColumn(col.family, col.qualifier);
+      switch (fieldSchema.getType()) {
+        case MAP:
+        case ARRAY:
+          scan.addFamily(col.family); break;
+        default:
+          scan.addColumn(col.family, col.qualifier); break;    
       }
     }
   }
@@ -402,7 +409,7 @@ implements Configurable {
           for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
             arrayList.add(fromBytes(valueSchema, e.getValue()));
           }
-          ListGenericArray arr = new ListGenericArray(valueSchema, arrayList);
+          ListGenericArray arr = new ListGenericArray(fieldSchema, arrayList);
           setField(persistent, field, arr);
           break;    
         default:
