@@ -258,6 +258,34 @@ public class DataStoreTestUtil {
     testQueryWebPageKeyRange(store, true, true);
   }
   
+  public static void testQueryWebPageQueryEmptyResults(DataStore<String, WebPage> store) 
+    throws IOException {
+    createWebPageData(store);
+    
+    //query empty results
+    Query<String, WebPage> query = store.newQuery();
+    query.setStartKey("aa");
+    query.setEndKey("ab");
+    
+    Result<String, WebPage> result = query.execute();
+    int numResults = 0;
+    while(result.next()) {
+      numResults++;
+    }
+    Assert.assertEquals(0, numResults);
+    
+    //query empty results for one key
+    query = store.newQuery();
+    query.setKey("aa");
+    
+    result = query.execute();
+    numResults = 0;
+    while(result.next()) {
+      numResults++;
+    }
+    Assert.assertEquals(0, numResults);
+  }
+  
   public static void testGetPartitions(DataStore<String, WebPage> store) 
   throws IOException {
     createWebPageData(store);

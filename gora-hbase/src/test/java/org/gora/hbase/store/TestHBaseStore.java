@@ -199,25 +199,29 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   public void testQuery() throws IOException {
     DataStoreTestUtil.testQueryWebPages(webPageStore);
   }
-  
+
   @Test
   public void testQueryStartKey() throws IOException {
     DataStoreTestUtil.testQueryWebPageStartKey(webPageStore);
   }
-  
+
   @Test
   public void testQueryEndKey() throws IOException {
     DataStoreTestUtil.testQueryWebPageEndKey(webPageStore);
   }
-  
+
   @Test
   public void testQueryKeyRange() throws IOException {
     DataStoreTestUtil.testQueryWebPageKeyRange(webPageStore);
   }
-  
+
+  @Test
+  public void testQueryWebPageQueryEmptyResults() throws IOException {
+    DataStoreTestUtil.testQueryWebPageQueryEmptyResults(webPageStore);
+  }
+
   @Test
   public void testGetPartitions() throws IOException {
     DataStoreTestUtil.testGetPartitions(webPageStore);
   }
-  
 }
