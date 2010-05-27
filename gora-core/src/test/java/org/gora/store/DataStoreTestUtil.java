@@ -21,6 +21,7 @@ import junit.framework.Assert;
 
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.util.Utf8;
+import org.gora.example.WebPageDataCreator;
 import org.gora.example.generated.Employee;
 import org.gora.example.generated.WebPage;
 import org.gora.persistency.Persistent;
@@ -72,6 +73,25 @@ public class DataStoreTestUtil {
     
     //should not throw exception
     dataStore.createSchema();
+  }
+
+  public static void testTruncateSchema(DataStore<String, WebPage> dataStore) 
+  throws IOException {
+    dataStore.createSchema();
+    WebPageDataCreator.createWebPageData(dataStore);
+    dataStore.truncateSchema();
+
+    assertEmptyResults(dataStore.newQuery());
+  }
+  
+  public static void testDeleteSchema(DataStore<String, WebPage> dataStore) 
+  throws IOException {
+    dataStore.createSchema();
+    WebPageDataCreator.createWebPageData(dataStore);
+    dataStore.deleteSchema();
+    dataStore.createSchema();
+
+    assertEmptyResults(dataStore.newQuery());
   }
   
   public static void testGetEmployee(DataStore<String, Employee> dataStore) 
@@ -266,20 +286,18 @@ public class DataStoreTestUtil {
     Query<String, WebPage> query = store.newQuery();
     query.setStartKey("aa");
     query.setEndKey("ab");
-    
-    Result<String, WebPage> result = query.execute();
-    int numResults = 0;
-    while(result.next()) {
-      numResults++;
-    }
-    Assert.assertEquals(0, numResults);
+    assertEmptyResults(query);
     
     //query empty results for one key
     query = store.newQuery();
     query.setKey("aa");
-    
-    result = query.execute();
-    numResults = 0;
+    assertEmptyResults(query);
+  }
+  
+  public static void assertEmptyResults(Query<String, WebPage> query) 
+    throws IOException {
+    Result<String, WebPage> result = query.execute();
+    int numResults = 0;
     while(result.next()) {
       numResults++;
     }

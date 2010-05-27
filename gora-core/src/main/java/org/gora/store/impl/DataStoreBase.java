@@ -158,4 +158,11 @@ implements DataStore<K, T> {
     }
     return false;
   }
+  
+  @Override
+  /** Default implementation deletes and recreates the schema*/
+  public void truncateSchema() throws IOException {
+    deleteSchema();
+    createSchema();
+  }
 }

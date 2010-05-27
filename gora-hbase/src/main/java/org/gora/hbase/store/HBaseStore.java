@@ -82,6 +82,8 @@ implements Configurable {
 
   private List<HColumnDescriptor> colDescs;
 
+  private HBaseAdmin admin;
+  
   private String tableName;
 
   private HTable table;
@@ -112,7 +114,9 @@ implements Configurable {
     columnMap = new HashMap<String, HbaseColumn>();
     colDescs = new ArrayList<HColumnDescriptor>();
     autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
-
+    
+    admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
+    
     try {
       parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEFAULT_FILE_NAME));
     } catch (Exception e) {
@@ -124,10 +128,9 @@ implements Configurable {
      table = new HTable(tableName);  
     }
   }
-  
+
   @Override
   public void createSchema() throws IOException {
-    HBaseAdmin admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
     if(admin.tableExists(tableName)) {
       return;
     }
@@ -137,6 +140,18 @@ implements Configurable {
     }
     admin.createTable(tableDesc);
     table = new HTable(tableName);
+  }
+
+  @Override
+  public void deleteSchema() throws IOException {
+    if(!admin.tableExists(tableName)) {
+      if(table != null) {
+        table.getWriteBuffer().clear();
+      }
+      return;
+    }
+    admin.disableTable(tableName);
+    admin.deleteTable(tableName);
   }
 
   @Override

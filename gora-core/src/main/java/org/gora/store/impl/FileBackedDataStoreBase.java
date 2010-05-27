@@ -24,6 +24,7 @@ import org.gora.query.Result;
 import org.gora.query.impl.FileSplitPartitionQuery;
 import org.gora.store.DataStoreFactory;
 import org.gora.store.FileBackedDataStore;
+import org.gora.util.OperationNotSupportedException;
 
 /**
  * Base implementations for {@link FileBackedDataStore} methods.
@@ -157,6 +158,16 @@ public abstract class FileBackedDataStoreBase<K, T extends Persistent>
   public void flush() throws IOException {
     if(outputStream != null)
       outputStream.flush();
+  }
+  
+  @Override
+  public void createSchema() throws IOException {
+  }
+  
+  @Override
+  public void deleteSchema() throws IOException {
+    throw new OperationNotSupportedException("delete schema is not supported for " +
+    		"file backed data stores");
   }
   
   @Override

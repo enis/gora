@@ -90,11 +90,7 @@ public class AvroStore<K, T extends Persistent>
   public void setDatumWriter(DatumWriter<T> datumWriter) {
     this.datumWriter = datumWriter;
   }
-  
-  @Override
-  public void createSchema() throws IOException {
-  }
-  
+
   @Override
   public void close() throws IOException {
     super.close();

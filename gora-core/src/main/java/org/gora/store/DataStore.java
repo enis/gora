@@ -71,6 +71,19 @@ public interface DataStore<K, T extends Persistent> extends Closeable,
   public abstract void createSchema() throws IOException;
 
   /**
+   * Deletes the underlying schema or table (or similar) in the datastore
+   * that holds the objects. This also deletes all the data associated with 
+   * the schema.
+   */
+  public abstract void deleteSchema() throws IOException;
+  
+  /**
+   * Deletes all the data associated with the schema, but keeps the 
+   * schema (table or similar) intact. 
+   */
+  public abstract void truncateSchema() throws IOException;
+  
+  /**
    * Returns a new instance of the key object.
    * @return a new instance of the key object.
    */

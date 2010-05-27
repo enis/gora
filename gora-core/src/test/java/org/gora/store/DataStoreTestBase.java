@@ -60,6 +60,16 @@ public abstract class DataStoreTestBase {
   }
   
   @Test
+  public  void testTruncateSchema() throws IOException {
+    DataStoreTestUtil.testTruncateSchema(webPageStore);
+  }
+  
+  @Test
+  public void testDeleteSchema() throws IOException {
+    DataStoreTestUtil.testDeleteSchema(webPageStore);
+  }
+  
+  @Test
   public void testPut() throws IOException {
     Employee employee = DataStoreTestUtil.testPutEmployee(employeeStore);
     assertPut(employee);

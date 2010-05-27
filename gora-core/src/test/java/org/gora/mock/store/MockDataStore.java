@@ -36,6 +36,14 @@ public class MockDataStore extends DataStoreBase<String, MockPersistent> {
   }
 
   @Override
+  public void deleteSchema() throws IOException {
+  }
+  
+  @Override
+  public void truncateSchema() throws IOException {
+  }
+  
+  @Override
   public void delete(String key) throws IOException {
   }
 

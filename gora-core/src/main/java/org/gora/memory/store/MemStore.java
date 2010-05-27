@@ -144,5 +144,10 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   public void createSchema() throws IOException { }
   
   @Override
+  public void deleteSchema() throws IOException {
+    map.clear();
+  }
+  
+  @Override
   public void flush() throws IOException { }
 }
