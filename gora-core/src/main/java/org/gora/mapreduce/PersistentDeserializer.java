@@ -2,14 +2,14 @@ package org.gora.mapreduce;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.Schema.Type;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.serializer.Deserializer;
@@ -18,30 +18,46 @@ import org.gora.persistency.State;
 import org.gora.persistency.StateManager;
 import org.gora.persistency.StatefulHashMap;
 import org.gora.persistency.StatefulMap;
+import org.gora.util.IOUtils;
 
-public class PersistentDeserializer extends SpecificDatumReader
-implements Deserializer<Persistent> {
+public class PersistentDeserializer 
+  extends SpecificDatumReader<Persistent> implements Deserializer<Persistent> {
 
   private BinaryDecoder decoder;
-  private Class<Persistent> persistentClass;
+  private Class<? extends Persistent> persistentClass;
   private boolean reuseObjects;
-
-  public PersistentDeserializer(Class<Persistent> c, boolean reuseObjects) {
+  private Persistent persistent;
+  
+  public PersistentDeserializer(Class<? extends Persistent> c, boolean reuseObjects) {
     this.persistentClass = c;
     this.reuseObjects = reuseObjects;
   }
   
   @Override
   public void open(InputStream in) throws IOException {
-    decoder = new BinaryDecoder(in);
+    /* It is very important to use a direct buffer, since Hadoop 
+     * supplies an input stream that is only valid until the end of one 
+     * record serialization. Each time deserialize() is called, the IS
+     * is advanced to point to the right location, so we should not 
+     * buffer the whole input stream at once.
+     */
+    decoder = new DecoderFactory().configureDirectDecoder(true)
+      .createBinaryDecoder(in, decoder);
   }
 
   @Override
   public void close() throws IOException { }
 
   @Override
-  public Persistent deserialize(Persistent persistent)
-  throws IOException {
+  public Persistent read(Persistent reuse, Decoder in) throws IOException {
+    Schema schema = persistent.getSchema();
+    return (Persistent) read(reuse, schema
+        , new FakeResolvingDecoder(schema, in));
+  }
+  
+  @Override
+  public Persistent deserialize(Persistent persistent) throws IOException {
+    
     StateManager stateManager = null;
     if (persistent == null || !reuseObjects) {
       try {
@@ -55,46 +71,75 @@ implements Deserializer<Persistent> {
       stateManager.clearDirty(persistent);
       stateManager.clearReadable(persistent);
     }
-    setSchema(persistent.getSchema());
-
-    List<Field> fields= persistent.getSchema().getFields();
-    boolean[] isDirty = new boolean[fields.size()];
-
-    int i = 0;
-    for (Field field : fields) {
-      boolean isReadable = decoder.readBoolean();
-      isDirty[i++] = decoder.readBoolean();
-      if (isReadable) {
-        Object o = read(null, decoder);
-        o = readExtraInformation(field.schema(), o, decoder);
-        persistent.put(field.pos(), o);
-      }
-    }
-
-    // Now set changed bits
-    stateManager.clearDirty(persistent);
-    for (i = 0; i < isDirty.length; i++) {
-      if (isDirty[i]) {
-        stateManager.setDirty(persistent, i);
-      }
-    }
+    this.persistent = persistent;
+    setSchema(persistent.getSchema());    
+    
+    read(persistent, decoder);
+    
     return persistent;
   }
 
-  @SuppressWarnings("unchecked")
-  private Object readExtraInformation(Schema schema, Object o, Decoder decoder)
-  throws IOException {
-    if (schema.getType() == Type.MAP) {
-      StatefulMap<Utf8, ?> map = new StatefulHashMap((Map)o);
-      map.clearStates();
-      int size = decoder.readInt();
-      for (int j = 0; j < size; j++) {
-        Utf8 key = decoder.readString(null);
-        State state = State.values()[decoder.readInt()];
-        map.putState(key, state);
+  @Override
+  protected Object readRecord(Object old, Schema expected, ResolvingDecoder in)
+      throws IOException {
+    
+    //check if top-level
+    if(expected.equals(persistent.getSchema())) {
+      boolean[] dirtyFields = IOUtils.readBoolArray(in);
+      boolean[] readableFields = IOUtils.readBoolArray(in);
+
+      //read fields
+      int i = 0;
+      Object record = newRecord(old, expected);
+      
+      for (Field f : expected.getFields()) {
+        if(readableFields[f.pos()]) {
+          int pos = f.pos();
+          String name = f.name();
+          Object oldDatum = (old != null) ? getField(record, name, pos) : null;
+          setField(record, name, pos, read(oldDatum, f.schema(), in));
+        }
       }
-      return map;
+      
+      // Now set changed bits
+      StateManager stateManager = persistent.getStateManager();
+      stateManager.clearDirty(persistent);
+      for (i = 0; i < dirtyFields.length; i++) {
+        if (dirtyFields[i]) {
+          stateManager.setDirty(persistent, i);
+        }
+      }
+      return record;
+    } else {
+      return super.readRecord(old, expected, in);
     }
-    return o;
+  }
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  protected Object readMap(Object old, Schema expected, ResolvingDecoder in)
+      throws IOException {
+    
+    StatefulMap<Utf8, ?> map = (StatefulMap<Utf8, ?>) newMap(old, 0);
+    map.clearStates();
+    int size = decoder.readInt();
+    for (int j = 0; j < size; j++) {
+      Utf8 key = decoder.readString(null);
+      State state = State.values()[decoder.readInt()];
+      map.putState(key, state);
+    }
+    
+    return super.readMap(map, expected, in);
+  }
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  protected Object newMap(Object old, int size) {
+    if (old instanceof StatefulHashMap) {
+      ((Map) old).clear();
+      ((StatefulHashMap)old).clearStates();
+      return old;
+    }
+    return new StatefulHashMap<Object, Object>();
   }
 }

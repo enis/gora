@@ -1,8 +1,12 @@
 package org.gora.persistency.impl;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.avro.Schema.Field;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecord;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.StateManager;
@@ -169,28 +173,40 @@ public abstract class PersistentBase implements Persistent {
     SpecificRecord r2 = (SpecificRecord)o;
     if (!this.getSchema().equals(r2.getSchema())) return false;
 
-    int end = this.getSchema().getFields().size();
-    for (int i = 0; i < end; i++) {
-      Object v1 = this.get(i);
-      Object v2 = r2.get(i);
-      if (v1 == null) {
-        if (v2 != null) return false;
-      } else {
-        if (!v1.equals(v2)) return false;
-      }
-    }
-    return true;
+    return this.hashCode() == r2.hashCode();
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    int end = this.getSchema().getFields().size();
+    List<Field> fields = this.getSchema().getFields();
+    int end = fields.size();
     for (int i = 0; i < end; i++) {
-      Object o = get(i);
-      result = prime * result + ((o == null) ? 0 : o.hashCode());
+      result = prime * result + getFieldHashCode(i, fields.get(i));
     }
     return result;
+  }
+  
+  private int getFieldHashCode(int i, Field field) {
+    Object o = get(i);
+    if(o == null)
+      return 0;
+    
+    if(field.schema().getType() == Type.BYTES) {
+      return getByteBufferHashCode((ByteBuffer)o);
+    }
+    
+    return o.hashCode();
+  }
+  
+  /** ByteBuffer.hashCode() takes into account the position of the 
+   * buffer, but we do not want that*/
+  private int getByteBufferHashCode(ByteBuffer buf) {
+    int h = 1;
+    int p = buf.arrayOffset();
+    for (int j = buf.limit() - 1; j >= p; j--)
+          h = 31 * h + buf.get(j);
+    return h;
   }
 }

@@ -14,6 +14,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.io.Decoder;
+import org.apache.avro.io.Encoder;
 import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.ipc.ByteBufferOutputStream;
 import org.apache.hadoop.conf.Configuration;
@@ -252,6 +254,68 @@ public class IOUtils {
     return arr;
   }
   
+  
+  /**
+   * Writes a boolean[] to the output.
+   */
+  public static void writeBoolArray(Encoder out, boolean[] boolArray) 
+    throws IOException {
+    
+    out.writeInt(boolArray.length);
+    
+    int byteArrLength = (int)Math.ceil(boolArray.length / 8.0);
+    
+    byte b = 0;
+    byte[] arr = new byte[byteArrLength];
+    int i = 0;
+    int arrIndex = 0;
+    for(i=0; i<boolArray.length; i++) {
+      if(i % 8 == 0 && i != 0) {
+        arr[arrIndex++] = b;
+        b = 0;
+      }
+      b >>= 1;
+      if(boolArray[i])
+        b |= 0x80;
+      else
+        b &= 0x7F;
+    }
+    if(i % 8 != 0) {
+      for(int j=0; j < 8 - (i % 8); j++) { //shift for the remaining byte
+        b >>=1;
+        b &= 0x7F;
+      }
+    }
+    
+    arr[arrIndex++] = b;
+    out.writeFixed(arr);
+  }
+
+  /**
+   * Reads a boolean[] from input
+   * @throws IOException 
+   */
+  public static boolean[] readBoolArray(Decoder in) throws IOException {
+    
+    int length = in.readInt();
+    boolean[] boolArr = new boolean[length];
+    
+    int byteArrLength = (int)Math.ceil(length / 8.0);
+    byte[] byteArr = new byte[byteArrLength];
+    in.readFixed(byteArr);
+    
+    int arrIndex = 0;
+    byte b = 0;
+    for(int i=0; i < length; i++) {
+      if(i % 8 == 0) {
+        b = byteArr[arrIndex++];
+      }
+      boolArr[i] = (b & 0x01) > 0;
+      b >>= 1; 
+    }
+    return boolArr;
+  }
+  
   /**
    * Writes the String array to the given DataOutput.
    * @param out the data output to write to
@@ -310,7 +374,7 @@ public class IOUtils {
       T obj = (T) DefaultStringifier.load(conf, dataKey, Class.forName(className));
       return obj;
     } catch (Exception ex) {
-      throw new IOException();
+      throw new IOException(ex);
     }
   }
 }

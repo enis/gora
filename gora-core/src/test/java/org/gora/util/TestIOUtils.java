@@ -5,6 +5,7 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -12,11 +13,14 @@ import junit.framework.Assert;
 
 import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.ipc.ByteBufferOutputStream;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.gora.mapreduce.GoraMapReduceUtils;
 import org.junit.Test;
 
 /**
@@ -24,7 +28,9 @@ import org.junit.Test;
  */
 public class TestIOUtils {
 
-  private static Configuration conf = new Configuration();
+  public static final Log log = LogFactory.getLog(TestIOUtils.class);
+  
+  public static Configuration conf = new Configuration();
 
   private static final int BOOL_ARRAY_MAX_LENGTH = 30;
   private static final int STRING_ARRAY_MAX_LENGTH = 30;
@@ -74,24 +80,39 @@ public class TestIOUtils {
   }
   
   @SuppressWarnings("unchecked")
-  public static <T> void testSerializeDeserialize(T before) throws Exception {
+  public static <T> void testSerializeDeserialize(T... objects) throws Exception {
     ByteBufferOutputStream os = new ByteBufferOutputStream();
     DataOutputStream dos = new DataOutputStream(os);
     ByteBufferInputStream is = null;
     DataInputStream dis = null;
     
+    GoraMapReduceUtils.setIOSerializations(conf, true);
+    
     try {
-      IOUtils.serialize(conf, dos , before, (Class<T>)before.getClass());
-      dos.flush();
-      
+      for(T before : objects) {
+        IOUtils.serialize(conf, dos , before, (Class<T>)before.getClass());
+        dos.flush();
+      }
+       
       is = new ByteBufferInputStream(os.getBufferList());
       dis = new DataInputStream(is);
       
-      T after = IOUtils.deserialize(conf, dis, null, (Class<T>)before.getClass());
+      for(T before : objects) {
+        T after = IOUtils.deserialize(conf, dis, null, (Class<T>)before.getClass());
+        
+        log.info("Before: " + before);
+        log.info("After : " + after);
+        
+        Assert.assertEquals(before, after);
+      }
       
-      System.out.println("Before: " + before);
-      System.out.println("After : " + after);
-      Assert.assertEquals(before, after);
+      //assert that the end of input is reached
+      try {
+        long skipped = dis.skip(1);
+        Assert.assertEquals(0, skipped);
+      }catch (EOFException expected) {
+        //either should throw exception or return 0 as skipped
+      }
     }finally {
       org.apache.hadoop.io.IOUtils.closeStream(dos);
       org.apache.hadoop.io.IOUtils.closeStream(os);
@@ -134,7 +155,6 @@ public class TestIOUtils {
           arr[k] = patterns[j][k % patterns[j].length];
         }
         
-        System.out.println("testing for:" + Arrays.toString(arr));
         testSerializeDeserialize(new BoolArrayWrapper(arr));
       }
     }
@@ -180,7 +200,6 @@ public class TestIOUtils {
         arr[j] = String.valueOf(j);
       }
       
-      System.out.println("testing for:" + Arrays.toString(arr));
       testSerializeDeserialize(new StringArrayWrapper(arr));
     }
   }

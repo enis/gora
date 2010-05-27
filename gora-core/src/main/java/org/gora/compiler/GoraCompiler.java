@@ -245,7 +245,8 @@ public class GoraCompiler {
           switch (fieldSchema.getType()) {
           case ARRAY:
             String valueType = type(fieldSchema.getElementType());
-            line(2, field.name()+" = new ListGenericArray<"+valueType+">(getSchema());");
+            line(2, field.name()+" = new ListGenericArray<"+valueType+">(getSchema()" +
+            		".getField("+field.name()+").schema());");
             break;
           case MAP:
             valueType = type(fieldSchema.getValueType());
