@@ -1,6 +1,9 @@
 
 package org.gora.persistency.impl;
 
+import java.nio.ByteBuffer;
+
+import org.apache.avro.util.Utf8;
 import org.gora.example.generated.Employee;
 import org.gora.example.generated.WebPage;
 import org.junit.Assert;
@@ -53,5 +56,37 @@ public class TestPersistentBase {
       int index = employee.getFieldIndex(EMPLOYEE_FIELDS[i]);
       Assert.assertEquals(i, index);
     }
+  }
+  
+  @Test
+  public void testClear() {
+    
+    //test clear all fields
+    WebPage page = new WebPage();
+    page.setUrl(new Utf8("http://foo.com"));
+    page.addToParsedContent(new Utf8("foo"));
+    page.putToOutlinks(new Utf8("foo"), new Utf8("bar"));
+    page.setContent(ByteBuffer.wrap("foo baz bar".getBytes()));
+    
+    page.clear();
+    
+    Assert.assertNull(page.getUrl());
+    Assert.assertEquals(0, page.getParsedContent().size());
+    Assert.assertEquals(0, page.getOutlinks().size());
+    Assert.assertNull(page.getContent());
+    
+    //set fields again
+    page.setUrl(new Utf8("http://bar.com"));
+    page.addToParsedContent(new Utf8("bar"));
+    page.putToOutlinks(new Utf8("bar"), new Utf8("baz"));
+    page.setContent(ByteBuffer.wrap("foo baz bar barbaz".getBytes()));
+    
+    //test clear new object
+    page = new WebPage();
+    page.clear();
+    
+    //test primitive fields
+    Employee employee = new Employee();
+    employee.clear();
   }
 }

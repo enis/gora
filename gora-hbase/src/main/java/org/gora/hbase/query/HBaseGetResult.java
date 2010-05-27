@@ -28,7 +28,7 @@ public class HBaseGetResult<K, T extends Persistent> extends HBaseResult<K,T> {
   }
 
   @Override
-  public boolean next() throws IOException {
+  public boolean nextInner() throws IOException {
     if(result == null || result.getRow() == null 
         || result.getRow().length == 0) {
       return false;

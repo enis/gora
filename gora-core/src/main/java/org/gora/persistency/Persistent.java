@@ -44,6 +44,13 @@ public interface Persistent extends SpecificRecord {
   public int getFieldIndex(String field);
   
   /**
+   * Clears the inner state of the object without any modification
+   * to the actual data on the data store. This method should be called 
+   * before re-using the object to hold the data for another result.  
+   */
+  public void clear();
+  
+  /**
    * Returns whether the object is newly constructed.
    * @return true if the object is newly constructed, false if
    * retrieved from a datastore. 

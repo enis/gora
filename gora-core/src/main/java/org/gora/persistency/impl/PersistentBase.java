@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecord;
+import org.gora.persistency.ListGenericArray;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.StateManager;
 
@@ -68,6 +69,36 @@ public abstract class PersistentBase implements Persistent {
   @Override
   public int getFieldIndex(String field) {
     return FIELD_MAP.get(getClass()).get(field);
+  }
+  
+  @Override
+  @SuppressWarnings("unchecked")
+  public void clear() {
+    List<Field> fields = getSchema().getFields();
+    
+    for(int i=0; i<getFields().length; i++) {
+      switch(fields.get(i).schema().getType()) {
+        case MAP: if(get(i) != null) ((Map)get(i)).clear(); break;
+        case ARRAY:
+          if(get(i) != null) {
+            if(get(i) instanceof ListGenericArray) {
+              ((ListGenericArray)get(i)).clear();
+            } else {
+              put(i, new ListGenericArray(fields.get(i).schema())); 
+            }
+          }
+          break;
+        case BOOLEAN: put(i, false); break;
+        case INT    : put(i, 0); break;
+        case DOUBLE : put(i, 0d); break;
+        case FLOAT  : put(i, 0f); break;
+        case LONG   : put(i, 0l); break;
+        case NULL   : break;
+        default     : put(i, null); break;
+      }
+    }
+    clearDirty();
+    clearReadable();
   }
   
   @Override

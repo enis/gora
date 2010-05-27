@@ -24,10 +24,7 @@ public class HBaseScannerResult<K, T extends Persistent>
   }
   
   @Override
-  public boolean next() throws IOException {
-    if(isLimitReached()) { 
-      return false;
-    }
+  public boolean nextInner() throws IOException {
     
     Result result = scanner.next();
     if (result == null) {

@@ -74,6 +74,8 @@ public class PersistentDeserializer
     this.persistent = persistent;
     setSchema(persistent.getSchema());    
     
+    persistent.clear();
+    
     read(persistent, decoder);
     
     return persistent;

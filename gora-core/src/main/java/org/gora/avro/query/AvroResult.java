@@ -37,13 +37,10 @@ public class AvroResult<K, T extends Persistent> extends ResultBase<K, T> {
   }
 
   @Override
-  public boolean next() throws IOException {
-    if(isLimitReached()) { 
-      return false;
-    }
+  public boolean nextInner() throws IOException {
     try {
-      persistent = reader.read(null, decoder); //TODO: add clear method to Persistent, 
-                                               //and change this to read(persistent, decoder) 
+      persistent = reader.read(persistent, decoder);
+      
     } catch (AvroTypeException ex) {
       //TODO: it seems that avro does not respect end-of file and return null
       //gracefully. Report the issue.

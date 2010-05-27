@@ -1,6 +1,8 @@
 
 package org.gora.query.impl;
 
+import java.io.IOException;
+
 import org.gora.persistency.Persistent;
 import org.gora.query.Query;
 import org.gora.query.Result;
@@ -71,5 +73,31 @@ public abstract class ResultBase<K, T extends Persistent>
     }
     return false;
   }
+  
+  protected void clear() {
+    if(persistent != null) {
+      persistent.clear();
+    }
+    if(key != null && key instanceof Persistent) {
+      ((Persistent)key).clear();
+    }
+  }
+  
+  @Override
+  public final boolean next() throws IOException {
+    if(isLimitReached()) { 
+      return false;
+    }
+    
+    clear();
+    
+    return nextInner();
+  }
+  
+  /**
+   * {@link ResultBase#next()} calls this function to read the 
+   * actual results. 
+   */
+  protected abstract boolean nextInner() throws IOException; 
   
 }

@@ -56,10 +56,7 @@ public class DataFileAvroResult<K, T extends Persistent> extends ResultBase<K, T
   }
 
   @Override
-  public boolean next() throws IOException {
-    if(isLimitReached()) {
-      return false;
-    }
+  public boolean nextInner() throws IOException {
     if (!reader.hasNext())
       return false;
     if(end > 0 && reader.pastSync(end))

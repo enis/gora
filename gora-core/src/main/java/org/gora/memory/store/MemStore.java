@@ -51,9 +51,10 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
     
     @Override
-    public boolean next() throws IOException {
-      if(isLimitReached()) return false;
-      
+    protected void clear() {  } //do not clear the object in the store 
+    
+    @Override
+    public boolean nextInner() throws IOException {
       if(!iterator.hasNext()) {
         return false; 
       }
