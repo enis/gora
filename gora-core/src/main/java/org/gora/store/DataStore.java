@@ -118,10 +118,17 @@ public interface DataStore<K, T extends Persistent> extends Closeable,
   /**
    * Deletes the object with the given key
    * @param key the key of the object
-   * @throws IOException
+   * @return whether deleted the object successfuly
    */
-  public abstract void delete(K key) throws IOException;
+  public abstract boolean delete(K key) throws IOException;
 
+  /**
+   * Deletes all the objects matching the query. 
+   * @param query matching records to this query will be deleted
+   * @return number of deleted records
+   */
+  public abstract long deleteByQuery(Query<K, T> query) throws IOException;
+  
   /**
    * Executes the given query and returns the results.
    * @param query the query to execute.

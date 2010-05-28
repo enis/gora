@@ -240,12 +240,45 @@ implements Configurable {
   public void delete(T obj) {
     throw new RuntimeException("Not implemented yet");
   }
-  
+
+  /**
+   * Deletes the object with the given key. 
+   * @return always true
+   */
   @Override
-  public void delete(K key) throws IOException {
+  public boolean delete(K key) throws IOException {
     table.delete(new Delete(toBytes(key)));
+    //HBase does not return success information and executing a get for 
+    //success is a bit costly
+    return true;
   }
 
+  @Override
+  public long deleteByQuery(Query<K, T> query) throws IOException {
+    
+    String[] fields = getFieldsToQuery(query.getFields());
+    //find whether all fields are queried, which means that complete 
+    //rows will be deleted
+    boolean isAllFields = Arrays.equals(fields
+        , getBeanFactory().getCachedPersistent().getFields());
+    
+    org.gora.query.Result<K, T> result = query.execute();
+    
+    ArrayList<Delete> deletes = new ArrayList<Delete>();
+    while(result.next()) {
+      Delete delete = new Delete(toBytes(result.getKey()));
+      deletes.add(delete);
+      if(!isAllFields) {
+        addFields(delete, query);
+      }
+    }
+    //TODO: delete by timestamp, etc
+    
+    table.delete(deletes);
+    
+    return deletes.size();
+  }
+  
   @Override
   public void flush() throws IOException {
     table.flushCommits();
@@ -375,6 +408,23 @@ implements Configurable {
     }
   }
 
+  //TODO: HBase Get, Scan, Delete should extend some common interface with addFamily, etc
+  private void addFields(Delete delete, Query<K,T> query) 
+    throws IOException {
+    String[] fields = query.getFields();
+    for (String f : fields) {
+      HbaseColumn col = columnMap.get(f);
+      Schema fieldSchema = fieldMap.get(f).schema();
+      switch (fieldSchema.getType()) {
+        case MAP:
+        case ARRAY:
+          delete.deleteFamily(col.family); break;
+        default:
+          delete.deleteColumn(col.family, col.qualifier); break;
+      }
+    }
+  }
+  
   private void addTimeRange(Get get, Query<K, T> query) throws IOException {
     if(query.getStartTime() > 0 || query.getEndTime() > 0) {
       if(query.getStartTime() == query.getEndTime()) {

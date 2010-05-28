@@ -44,9 +44,16 @@ public class MockDataStore extends DataStoreBase<String, MockPersistent> {
   }
   
   @Override
-  public void delete(String key) throws IOException {
+  public boolean delete(String key) throws IOException {
+    return false;
   }
 
+  @Override
+  public long deleteByQuery(Query<String, MockPersistent> query)
+      throws IOException {
+    return 0;
+  }
+  
   @Override
   public Result<String, MockPersistent> execute(
       Query<String, MockPersistent> query) throws IOException {

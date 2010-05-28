@@ -102,10 +102,15 @@ public class AvroStore<K, T extends Persistent>
   }
 
   @Override
-  public void delete(K key) throws IOException {
-    throw new OperationNotSupportedException();
+  public boolean delete(K key) throws IOException {
+    throw new OperationNotSupportedException("delete is not supported for AvroStore");
   }
 
+  @Override
+  public long deleteByQuery(Query<K, T> query) throws IOException {
+    throw new OperationNotSupportedException("delete is not supported for AvroStore");
+  }
+  
   /**
    * Executes a normal Query reading the whole data. #execute() calls this function
    * for non-PartitionQuery's.

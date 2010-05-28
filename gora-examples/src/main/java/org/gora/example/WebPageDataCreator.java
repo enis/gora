@@ -3,6 +3,7 @@ package org.gora.example;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.apache.avro.util.Utf8;
@@ -79,6 +80,14 @@ public class WebPageDataCreator {
     {"baz", "bar"},
   };
 
+  public static final String[] SORTED_URLS = new String[URLS.length];
+  static {
+    for (int i = 0; i < URLS.length; i++) {
+      SORTED_URLS[i] = URLS[i];
+    }
+    Arrays.sort(SORTED_URLS);
+  }
+  
   public static void createWebPageData(DataStore<String, WebPage> dataStore) 
   throws IOException {
     WebPage page;

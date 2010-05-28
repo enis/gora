@@ -4,6 +4,7 @@ package org.gora.store;
 import static org.gora.example.WebPageDataCreator.ANCHORS;
 import static org.gora.example.WebPageDataCreator.CONTENTS;
 import static org.gora.example.WebPageDataCreator.LINKS;
+import static org.gora.example.WebPageDataCreator.SORTED_URLS;
 import static org.gora.example.WebPageDataCreator.URLS;
 import static org.gora.example.WebPageDataCreator.URL_INDEXES;
 import static org.gora.example.WebPageDataCreator.createWebPageData;
@@ -294,14 +295,19 @@ public class DataStoreTestUtil {
     assertEmptyResults(query);
   }
   
-  public static void assertEmptyResults(Query<String, WebPage> query) 
+  public static<K,T extends Persistent> void assertEmptyResults(Query<K, T> query) 
     throws IOException {
-    Result<String, WebPage> result = query.execute();
-    int numResults = 0;
+    assertNumResults(query, 0);
+  }
+  
+  public static<K,T extends Persistent> void assertNumResults(Query<K, T>query
+      , long numResults) throws IOException {
+    Result<K, T> result = query.execute();
+    int actualNumResults = 0;
     while(result.next()) {
-      numResults++;
+      actualNumResults++;
     }
-    Assert.assertEquals(0, numResults);
+    Assert.assertEquals(numResults, actualNumResults);
   }
   
   public static void testGetPartitions(DataStore<String, WebPage> store) 
@@ -372,5 +378,122 @@ public class DataStoreTestUtil {
       Assert.assertNotNull(p);
       Assert.assertEquals(r.getValue(), p);
     }
+  }
+  
+  public static void testDeleteByQuery(DataStore<String, WebPage> store) 
+    throws IOException {
+    
+    Query<String, WebPage> query;
+
+    
+    //test 1 - delete all
+    WebPageDataCreator.createWebPageData(store);
+    
+    query = store.newQuery();
+    
+    assertNumResults(store.newQuery(), URLS.length);
+    store.deleteByQuery(query);
+    assertEmptyResults(store.newQuery());
+
+    
+    //test 2 - delete all
+    WebPageDataCreator.createWebPageData(store);
+    
+    query = store.newQuery();
+    query.setFields(WebPage._ALL_FIELDS);
+    
+    assertNumResults(store.newQuery(), URLS.length);
+    store.deleteByQuery(query);
+    assertEmptyResults(store.newQuery());
+
+    
+    //test 3 - delete all
+    WebPageDataCreator.createWebPageData(store);
+    
+    query = store.newQuery();
+    query.setKeyRange("a", "z"); //all start with "http://"
+    
+    assertNumResults(store.newQuery(), URLS.length);
+    store.deleteByQuery(query);    
+    assertEmptyResults(store.newQuery());
+
+    
+    //test 4 - delete some
+    WebPageDataCreator.createWebPageData(store);
+    int numKeys = 4;
+    
+    query = store.newQuery();
+    query.setEndKey(SORTED_URLS[numKeys]);
+    
+    assertNumResults(store.newQuery(), URLS.length);
+    store.deleteByQuery(query);    
+    assertNumResults(store.newQuery(), URLS.length - numKeys);
+    
+    
+    //test 5 - delete all with some fields
+    WebPageDataCreator.createWebPageData(store);
+    
+    query = store.newQuery();
+    query.setFields(WebPage.Field.OUTLINKS.getName()
+        , WebPage.Field.PARSED_CONTENT.getName(), WebPage.Field.CONTENT.getName());
+    
+    assertNumResults(store.newQuery(), URLS.length);
+    store.deleteByQuery(query);
+    store.deleteByQuery(query);
+    store.deleteByQuery(query);//don't you love that HBase sometimes does not delete arbitrarily
+    assertNumResults(store.newQuery(), URLS.length);
+    
+    //assert that data is deleted
+    for (int i = 0; i < SORTED_URLS.length; i++) {
+      WebPage page = store.get(SORTED_URLS[i]);
+      Assert.assertNotNull(page);
+      
+      Assert.assertNotNull(page.getUrl());
+      Assert.assertEquals(page.getUrl().toString(), SORTED_URLS[i]);
+      Assert.assertEquals(0, page.getOutlinks().size());
+      Assert.assertEquals(0, page.getParsedContent().size());
+      if(page.getContent() != null) {
+        System.out.println("url:" + page.getUrl().toString());
+        System.out.println( "limit:" + page.getContent().limit());
+      } else {
+        Assert.assertNull(page.getContent());
+      }
+    }
+    
+    //test 6 - delete some with some fields
+    WebPageDataCreator.createWebPageData(store);
+    
+    query = store.newQuery();
+    query.setFields(WebPage.Field.URL.getName());
+    String startKey = SORTED_URLS[numKeys];
+    String endKey = SORTED_URLS[SORTED_URLS.length - numKeys];
+    query.setStartKey(startKey);
+    query.setEndKey(endKey);
+    
+    assertNumResults(store.newQuery(), URLS.length);
+    store.deleteByQuery(query);
+    store.deleteByQuery(query);
+    store.deleteByQuery(query);//don't you love that HBase sometimes does not delete arbitrarily
+    System.out.println(Arrays.toString(SORTED_URLS));
+    assertNumResults(store.newQuery(), URLS.length);
+    
+    //assert that data is deleted
+    for (int i = 0; i < URLS.length; i++) {
+      WebPage page = store.get(URLS[i]);
+      Assert.assertNotNull(page);
+      if( URLS[i].compareTo(startKey) < 0 || URLS[i].compareTo(endKey) >= 0) {
+        //not deleted
+        assertWebPage(page, i);
+      } else {
+        //deleted
+        Assert.assertNull(page.getUrl());
+        Assert.assertNotNull(page.getOutlinks());
+        Assert.assertNotNull(page.getParsedContent());
+        Assert.assertNotNull(page.getContent());
+        Assert.assertTrue(page.getOutlinks().size() > 0);
+        Assert.assertTrue(page.getParsedContent().size() > 0);
+      }
+    }
+    
   }
 }

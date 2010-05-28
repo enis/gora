@@ -229,4 +229,9 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   public void testGetPartitions() throws IOException {
     DataStoreTestUtil.testGetPartitions(webPageStore);
   }
+  
+  @Test
+  public void testDeleteByQuery() throws IOException {
+    DataStoreTestUtil.testDeleteByQuery(webPageStore);
+  }
 }

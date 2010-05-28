@@ -69,10 +69,23 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   private TreeMap<K, T> map = new TreeMap<K, T>();  
   
   @Override
-  public void delete(K key) throws IOException {
-    map.remove(key);
+  public boolean delete(K key) throws IOException {
+    return map.remove(key) != null;
   }
 
+  @Override
+  public long deleteByQuery(Query<K, T> query) throws IOException {
+    long deletedRows = 0;
+    Result<K,T> result = query.execute();
+    
+    while(result.next()) {
+      if(delete(result.getKey()))
+        deletedRows++;
+    }
+    
+    return 0;
+  }
+  
   @Override
   public Result<K, T> execute(Query<K, T> query) throws IOException {
     K startKey = query.getStartKey();
