@@ -71,6 +71,11 @@ public class TestHBaseStore extends HBaseClusterTestCase {
   }
   
   @Test
+  public void testSchemaExists() throws IOException {
+    DataStoreTestUtil.testSchemaExists(webPageStore);
+  }
+  
+  @Test
   public void testPut() throws IOException {
     DataStoreTestUtil.testPutEmployee(employeeStore);
   }

@@ -70,6 +70,11 @@ public abstract class DataStoreTestBase {
   }
   
   @Test
+  public void testSchemaExists() throws IOException {
+    DataStoreTestUtil.testSchemaExists(webPageStore);
+  }
+  
+  @Test
   public void testPut() throws IOException {
     Employee employee = DataStoreTestUtil.testPutEmployee(employeeStore);
     assertPut(employee);

@@ -84,6 +84,12 @@ public interface DataStore<K, T extends Persistent> extends Closeable,
   public abstract void truncateSchema() throws IOException;
   
   /**
+   * Returns whether the schema that holds the data exists in the datastore.
+   * @return whether schema exists
+   */
+  public abstract boolean schemaExists() throws IOException;
+  
+  /**
    * Returns a new instance of the key object.
    * @return a new instance of the key object.
    */

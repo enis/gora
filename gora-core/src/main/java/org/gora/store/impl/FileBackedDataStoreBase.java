@@ -171,6 +171,11 @@ public abstract class FileBackedDataStoreBase<K, T extends Persistent>
   }
   
   @Override
+  public boolean schemaExists() throws IOException {
+    return true;
+  }
+  
+  @Override
   public void write(DataOutput out) throws IOException {
     super.write(out);
     org.gora.util.IOUtils.writeNullFieldsInfo(out, inputPath, outputPath);

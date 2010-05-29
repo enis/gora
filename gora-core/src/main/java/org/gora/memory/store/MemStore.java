@@ -162,5 +162,10 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   }
   
   @Override
+  public boolean schemaExists() throws IOException {
+    return true;
+  }
+  
+  @Override
   public void flush() throws IOException { }
 }

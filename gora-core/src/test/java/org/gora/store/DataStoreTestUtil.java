@@ -95,6 +95,16 @@ public class DataStoreTestUtil {
     assertEmptyResults(dataStore.newQuery());
   }
   
+  public static<K, T extends Persistent> void testSchemaExists(
+      DataStore<K, T> dataStore) throws IOException {
+    dataStore.createSchema();
+    
+    Assert.assertTrue(dataStore.schemaExists());
+    
+    dataStore.deleteSchema();
+    Assert.assertFalse(dataStore.schemaExists());
+  }
+  
   public static void testGetEmployee(DataStore<String, Employee> dataStore) 
     throws IOException {
     dataStore.createSchema();

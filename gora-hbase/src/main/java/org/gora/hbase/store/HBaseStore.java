@@ -155,6 +155,11 @@ implements Configurable {
   }
 
   @Override
+  public boolean schemaExists() throws IOException {
+    return admin.tableExists(tableName);
+  }
+  
+  @Override
   public T get(K key, String[] fields) throws IOException {
     fields = getFieldsToQuery(fields);
     Get get = new Get(toBytes(key));
@@ -490,8 +495,6 @@ implements Configurable {
     stateManager.clearDirty(persistent);
     return persistent;
   }
-
-
 
   @SuppressWarnings("unchecked")
   private void setField(T persistent, Field field, Map map) {
