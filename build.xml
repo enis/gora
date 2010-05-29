@@ -34,7 +34,7 @@
 
   <!-- target: -buildlist  ================================================ -->    
   <target name="-buildlist" depends="init">
-    <ivy:buildlist reference="build-path">
+    <ivy:buildlist reference="build-path" ivyfilepath="ivy/${ivy.file}">
       <fileset dir="." includes="**/build.xml" excludes="build.xml"/>
     </ivy:buildlist>
   </target>
