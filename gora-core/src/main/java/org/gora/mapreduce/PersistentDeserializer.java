@@ -113,7 +113,18 @@ public class PersistentDeserializer
       }
       return record;
     } else {
-      return super.readRecord(old, expected, in);
+      //since ResolvingDecoder.readFieldOrder is final, we cannot override it
+      //so this is a copy of super.readReacord, with the readFieldOrder change
+      Object record = newRecord(old, expected);
+      
+      for (Field f : expected.getFields()) {
+        int pos = f.pos();
+        String name = f.name();
+        Object oldDatum = (old != null) ? getField(record, name, pos) : null;
+        setField(record, name, pos, read(oldDatum, f.schema(), in));
+      }
+
+      return record;
     }
   }
   
