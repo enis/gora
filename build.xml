@@ -47,8 +47,7 @@
     <subant target="jar" buildpathref="build-path" />
   </target>
 
-  <target name="compile-test" depends="-buildlist">
-    <subant target="compile-test" buildpathref="build-path" />
+  <target name="compile-test" depends="publish-local-all-test">
   </target>
 
   <target name="test" depends="publish-local-all-test">
