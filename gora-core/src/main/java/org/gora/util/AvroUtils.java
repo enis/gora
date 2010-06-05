@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.reflect.ReflectData;
 
 /**
  * An utility class for Avro related tasks 
@@ -23,6 +24,16 @@ public class AvroUtils {
       fieldMap.put(field.name(), field);
     }
     return fieldMap;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public static Object getEnumValue(Schema schema, String symbol) {
+    return Enum.valueOf(ReflectData.get().getClass(schema), symbol);
+  }
+  
+  public static Object getEnumValue(Schema schema, int enumOrdinal) {
+    String symbol = schema.getEnumSymbols().get(enumOrdinal);
+    return getEnumValue(schema, symbol);
   }
   
 }

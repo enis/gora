@@ -19,6 +19,15 @@ public interface BeanFactory<K, T extends Persistent> {
   public abstract T newPersistent();
 
   /**
+   * Returns an instance of the key object to be 
+   * used to access static fields of the object. Returned object MUST  
+   * be treated as read-only. No fields other than the static fields 
+   * of the object should be assumed to be readable. 
+   * @return a cached instance of the key object
+   */
+  public abstract K getCachedKey();
+  
+  /**
    * Returns an instance of the {@link Persistent} object to be 
    * used to access static fields of the object. Returned object MUST  
    * be treated as read-only. No fields other than the static fields 

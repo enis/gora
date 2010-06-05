@@ -10,11 +10,11 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.gora.util.AvroUtils;
 
 /**
  * Contains utility methods for byte[] <-> field 
@@ -34,9 +34,7 @@ public class HBaseByteInterface {
   public static Object fromBytes(Schema schema, byte[] val) throws IOException {
     Type type = schema.getType();
     switch (type) {
-    case ENUM:
-      String symbol = schema.getEnumSymbols().get(val[0]);
-      return Enum.valueOf(ReflectData.get().getClass(schema), symbol);
+    case ENUM:    return AvroUtils.getEnumValue(schema, val[0]);
     case STRING:  return new Utf8(Bytes.toString(val));
     case BYTES:   return ByteBuffer.wrap(val);
     case INT:     return Bytes.toInt(val);

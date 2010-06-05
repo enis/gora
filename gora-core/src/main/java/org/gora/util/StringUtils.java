@@ -3,6 +3,7 @@ package org.gora.util;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -21,6 +22,35 @@ public class StringUtils {
     return set.toArray(new String[set.size()]);
   }
 
+  public static String join(List<String> strs) {
+    return join(new StringBuilder(), strs).toString();
+  }
+
+  public static String join(String[] strs) {
+    return join(new StringBuilder(), strs).toString();
+  }
+  
+  public static StringBuilder join(StringBuilder builder, List<String> strs) {
+    for (int i = 0; i < strs.size(); i++) {
+      if(i != 0) builder.append(',');
+      builder.append(strs.get(i));
+    }
+    return builder;
+  }
+
+  public static StringBuilder join(StringBuilder builder, String[] strs) {
+    for (int i = 0; i < strs.length; i++) {
+      if(i != 0) builder.append(",");
+      builder.append(strs[i]);
+    }
+    return builder;
+  }
+  
+  /** helper for string null and empty checking*/
+  public static boolean is(String str) {
+    return str != null && str.length() > 0; 
+  }
+  
   //below is taken from:http://jvalentino.blogspot.com/2007/02/shortcut-to-calculating-power-set-using.html
   /**
    * Returns the power set from the given set by using a binary counter

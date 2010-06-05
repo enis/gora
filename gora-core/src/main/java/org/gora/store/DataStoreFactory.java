@@ -33,6 +33,8 @@ public class DataStoreFactory {
   
   public static final String OUTPUT_PATH = "output.path";
   
+  public static final String MAPPING_FILE = "mapping.file";
+  
   private static String propertiesFile = GORA_DEFAULT_PROPERTIES_FILE; 
   
   private static String defaultDataStoreClass;
@@ -215,6 +217,11 @@ public class DataStoreFactory {
    */
   public static String getOutputPath(Properties properties, DataStore<?,?> store) {
     return findProperty(properties, store, OUTPUT_PATH, null);
+  }
+  
+  public static String getMappingFile(Properties properties, DataStore<?,?> store
+      , String defaultValue) {
+    return findProperty(properties, store, MAPPING_FILE, defaultValue);
   }
   
   private static void setProperties(Properties properties) {

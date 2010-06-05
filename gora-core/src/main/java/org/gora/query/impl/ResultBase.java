@@ -90,6 +90,7 @@ public abstract class ResultBase<K, T extends Persistent>
     }
     
     clear();
+    persistent = getOrCreatePersistent(persistent);
     
     return nextInner();
   }
@@ -100,4 +101,10 @@ public abstract class ResultBase<K, T extends Persistent>
    */
   protected abstract boolean nextInner() throws IOException; 
   
+  protected T getOrCreatePersistent(T persistent) throws IOException {
+    if(persistent != null) {
+      return persistent;
+    }
+    return dataStore.newPersistent();
+  }
 }

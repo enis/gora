@@ -56,7 +56,7 @@ public class DataStoreTestUtil {
     
     Employee employee = dataStore.newPersistent();
     employee.setName(new Utf8("Random Joe"));
-    employee.setDateOfBirth( System.currentTimeMillis() - 42L *  YEAR_IN_MS );
+    employee.setDateOfBirth( System.currentTimeMillis() - 20L *  YEAR_IN_MS );
     employee.setSalary(100000);
     employee.setSsn(new Utf8("101010101010"));
     return employee;
