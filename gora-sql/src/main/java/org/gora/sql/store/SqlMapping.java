@@ -25,8 +25,10 @@ class SqlMapping {
     fields.put(fieldname, new Column(column));
   }
   
-  public void addField(String fieldname, String column, boolean isPrimaryKey) {
-    fields.put(fieldname, new Column(column, isPrimaryKey));
+  public void addField(String fieldname, String columnName, String jdbcType, boolean isPrimaryKey
+      , int length, int scale) {
+    Column column = new Column(columnName, jdbcType, isPrimaryKey, length, scale);
+    fields.put(fieldname, column);
     if(isPrimaryKey)
       setPrimaryKeyField(fieldname);
   }
@@ -45,5 +47,9 @@ class SqlMapping {
   
   public Column getPrimaryColumn() {
     return getColumn(primaryKeyField);
+  }
+  
+  public HashMap<String, Column> getFields() {
+    return fields;
   }
 }

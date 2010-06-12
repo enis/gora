@@ -38,6 +38,8 @@ implements DataStore<K, T> {
   
   protected Configuration conf;
   
+  protected boolean autoCreateSchema;
+  
   public DataStoreBase() {
   }
   
@@ -50,6 +52,8 @@ implements DataStore<K, T> {
       this.beanFactory = new BeanFactoryImpl<K, T>(keyClass, persistentClass);
     schema = this.beanFactory.getCachedPersistent().getSchema();
     fieldMap = AvroUtils.getFieldMap(schema);
+    
+    autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
   }
   
   @Override
@@ -127,6 +131,13 @@ implements DataStore<K, T> {
     this.conf = conf;
   }
 
+  protected Configuration getOrCreateConf() {
+    if(conf == null) {
+      conf = new Configuration();
+    }
+    return conf;
+  }
+  
   @Override
   @SuppressWarnings("unchecked")
   public void readFields(DataInput in) throws IOException {

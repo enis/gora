@@ -3,11 +3,21 @@ package org.gora.sql.store;
 
 class Column {
 
+  public static enum MappingStrategy {
+    SERIALIZED, 
+    JOIN_TABLE,
+    SECONDARY_TABLE,
+  }
+  
+  private String tableName;
   private String name;
   private String jdbcType;
   private boolean isPrimaryKey;
   private int length = -1;
   private int scale = -1;
+  private MappingStrategy mappingStrategy;
+  
+  //index, not-null, default-value
   
   public Column() {
   }
@@ -16,10 +26,13 @@ class Column {
     this.name = name;
   }
   
-  public Column(String name, String jdbcType, boolean isPrimaryKey) {
+  public Column(String name, String jdbcType, boolean isPrimaryKey, int length, int scale) {
     this.name = name;
     this.jdbcType = jdbcType;
     this.isPrimaryKey = isPrimaryKey;
+    this.length = length;
+    this.scale = scale;
+    this.mappingStrategy = MappingStrategy.SERIALIZED;
   }
   
   public Column(String name, boolean isPrimaryKey) {
@@ -69,5 +82,21 @@ class Column {
   
   public int getScaleOrLength() {
     return length > 0 ? length : scale;  
+  }
+  
+  public String getTableName() {
+    return tableName;
+  }
+  
+  public void setTableName(String tableName) {
+    this.tableName = tableName;
+  }
+  
+  public MappingStrategy getMappingStrategy() {
+    return mappingStrategy;
+  }
+  
+  public void setMappingStrategy(MappingStrategy mappingStrategy) {
+    this.mappingStrategy = mappingStrategy;
   }
 }

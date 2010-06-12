@@ -14,17 +14,23 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.ipc.ByteBufferOutputStream;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.DataInputBuffer;
+import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.DefaultStringifier;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
+import org.gora.avro.PersistentDatumWriter;
+import org.gora.persistency.Persistent;
 
 /**
  * An utility class for I/O related functionality. 
@@ -118,6 +124,28 @@ public class IOUtils {
     Text.writeString(out, obj.getClass().getCanonicalName());
     serialize(conf, out, obj, (Class<T>)obj.getClass());
   }
+
+  /** Serializes the object to the given dataoutput using 
+   * available Hadoop serializations*/
+  public static<T> byte[] serialize(Configuration conf, T obj) throws IOException {
+    DataOutputBuffer buffer = new DataOutputBuffer();
+    serialize(conf, buffer, obj);
+    return buffer.getData();
+  }
+  
+  /**
+   * Serializes a field of a persistent object, and returns an InputStream
+   * to read the serialization from.
+   */
+  public static<T extends Persistent> InputStream serialize(PersistentDatumWriter<T> datumWriter, 
+      Schema schema, Object object) throws IOException {
+    ByteBufferOutputStream os = new ByteBufferOutputStream();
+    BinaryEncoder encoder = new BinaryEncoder(os);
+    datumWriter.write(schema, object, encoder);
+    encoder.flush();
+    os.close();
+    return new ByteBufferInputStream(os.getBufferList());
+  }
   
   /** Deserializes the object in the given datainput using 
    * available Hadoop serializations.
@@ -173,6 +201,17 @@ public class IOUtils {
     String clazz = Text.readString(in);
     Class<T> c = (Class<T>)Class.forName(clazz);
     return deserialize(conf, in, obj, c);
+  }
+  
+  /** Deserializes the object in the given datainput using 
+   * available Hadoop serializations.
+   * @throws IOException 
+   * @throws ClassNotFoundException */
+  public static<T> T deserialize(Configuration conf, byte[] in
+      , T obj) throws IOException, ClassNotFoundException {
+    DataInputBuffer buffer = new DataInputBuffer();
+    buffer.reset(in, in.length);
+    return deserialize(conf, buffer, obj);
   }
   
   /**

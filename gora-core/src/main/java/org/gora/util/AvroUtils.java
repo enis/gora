@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.reflect.ReflectData;
+import org.gora.persistency.Persistent;
 
 /**
  * An utility class for Avro related tasks 
@@ -34,6 +35,17 @@ public class AvroUtils {
   public static Object getEnumValue(Schema schema, int enumOrdinal) {
     String symbol = schema.getEnumSymbols().get(enumOrdinal);
     return getEnumValue(schema, symbol);
+  }
+  
+  /**
+   * Returns the schema of the class
+   */
+  public static Schema getSchema(Class<? extends Persistent> clazz) 
+    throws SecurityException, NoSuchFieldException
+    , IllegalArgumentException, IllegalAccessException {
+    
+    java.lang.reflect.Field field = clazz.getDeclaredField("_SCHEMA");
+    return (Schema) field.get(null);
   }
   
 }

@@ -56,7 +56,6 @@ import org.gora.persistency.StatefulMap;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.impl.PartitionQueryImpl;
-import org.gora.store.DataStoreFactory;
 import org.gora.store.impl.DataStoreBase;
 import org.gora.util.NodeWalker;
 import org.gora.util.XmlUtils;
@@ -113,7 +112,6 @@ implements Configurable {
     this.conf = new HBaseConfiguration();
     columnMap = new HashMap<String, HbaseColumn>();
     colDescs = new ArrayList<HColumnDescriptor>();
-    autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
     
     admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
     
