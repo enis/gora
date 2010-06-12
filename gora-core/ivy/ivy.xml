@@ -37,7 +37,7 @@
     <dependency org="junit" name="junit" rev="4.6" conf="test->default"/>
 
     <!-- tests depends on gora-examples -->
-    <dependency org="org.gora" name="gora-examples" rev="latest.integration" changing="true" conf="test->compile"/>
+    <dependency org="org.gora" name="gora-examples" rev="latest.integration" changing="true" conf="test->test"/>
 
   </dependencies>
 </ivy-module>

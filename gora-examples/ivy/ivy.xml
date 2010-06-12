@@ -12,6 +12,7 @@
 
   <publications defaultconf="compile">
     <artifact name="gora-examples" conf="compile"/>
+    <artifact name="gora-examples-test" conf="test"/>
   </publications>
 
   <dependencies>
