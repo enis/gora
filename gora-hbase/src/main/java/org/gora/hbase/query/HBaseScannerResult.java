@@ -22,6 +22,10 @@ public class HBaseScannerResult<K, T extends Persistent>
     super(dataStore, query);
     this.scanner = scanner;
   }
+
+  // do not clear object in scanner result
+  @Override
+  protected void clear() { }
   
   @Override
   public boolean nextInner() throws IOException {
