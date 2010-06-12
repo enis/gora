@@ -133,7 +133,7 @@
   <target name="jar" depends="compile, version" description="--> make a jar file for this project">
     <jar destfile="${jar.file}">
       <fileset dir="${build.classes.dir}" />
-      <zipfileset dir="${conf.dir}" excludes="*.template"/>
+      <!--<zipfileset dir="${conf.dir}" excludes="*.template"/>-->
       <manifest>
         <attribute name="Built-By" value="${user.name}"/>
         <attribute name="Build-Version" value="${version}" />
@@ -147,7 +147,8 @@
   <target name="test-jar" depends="version, compile-test, jar" description="--> make a jar file for this project">
     <jar destfile="${test.jar.file}">
       <fileset dir="${test.build.classes.dir}" />
-      <zipfileset dir="${conf.dir}" excludes="*.template"/>
+      <fileset dir="${test.conf.dir}" excludes="*.template" />
+      <!--<zipfileset dir="${conf.dir}" excludes="*.template"/>-->
       <manifest>
         <attribute name="Built-By" value="${user.name}"/>
         <attribute name="Build-Version" value="${version}" />
