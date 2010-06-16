@@ -3,6 +3,8 @@ package org.gora.sql.store;
 
 import java.util.HashMap;
 
+import org.gora.sql.store.SqlTypeInterface.JdbcType;
+
 class SqlMapping {
 
   private String tableName;
@@ -25,7 +27,7 @@ class SqlMapping {
     fields.put(fieldname, new Column(column));
   }
   
-  public void addField(String fieldname, String columnName, String jdbcType, boolean isPrimaryKey
+  public void addField(String fieldname, String columnName, JdbcType jdbcType, boolean isPrimaryKey
       , int length, int scale) {
     Column column = new Column(columnName, jdbcType, isPrimaryKey, length, scale);
     fields.put(fieldname, column);

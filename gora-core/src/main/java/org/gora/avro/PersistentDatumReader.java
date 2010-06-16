@@ -3,6 +3,7 @@ package org.gora.avro;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -26,6 +27,9 @@ public class PersistentDatumReader<T extends Persistent>
 
   private Schema rootSchema;
   private T cachedPersistent; // for creating objects
+  
+  private WeakHashMap<Decoder, ResolvingDecoder> decoderCache 
+    = new WeakHashMap<Decoder, ResolvingDecoder>();
   
   public PersistentDatumReader() {
   }
@@ -65,8 +69,22 @@ public class PersistentDatumReader<T extends Persistent>
   @Override
   @SuppressWarnings("unchecked")
   public T read(T reuse, Decoder in) throws IOException {
-    return (T) read(reuse, rootSchema
-        , new FakeResolvingDecoder(rootSchema, in));
+    return (T) read(reuse, rootSchema, in);
+  }
+  
+  public Object read(Object reuse, Schema schema, Decoder decoder) 
+    throws IOException {
+    return super.read(reuse, schema, getResolvingDecoder(decoder));
+  }
+  
+  protected ResolvingDecoder getResolvingDecoder(Decoder decoder) 
+  throws IOException {
+    ResolvingDecoder resolvingDecoder = decoderCache.get(decoder);
+    if(resolvingDecoder == null) {
+      resolvingDecoder = new FakeResolvingDecoder(rootSchema, decoder);
+      decoderCache.put(decoder, resolvingDecoder);
+    }
+    return resolvingDecoder;
   }
   
   @Override

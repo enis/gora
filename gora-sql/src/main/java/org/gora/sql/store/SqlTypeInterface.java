@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
 import java.util.Currency;
+import java.util.HashMap;
 import java.util.Locale;
 
 import org.apache.avro.Schema;
@@ -26,6 +27,80 @@ import org.apache.hadoop.io.Writable;
  * java, avro and SQL types.
  */
 public class SqlTypeInterface {
+
+  /**
+   * Encapsules java.sql.Types as an enum
+   */
+  public static enum JdbcType { 
+    ARRAY(Types.ARRAY),
+    BIT(Types.BIT),
+    BIGINT(Types.BIGINT),
+    BINARY(Types.BINARY),
+    BLOB(Types.BLOB),
+    BOOLEAN(Types.BOOLEAN),
+    CHAR(Types.CHAR),
+    CLOB(Types.CLOB),
+    DATALINK(Types.DATALINK),
+    DATE(Types.DATE),
+    DECIMAL(Types.DECIMAL),
+    DISTINCT(Types.DISTINCT),
+    DOUBLE(Types.DOUBLE),
+    FLOAT(Types.FLOAT),
+    INTEGER(Types.INTEGER),
+    LONGNVARCHAR(Types.LONGNVARCHAR),
+    LONGVARBINARY(Types.LONGVARBINARY),
+    LONGVARCHAR(Types.LONGVARCHAR),
+    NCHAR(Types.NCHAR),
+    NCLOB(Types.NCLOB),
+    NULL(Types.NULL),
+    NUMERIC(Types.NUMERIC),
+    NVARCHAR(Types.NVARCHAR),
+    REAL(Types.REAL),
+    REF(Types.REF),
+    ROWID(Types.ROWID),
+    SMALLINT(Types.SMALLINT),
+    SQLXML(Types.SQLXML, "XML"),
+    STRUCT(Types.STRUCT),
+    TIME(Types.TIME),
+    TIMESTAMP(Types.TIMESTAMP),
+    TINYINT(Types.TINYINT),
+    VARBINARY(Types.VARBINARY),
+    VARCHAR(Types.VARCHAR)
+    ;
+
+    private int order;
+    private String sqlType; 
+
+    private JdbcType(int order) {
+      this.order = order;
+    }
+    private JdbcType(int order, String sqlType) {
+      this.order = order;
+      this.sqlType = sqlType;
+    }
+    public String getSqlType() {
+      return sqlType == null ? toString() : sqlType;
+    }
+    public int getOrder() {
+      return order;
+    }
+
+    private static HashMap<Integer, JdbcType> map =
+      new HashMap<Integer, JdbcType>();
+    static {
+      for(JdbcType type : JdbcType.values()) {
+        map.put(type.order, type);
+      }
+    }
+
+    /**
+     * Returns a JdbcType enum from a jdbc type in java.sql.Types
+     * @param order an integer in java.sql.Types
+     */
+    public static final JdbcType get(int order) {
+      return map.get(order);
+    }
+  };
 
   public static int getSqlType(Class<?> clazz) {
 
@@ -95,47 +170,30 @@ public class SqlTypeInterface {
     return Types.OTHER;
   }
 
-  public static String getSqlTypeAsString(Schema schema) throws IOException {
-    int type = getSqlType(schema);
-    return jdbcTypeToString(type);
-  }
-
-  public static int getSqlType(Schema schema) throws IOException {
+  public static JdbcType getJdbcType(Schema schema) throws IOException {
     Type type = schema.getType();
 
     switch(type) {
-      case MAP    : return Types.BLOB;
-      case ARRAY  : return Types.BLOB;
-      case BOOLEAN: return Types.BIT;
-      case BYTES  : return Types.BLOB;
-      case DOUBLE : return Types.DOUBLE;
-      case ENUM   : return Types.VARCHAR;        
-      case FIXED  : return Types.BINARY; 
-      case FLOAT  : return Types.FLOAT;
-      case INT    : return Types.INTEGER;  
-      case LONG   : return Types.BIGINT; 
+      case MAP    : return JdbcType.BLOB;
+      case ARRAY  : return JdbcType.BLOB;
+      case BOOLEAN: return JdbcType.BIT;
+      case BYTES  : return JdbcType.BLOB;
+      case DOUBLE : return JdbcType.DOUBLE;
+      case ENUM   : return JdbcType.VARCHAR;        
+      case FIXED  : return JdbcType.BINARY; 
+      case FLOAT  : return JdbcType.FLOAT;
+      case INT    : return JdbcType.INTEGER;  
+      case LONG   : return JdbcType.BIGINT; 
       case NULL   : break;
-      case RECORD : return Types.BLOB;
-      case STRING : return Types.VARCHAR;        
+      case RECORD : return JdbcType.BLOB;
+      case STRING : return JdbcType.VARCHAR;        
       case UNION  : throw new IOException("Union is not supported yet");
     }
-    return -1;
+    return null;
   }
 
-  public static String jdbcTypeToString(int type) throws IOException {
-    //I don't know whether this exists in jdbc 
-    switch(type) {
-      case Types.BIT      : return "BIT";
-      case Types.BINARY   : return "BINARY";
-      case Types.VARBINARY: return "VARBINARY";
-      case Types.DOUBLE   : return "DOUBLE";
-      case Types.VARCHAR  : return "VARCHAR";
-      case Types.FLOAT    : return "FLOAT";
-      case Types.INTEGER  : return "INTEGER";
-      case Types.BIGINT   : return "BIGINT";
-      case Types.BLOB     : return "BLOB";
-    }
-    throw new IOException("unknown SQL type: " + type);
+  public static JdbcType stringToJdbcType(String type) {
+    return JdbcType.valueOf(type);
   }
 
 }

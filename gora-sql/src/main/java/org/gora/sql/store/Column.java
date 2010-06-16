@@ -1,6 +1,8 @@
 
 package org.gora.sql.store;
 
+import org.gora.sql.store.SqlTypeInterface.JdbcType;
+
 class Column {
 
   public static enum MappingStrategy {
@@ -11,7 +13,7 @@ class Column {
   
   private String tableName;
   private String name;
-  private String jdbcType;
+  private JdbcType jdbcType;
   private boolean isPrimaryKey;
   private int length = -1;
   private int scale = -1;
@@ -26,7 +28,7 @@ class Column {
     this.name = name;
   }
   
-  public Column(String name, String jdbcType, boolean isPrimaryKey, int length, int scale) {
+  public Column(String name, JdbcType jdbcType, boolean isPrimaryKey, int length, int scale) {
     this.name = name;
     this.jdbcType = jdbcType;
     this.isPrimaryKey = isPrimaryKey;
@@ -48,11 +50,11 @@ class Column {
     this.name = name;
   }
   
-  public String getJdbcType() {
+  public JdbcType getJdbcType() {
     return jdbcType;
   }
   
-  public void setJdbcType(String jdbcType) {
+  public void setJdbcType(JdbcType jdbcType) {
     this.jdbcType = jdbcType;
   }
   

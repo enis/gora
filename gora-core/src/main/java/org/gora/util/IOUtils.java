@@ -133,18 +133,17 @@ public class IOUtils {
     return buffer.getData();
   }
   
+ 
   /**
-   * Serializes a field of a persistent object, and returns an InputStream
-   * to read the serialization from.
+   * Serializes the field object using the datumWriter.
    */
-  public static<T extends Persistent> InputStream serialize(PersistentDatumWriter<T> datumWriter, 
-      Schema schema, Object object) throws IOException {
-    ByteBufferOutputStream os = new ByteBufferOutputStream();
+  public static<T extends Persistent> void serialize(OutputStream os, 
+      PersistentDatumWriter<T> datumWriter, Schema schema, Object object) 
+      throws IOException {
+    
     BinaryEncoder encoder = new BinaryEncoder(os);
     datumWriter.write(schema, object, encoder);
     encoder.flush();
-    os.close();
-    return new ByteBufferInputStream(os.getBufferList());
   }
   
   /** Deserializes the object in the given datainput using 
