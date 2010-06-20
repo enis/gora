@@ -23,6 +23,7 @@
     <dependency org="com.healthmarketscience.sqlbuilder" name="sqlbuilder" rev="2.0.6" conf="*->default"/>
 
     <!-- test dependencies -->
+    <dependency org="org.hsqldb" name="hsqldb" rev="2.0.0" conf="test->default"/>
 
   </dependencies>
     

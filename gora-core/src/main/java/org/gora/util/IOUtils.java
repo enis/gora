@@ -33,13 +33,15 @@ import org.gora.avro.PersistentDatumWriter;
 import org.gora.persistency.Persistent;
 
 /**
- * An utility class for I/O related functionality. 
+ * An utility class for I/O related functionality.
  */
 public class IOUtils {
 
   private static SerializationFactory serializationFactory = null;
   private static Configuration conf;
-  
+
+  private static final int BUFFER_SIZE = 8192;
+
   private static Configuration getOrCreateConf(Configuration conf) {
     if(conf == null) {
       if(IOUtils.conf == null) {
@@ -48,10 +50,10 @@ public class IOUtils {
     }
     return conf != null ? conf : IOUtils.conf;
   }
-  
-  public static Object readObject(DataInput in) 
+
+  public static Object readObject(DataInput in)
     throws ClassNotFoundException, IOException {
-    
+
     if(in instanceof ObjectInput) {
       return ((ObjectInput)in).readObject();
     } else {
@@ -61,11 +63,11 @@ public class IOUtils {
         return obj;
       }
     }
-    throw new IOException("cannot write to DataOutput of instance:" 
+    throw new IOException("cannot write to DataOutput of instance:"
         + in.getClass());
   }
-  
-  public static void writeObject(DataOutput out, Object obj) 
+
+  public static void writeObject(DataOutput out, Object obj)
     throws IOException {
     if(out instanceof ObjectOutput) {
       ((ObjectOutput)out).writeObject(obj);
@@ -75,38 +77,38 @@ public class IOUtils {
         objOut.writeObject(obj);
       }
     }
-    throw new IOException("cannot write to DataOutput of instance:" 
+    throw new IOException("cannot write to DataOutput of instance:"
         + out.getClass());
   }
-  
-  /** Serializes the object to the given dataoutput using 
+
+  /** Serializes the object to the given dataoutput using
    * available Hadoop serializations
    * @throws IOException */
   public static<T> void serialize(Configuration conf, DataOutput out
       , T obj, Class<T> objClass) throws IOException {
-    
+
     if(serializationFactory == null) {
       serializationFactory = new SerializationFactory(getOrCreateConf(conf));
     }
     Serializer<T> serializer = serializationFactory.getSerializer(objClass);
-    
+
     ByteBufferOutputStream os = new ByteBufferOutputStream();
     try {
       serializer.open(os);
       serializer.serialize(obj);
-      
+
       int length = 0;
       List<ByteBuffer> buffers = os.getBufferList();
       for(ByteBuffer buffer : buffers) {
         length += buffer.limit() - buffer.arrayOffset();
       }
-      
+
       WritableUtils.writeVInt(out, length);
       for(ByteBuffer buffer : buffers) {
         byte[] arr = buffer.array();
         out.write(arr, buffer.arrayOffset(), buffer.limit());
       }
-      
+
     }finally {
       if(serializer != null)
         serializer.close();
@@ -114,8 +116,8 @@ public class IOUtils {
         os.close();
     }
   }
-  
-  /** Serializes the object to the given dataoutput using 
+
+  /** Serializes the object to the given dataoutput using
    * available Hadoop serializations
    * @throws IOException */
   @SuppressWarnings("unchecked")
@@ -125,41 +127,41 @@ public class IOUtils {
     serialize(conf, out, obj, (Class<T>)obj.getClass());
   }
 
-  /** Serializes the object to the given dataoutput using 
+  /** Serializes the object to the given dataoutput using
    * available Hadoop serializations*/
   public static<T> byte[] serialize(Configuration conf, T obj) throws IOException {
     DataOutputBuffer buffer = new DataOutputBuffer();
     serialize(conf, buffer, obj);
     return buffer.getData();
   }
-  
- 
+
+
   /**
    * Serializes the field object using the datumWriter.
    */
-  public static<T extends Persistent> void serialize(OutputStream os, 
-      PersistentDatumWriter<T> datumWriter, Schema schema, Object object) 
+  public static<T extends Persistent> void serialize(OutputStream os,
+      PersistentDatumWriter<T> datumWriter, Schema schema, Object object)
       throws IOException {
-    
+
     BinaryEncoder encoder = new BinaryEncoder(os);
     datumWriter.write(schema, object, encoder);
     encoder.flush();
   }
-  
-  /** Deserializes the object in the given datainput using 
+
+  /** Deserializes the object in the given datainput using
    * available Hadoop serializations.
-   * @throws IOException 
+   * @throws IOException
    * @throws ClassNotFoundException */
   @SuppressWarnings("unchecked")
   public static<T> T deserialize(Configuration conf, DataInput in
       , T obj , String objClass) throws IOException, ClassNotFoundException {
-    
+
     Class<T> c = (Class<T>) Class.forName(objClass);
-    
+
     return deserialize(conf, in, obj, c);
   }
-  
-  /** Deserializes the object in the given datainput using 
+
+  /** Deserializes the object in the given datainput using
    * available Hadoop serializations.
    * @throws IOException */
   public static<T> T deserialize(Configuration conf, DataInput in
@@ -169,19 +171,19 @@ public class IOUtils {
     }
     Deserializer<T> deserializer = serializationFactory.getDeserializer(
         objClass);
-    
+
     int length = WritableUtils.readVInt(in);
     byte[] arr = new byte[length];
     in.readFully(arr);
     List<ByteBuffer> list = new ArrayList<ByteBuffer>();
     list.add(ByteBuffer.wrap(arr));
     ByteBufferInputStream is = new ByteBufferInputStream(list);
-    
+
     try {
       deserializer.open(is);
       T newObj = deserializer.deserialize(obj);
       return newObj;
-      
+
     }finally {
       if(deserializer != null)
         deserializer.close();
@@ -189,10 +191,10 @@ public class IOUtils {
         is.close();
     }
   }
-  
-  /** Deserializes the object in the given datainput using 
+
+  /** Deserializes the object in the given datainput using
    * available Hadoop serializations.
-   * @throws IOException 
+   * @throws IOException
    * @throws ClassNotFoundException */
   @SuppressWarnings("unchecked")
   public static<T> T deserialize(Configuration conf, DataInput in
@@ -201,10 +203,10 @@ public class IOUtils {
     Class<T> c = (Class<T>)Class.forName(clazz);
     return deserialize(conf, in, obj, c);
   }
-  
-  /** Deserializes the object in the given datainput using 
+
+  /** Deserializes the object in the given datainput using
    * available Hadoop serializations.
-   * @throws IOException 
+   * @throws IOException
    * @throws ClassNotFoundException */
   public static<T> T deserialize(Configuration conf, byte[] in
       , T obj) throws IOException, ClassNotFoundException {
@@ -212,7 +214,7 @@ public class IOUtils {
     buffer.reset(in, in.length);
     return deserialize(conf, buffer, obj);
   }
-  
+
   /**
    * Writes a byte[] to the output, representing whether each given field is null
    * or not. A Vint and ceil( fields.length / 8 ) bytes are written to the output.
@@ -220,7 +222,7 @@ public class IOUtils {
    * @param fields the fields to check for null
    * @see #readNullFieldsInfo(DataInput)
    */
-  public static void writeNullFieldsInfo(DataOutput out, Object ... fields) 
+  public static void writeNullFieldsInfo(DataOutput out, Object ... fields)
     throws IOException {
 
     boolean[] isNull = new boolean[fields.length];
@@ -241,15 +243,15 @@ public class IOUtils {
   public static boolean[] readNullFieldsInfo(DataInput in) throws IOException {
     return readBoolArray(in);
   }
-  
+
   /**
    * Writes a boolean[] to the output.
    */
-  public static void writeBoolArray(DataOutput out, boolean[] boolArray) 
+  public static void writeBoolArray(DataOutput out, boolean[] boolArray)
     throws IOException {
-    
+
     WritableUtils.writeVInt(out, boolArray.length);
-    
+
     byte b = 0;
     int i = 0;
     for(i=0; i<boolArray.length; i++) {
@@ -269,40 +271,40 @@ public class IOUtils {
         b &= 0x7F;
       }
     }
-    
+
     out.writeByte(b);
   }
 
   /**
    * Reads a boolean[] from input
-   * @throws IOException 
+   * @throws IOException
    */
   public static boolean[] readBoolArray(DataInput in) throws IOException {
     int length = WritableUtils.readVInt(in);
     boolean[] arr = new boolean[length];
-    
+
     byte b = 0;
     for(int i=0; i < length; i++) {
       if(i % 8 == 0) {
         b = in.readByte();
       }
       arr[i] = (b & 0x01) > 0;
-      b >>= 1; 
+      b >>= 1;
     }
     return arr;
   }
-  
-  
+
+
   /**
    * Writes a boolean[] to the output.
    */
-  public static void writeBoolArray(Encoder out, boolean[] boolArray) 
+  public static void writeBoolArray(Encoder out, boolean[] boolArray)
     throws IOException {
-    
+
     out.writeInt(boolArray.length);
-    
+
     int byteArrLength = (int)Math.ceil(boolArray.length / 8.0);
-    
+
     byte b = 0;
     byte[] arr = new byte[byteArrLength];
     int i = 0;
@@ -324,24 +326,24 @@ public class IOUtils {
         b &= 0x7F;
       }
     }
-    
+
     arr[arrIndex++] = b;
     out.writeFixed(arr);
   }
 
   /**
    * Reads a boolean[] from input
-   * @throws IOException 
+   * @throws IOException
    */
   public static boolean[] readBoolArray(Decoder in) throws IOException {
-    
+
     int length = in.readInt();
     boolean[] boolArr = new boolean[length];
-    
+
     int byteArrLength = (int)Math.ceil(length / 8.0);
     byte[] byteArr = new byte[byteArrLength];
     in.readFixed(byteArr);
-    
+
     int arrIndex = 0;
     byte b = 0;
     for(int i=0; i < length; i++) {
@@ -349,11 +351,11 @@ public class IOUtils {
         b = byteArr[arrIndex++];
       }
       boolArr[i] = (b & 0x01) > 0;
-      b >>= 1; 
+      b >>= 1;
     }
     return boolArr;
   }
-  
+
   /**
    * Writes the String array to the given DataOutput.
    * @param out the data output to write to
@@ -382,20 +384,20 @@ public class IOUtils {
     }
     return arr;
   }
-  
+
   /**
-   * Stores the given object in the configuration under the given dataKey 
+   * Stores the given object in the configuration under the given dataKey
    * @param obj the object to store
    * @param conf the configuration to store the object into
    * @param dataKey the key to store the data
    */
-  public static<T> void storeToConf(T obj, Configuration conf, String dataKey) 
+  public static<T> void storeToConf(T obj, Configuration conf, String dataKey)
     throws IOException {
     String classKey = dataKey + "._class";
     conf.set(classKey, obj.getClass().getCanonicalName());
     DefaultStringifier.store(conf, obj, dataKey);
   }
-  
+
   /**
    * Loads the object stored by {@link #storeToConf(Object, Configuration, String)}
    * method from the configuration under the given dataKey.
@@ -404,7 +406,7 @@ public class IOUtils {
    * @return the store object
    */
   @SuppressWarnings("unchecked")
-  public static<T> T loadFromConf(Configuration conf, String dataKey) 
+  public static<T> T loadFromConf(Configuration conf, String dataKey)
     throws IOException {
     String classKey = dataKey + "._class";
     String className = conf.get(classKey);
@@ -415,4 +417,44 @@ public class IOUtils {
       throw new IOException(ex);
     }
   }
+
+  /**
+   * Copies the contents of the buffers into a single byte[]
+   */
+  //TODO: not tested
+  public static byte[] getAsBytes(List<ByteBuffer> buffers) {
+    //find total size
+    int size = 0;
+    for(ByteBuffer buffer : buffers) {
+      size += buffer.remaining();
+    }
+
+    byte[] arr = new byte[size];
+
+    int offset = 0;
+    for(ByteBuffer buffer : buffers) {
+      int len = buffer.remaining();
+      buffer.get(arr, offset, len);
+      offset += len;
+    }
+
+    return arr;
+  }
+
+  /**
+   * Reads until the end of the input stream, and returns the contents as a byte[]
+   */
+  public static byte[] readFully(InputStream in) throws IOException {
+    List<ByteBuffer> buffers = new ArrayList<ByteBuffer>(4);
+    while(true) {
+      ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+      buffers.add(buffer);
+      int count = in.read(buffer.array(), 0, BUFFER_SIZE);
+      buffer.limit(count);
+      if(count < BUFFER_SIZE) break;
+    }
+
+    return getAsBytes(buffers);
+  }
+
 }
