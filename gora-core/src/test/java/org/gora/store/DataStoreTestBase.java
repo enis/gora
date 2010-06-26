@@ -179,4 +179,13 @@ public abstract class DataStoreTestBase {
     DataStoreTestUtil.testQueryWebPageKeyRange(webPageStore);
   }
 
+  @Test
+  public void testDelete() throws IOException {
+    DataStoreTestUtil.testDelete(webPageStore);
+  }
+  
+  @Test
+  public void testDeleteByQuery() throws IOException {
+    DataStoreTestUtil.testDeleteByQuery(webPageStore);
+  }
 }

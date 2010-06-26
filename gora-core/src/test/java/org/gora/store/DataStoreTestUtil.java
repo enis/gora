@@ -392,6 +392,23 @@ public class DataStoreTestUtil {
     }
   }
 
+  public static void testDelete(DataStore<String, WebPage> store) throws IOException {
+    WebPageDataCreator.createWebPageData(store);
+    //delete one by one
+    
+    int deletedSoFar = 0;
+    for(String url : URLS) {
+      Assert.assertTrue(store.delete(url));
+      store.flush();
+      
+      //assert that it is actually deleted
+      Assert.assertNull(store.get(url));
+      
+      //assert that other records are not deleted
+      assertNumResults(store.newQuery(), URLS.length - ++deletedSoFar);  
+    }
+  }
+  
   public static void testDeleteByQuery(DataStore<String, WebPage> store)
     throws IOException {
 

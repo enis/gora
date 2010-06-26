@@ -42,9 +42,10 @@ import org.gora.query.Result;
 import org.gora.query.impl.PartitionQueryImpl;
 import org.gora.sql.query.SqlQuery;
 import org.gora.sql.query.SqlResult;
+import org.gora.sql.statement.Delete;
 import org.gora.sql.statement.InsertStatement;
 import org.gora.sql.statement.SelectStatement;
-import org.gora.sql.statement.WhereClause;
+import org.gora.sql.statement.Where;
 import org.gora.sql.store.SqlTypeInterface.JdbcType;
 import org.gora.store.DataStoreFactory;
 import org.gora.store.impl.DataStoreBase;
@@ -61,6 +62,10 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 
+/**
+ * A DataStore implementation for RDBMS with a SQL interface. SqlStore 
+ * uses JDBC drivers to communicate with the DB. 
+ */
 public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
   private static final Log log = LogFactory.getLog(SqlStore.class);
@@ -85,13 +90,16 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   private String jdbcPassword;
 
   private SqlMapping mapping;
-
+  private Column primaryColumn;
+  
   private Connection connection; //no connection pooling yet
-
+  private DatabaseMetaData metadata;
+  private boolean dbMixedCaseIdentifiers, dbLowerCaseIdentifiers, dbUpperCaseIdentifiers;
+  
   private HashSet<PreparedStatement> writeCache;
 
   private int keySqlType;
-
+  
   private DbTable sqlTable;
 
   private PersistentDatumReader<T> datumReader;
@@ -115,20 +123,21 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
     String mappingFile = DataStoreFactory.getMappingFile(properties, this
         , DEFAULT_MAPPING_FILE);
-    mapping = readMapping(mappingFile);
-
-    sqlTable = createSqlTable(mapping);
 
     connection = getConnection();
-
+    initDbMetadata();
+    
+    mapping = readMapping(mappingFile);
+    primaryColumn = mapping.getPrimaryColumn();
+    
+    sqlTable = createSqlTable(mapping);
+    
     writeCache = new HashSet<PreparedStatement>();
 
     keySqlType = SqlTypeInterface.getSqlType(keyClass);
 
     datumReader = new PersistentDatumReader<T>(schema);
     datumWriter = new PersistentDatumWriter<T>(schema);
-
-
 
     if(autoCreateSchema) {
       createSchema();
@@ -207,14 +216,6 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     try {
       DatabaseMetaData metadata = connection.getMetaData();
       String tableName = mapping.getTableName();
-      if(!metadata.storesMixedCaseIdentifiers()) {
-        if(metadata.storesLowerCaseIdentifiers()) {
-          tableName = tableName.toLowerCase();
-        }
-        else if(metadata.storesUpperCaseIdentifiers()) {
-          tableName = tableName.toUpperCase();
-        }
-      }
 
       resultSet = metadata.getTables(null, null, tableName, null);
 
@@ -232,12 +233,33 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
   @Override
   public boolean delete(K key) throws IOException {
-    return false;
+    Delete delete = new Delete(); 
+    delete.from(sqlTable.getName())
+          .where().equals(primaryColumn.getName(), "?");
+    try {
+      PreparedStatement statement = connection.prepareStatement(delete.toString());
+      setObject(statement, 1, key, keySqlType, primaryColumn);
+      
+      int ret = statement.executeUpdate();
+      return ret > 0;
+    } catch (SQLException ex) {
+      throw new IOException(ex);
+    }
   }
 
   @Override
   public long deleteByQuery(Query<K, T> query) throws IOException {
-    return 0;
+    Delete delete = new Delete().from(sqlTable.getName());
+    delete.where(constructWhereClause(query));
+    try {
+      PreparedStatement statement = connection.prepareStatement(delete.toString());
+      setParametersForPreparedStatement(statement, query);
+      
+      return statement.executeUpdate();
+      
+    } catch (SQLException ex) {
+      throw new IOException(ex);
+    }
   }
 
   @Override
@@ -265,10 +287,9 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
     ResultSet resultSet = null;
     try {
-      WhereClause where = new WhereClause();
+      Where where = new Where();
       SelectStatement select = new SelectStatement(mapping.getTableName());
       select.setWhere(where);
-      Column primaryColumn = mapping.getPrimaryColumn();
 
 //      boolean isPrimarySelected = false;
 //      for (int i = 0; i < requestFields.length; i++) {
@@ -287,8 +308,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         select.addToSelectList(column.getName());
       }
 
-
-      where.addEqualsPart(primaryColumn.getName(), "?");
+      where.equals(primaryColumn.getName(), "?");
       PreparedStatement statement = getConnection().prepareStatement(select.toString());
 
       setObject(statement, 1, key, keySqlType, primaryColumn);
@@ -314,7 +334,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
     ResultSet resultSet = null;
     try {
-      WhereClause where = new WhereClause();
+      Where where = constructWhereClause(query);
       SelectStatement select = new SelectStatement(mapping.getTableName());
       select.setWhere(where);
 
@@ -324,36 +344,13 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         select.addToSelectList(column.getName());
       }
 
-      Column primaryColumn = mapping.getPrimaryColumn();
-
-      if (query.getKey() != null) {
-        where.addEqualsPart(primaryColumn.getName(), "?");
-      } else {
-        if (query.getStartKey() != null) {
-          where.addGreaterThanEqPart(primaryColumn.getName(), "?");
-        }
-        if(query.getEndKey() != null) {
-          where.addLessThanEqPart(primaryColumn.getName(), "?");
-        }
-      }
-
       if(query.getLimit() > 0) {
         select.setLimit(query.getLimit());
       }
 
       PreparedStatement statement = getConnection().prepareStatement(select.toString());
-      int offset = 1;
 
-      if(query.getKey() != null) {
-        setObject(statement, offset++, query.getKey(), keySqlType, primaryColumn);
-      } else {
-        if(query.getStartKey() != null) {
-          setObject(statement, offset++, query.getStartKey(), keySqlType, primaryColumn);
-        }
-        if(query.getEndKey() != null) {
-          setObject(statement, offset++, query.getEndKey(), keySqlType, primaryColumn);
-        }
-      }
+      setParametersForPreparedStatement(statement, query);
 
       resultSet = statement.executeQuery();
 
@@ -363,6 +360,36 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
   }
 
+  private Where constructWhereClause(Query<K,T> query) {
+    Where where = new Where();
+    if (query.getKey() != null) {
+      where.equals(primaryColumn.getName(), "?");
+    } else {
+      if (query.getStartKey() != null) {
+        where.greaterThanEq(primaryColumn.getName(), "?");
+      }
+      if(query.getEndKey() != null) {
+        where.lessThanEq(primaryColumn.getName(), "?");
+      }
+    }
+    return where;
+  }
+  
+  private void setParametersForPreparedStatement(PreparedStatement statement
+      , Query<K,T> query) throws SQLException, IOException {
+    int offset = 1;
+    if(query.getKey() != null) {
+      setObject(statement, offset++, query.getKey(), keySqlType, primaryColumn);
+    } else {
+      if(query.getStartKey() != null) {
+        setObject(statement, offset++, query.getStartKey(), keySqlType, primaryColumn);
+      }
+      if(query.getEndKey() != null) {
+        setObject(statement, offset++, query.getEndKey(), keySqlType, primaryColumn);
+      }
+    }
+  }
+  
   public T readObject(ResultSet rs, T persistent
       , String[] requestFields) throws SQLException, IOException {
     if(rs == null) {
@@ -558,7 +585,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         statement.setDouble(index, (Double)object);
         break;
       case ENUM:
-        statement.setString(index, ((Enum)object).name());
+        statement.setString(index, ((Enum<?>)object).name());
         break;
       case FIXED:
         setBytes(statement, column, index, ((GenericFixed)object).bytes());
@@ -652,6 +679,31 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
   }
 
+  protected void initDbMetadata() throws IOException {
+    try {
+      metadata = connection.getMetaData();
+      
+      dbMixedCaseIdentifiers = metadata.storesMixedCaseIdentifiers();
+      dbLowerCaseIdentifiers = metadata.storesLowerCaseIdentifiers();
+      dbUpperCaseIdentifiers = metadata.storesUpperCaseIdentifiers();
+      
+    } catch (SQLException ex) {
+      throw new IOException();
+    }
+  }
+  
+  protected String getIdentifier(String identifier) {
+    if(!dbMixedCaseIdentifiers) {
+      if(dbLowerCaseIdentifiers) {
+        return identifier.toLowerCase();
+      }
+      else if(dbUpperCaseIdentifiers) {
+        return identifier.toUpperCase();
+      }
+    }
+    return identifier;
+  }
+  
   protected DbTable createSqlTable(SqlMapping mapping) {
     // create default schema
     DbSpec spec = new DbSpec();
@@ -686,7 +738,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
             && table.getAttributeValue("persistentClass").equals(
                 persistentClass.getCanonicalName())) {
 
-          mapping.setTableName(table.getAttributeValue("name"));
+          mapping.setTableName(getIdentifier(table.getAttributeValue("name")));
           List<Element> fields = table.getChild("fields").getChildren("field");
 
           for(Element field:fields) {

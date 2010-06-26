@@ -12,7 +12,7 @@
 
 <table name="WebPage" keyClass="java.lang.String" persistentClass="org.gora.example.generated.WebPage">
   <fields>
-    <field name="url" column="common" length="128" primarykey="true"/>
+    <field name="url" column="url" length="128" primarykey="true"/>
     <field name="content" column="content"/>
     <field name="parsedContent" column="parsedContent"/>
     <field name="outlinks" column="outlinks"/>

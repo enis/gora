@@ -10,7 +10,7 @@ public class SelectStatement {
   private String selectStatement;
   private ArrayList<String> selectList;
   private String from;
-  private WhereClause where;
+  private Where where;
   private String groupBy;
   private String having;
   private String orderBy;
@@ -36,7 +36,7 @@ public class SelectStatement {
     this.orderBy = orderBy;
   }
   
-  public SelectStatement(String selectList, String from, WhereClause where,
+  public SelectStatement(String selectList, String from, Where where,
       String groupBy, String having, String orderBy, boolean orderByAsc,
       int offset, int limit, boolean semicolon) {
     super();
@@ -78,7 +78,7 @@ public class SelectStatement {
   /** Adds a part to the Where clause connected with AND */
   public void addWhere(String part) {
     if(where == null)
-      where = new WhereClause();
+      where = new Where();
     where.addPart(part);
   }
   
@@ -126,14 +126,14 @@ public class SelectStatement {
   /**
    * @return the where
    */
-  public WhereClause getWhere() {
+  public Where getWhere() {
     return where;
   }
 
   /**
    * @param where the where to set
    */
-  public void setWhere(WhereClause where) {
+  public void setWhere(Where where) {
     this.where = where;
   }
   
@@ -141,7 +141,7 @@ public class SelectStatement {
    * @param where the where to set
    */
   public void setWhere(String where) {
-    this.where = new WhereClause(where);
+    this.where = new Where(where);
   }
 
   /**
