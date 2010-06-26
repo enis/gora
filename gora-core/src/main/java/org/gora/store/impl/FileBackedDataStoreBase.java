@@ -29,17 +29,17 @@ import org.gora.util.OperationNotSupportedException;
 /**
  * Base implementations for {@link FileBackedDataStore} methods.
  */
-public abstract class FileBackedDataStoreBase<K, T extends Persistent> 
+public abstract class FileBackedDataStoreBase<K, T extends Persistent>
   extends DataStoreBase<K, T> implements FileBackedDataStore<K, T> {
 
   protected long inputSize; //input size in bytes
-  
+
   protected String inputPath;
   protected String outputPath;
-  
+
   protected InputStream inputStream;
   protected OutputStream outputStream;
-  
+
   @Override
   public void initialize(Class<K> keyClass, Class<T> persistentClass,
       Properties properties) throws IOException {
@@ -53,41 +53,48 @@ public abstract class FileBackedDataStoreBase<K, T extends Persistent>
       }
     }
   }
-  
-  public void setInputPath(String inputPath) {
+
+  @Override
+public void setInputPath(String inputPath) {
     this.inputPath = inputPath;
   }
-  
-  public void setOutputPath(String outputPath) {
+
+  @Override
+public void setOutputPath(String outputPath) {
     this.outputPath = outputPath;
   }
-  
-  public String getInputPath() {
+
+  @Override
+public String getInputPath() {
     return inputPath;
   }
-  
-  public String getOutputPath() {
+
+  @Override
+public String getOutputPath() {
     return outputPath;
   }
-  
-  public void setInputStream(InputStream inputStream) {
+
+  @Override
+public void setInputStream(InputStream inputStream) {
     this.inputStream = inputStream;
   }
-  
-  public void setOutputStream(OutputStream outputStream) {
+
+  @Override
+public void setOutputStream(OutputStream outputStream) {
     this.outputStream = outputStream;
   }
-  
-  public InputStream getInputStream() {
+
+  @Override
+public InputStream getInputStream() {
     return inputStream;
   }
-  
+
   @Override
   public OutputStream getOutputStream() {
     return outputStream;
   }
-  
-  /** Opens an InputStream for the input Hadoop path */ 
+
+  /** Opens an InputStream for the input Hadoop path */
   protected InputStream createInputStream() throws IOException {
     //TODO: if input path is a directory, use smt like MultiInputStream to
     //read all the files recursively
@@ -96,8 +103,8 @@ public abstract class FileBackedDataStoreBase<K, T extends Persistent>
     inputSize = fs.getFileStatus(path).getLen();
     return fs.open(path);
   }
-  
-  /** Opens an OutputStream for the output Hadoop path */ 
+
+  /** Opens an OutputStream for the output Hadoop path */
   protected OutputStream createOutputStream() throws IOException {
     Path path = new Path(outputPath);
     FileSystem fs = path.getFileSystem(getConf());
@@ -123,16 +130,15 @@ public abstract class FileBackedDataStoreBase<K, T extends Persistent>
       throws IOException {
     List<InputSplit> splits = GoraMapReduceUtils.getSplits(getConf(), inputPath);
     List<PartitionQuery<K, T>> queries = new ArrayList<PartitionQuery<K,T>>(splits.size());
-    
+
     for(InputSplit split : splits) {
       queries.add(new FileSplitPartitionQuery<K, T>(query, (FileSplit) split));
     }
-    
-    return queries; 
+
+    return queries;
   }
-  
+
   @Override
-  @SuppressWarnings("unchecked")
   public Result<K, T> execute(Query<K, T> query) throws IOException {
     if(query instanceof FileSplitPartitionQuery) {
         return executePartial((FileSplitPartitionQuery<K, T>) query);
@@ -140,41 +146,41 @@ public abstract class FileBackedDataStoreBase<K, T extends Persistent>
       return executeQuery(query);
     }
   }
-  
+
   /**
    * Executes a normal Query reading the whole data. #execute() calls this function
    * for non-PartitionQuery's.
    */
-  protected abstract Result<K,T> executeQuery(Query<K,T> query) 
+  protected abstract Result<K,T> executeQuery(Query<K,T> query)
     throws IOException;
-  
+
   /**
    * Executes a PartitialQuery, reading the data between start and end.
    */
-  protected abstract Result<K,T> executePartial(FileSplitPartitionQuery<K,T> query) 
+  protected abstract Result<K,T> executePartial(FileSplitPartitionQuery<K,T> query)
     throws IOException;
-  
+
   @Override
   public void flush() throws IOException {
     if(outputStream != null)
       outputStream.flush();
   }
-  
+
   @Override
   public void createSchema() throws IOException {
   }
-  
+
   @Override
   public void deleteSchema() throws IOException {
     throw new OperationNotSupportedException("delete schema is not supported for " +
     		"file backed data stores");
   }
-  
+
   @Override
   public boolean schemaExists() throws IOException {
     return true;
   }
-  
+
   @Override
   public void write(DataOutput out) throws IOException {
     super.write(out);
@@ -184,17 +190,17 @@ public abstract class FileBackedDataStoreBase<K, T extends Persistent>
     if(outputPath != null)
       Text.writeString(out, outputPath);
   }
-  
+
   @Override
   public void readFields(DataInput in) throws IOException {
     super.readFields(in);
     boolean[] nullFields = org.gora.util.IOUtils.readNullFieldsInfo(in);
-    if(!nullFields[0]) 
+    if(!nullFields[0])
       inputPath = Text.readString(in);
-    if(!nullFields[1]) 
+    if(!nullFields[1])
       outputPath = Text.readString(in);
   }
-  
+
   @Override
   public void close() throws IOException {
     IOUtils.closeStream(inputStream);

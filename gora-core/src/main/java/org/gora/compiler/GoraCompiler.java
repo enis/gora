@@ -50,10 +50,10 @@ public class GoraCompiler {
     return s.substring(0, 1).toUpperCase() + s.substring(1);
   }
 
-  /** Recognizes camel case */ 
+  /** Recognizes camel case */
   private static String toUpperCase(String s) {
     StringBuilder builder = new StringBuilder();
-    
+
     for(int i=0; i<s.length(); i++) {
       if(i > 0) {
         if(Character.isUpperCase(s.charAt(i))
@@ -64,10 +64,10 @@ public class GoraCompiler {
       }
       builder.append(Character.toUpperCase(s.charAt(i)));
     }
-    
+
     return builder.toString();
   }
-  
+
   /** Recursively enqueue schemas that need a class generated. */
   private void enqueue(Schema schema) throws IOException {
     if (queue.contains(schema)) return;
@@ -216,7 +216,7 @@ public class GoraCompiler {
         line(2, "public String getName() {return name;}");
         line(2, "public String toString() {return name;}");
         line(1, "};");
-        
+
         StringBuilder builder = new StringBuilder(
         "public static final String[] _ALL_FIELDS = {");
         for (Field field : schema.getFields()) {
@@ -224,16 +224,16 @@ public class GoraCompiler {
         }
         builder.append("};");
         line(1, builder.toString());
-        
+
         line(1, "static {");
         line(2, "PersistentBase.registerFields("+type+".class, _ALL_FIELDS);");
         line(1, "}");
-        
+
         // field declations
         for (Field field : schema.getFields()) {
           line(1,"private "+unbox(field.schema())+" "+field.name()+";");
         }
-        
+
         //constructors
         line(1, "public " + type + "() {");
         line(2, "this(new StateManagerImpl());");
@@ -254,12 +254,12 @@ public class GoraCompiler {
           }
         }
         line(1, "}");
-        
+
         //newInstance(StateManager)
         line(1, "public " + type + " newInstance(StateManager stateManager) {");
         line(2, "return new " + type + "(stateManager);" );
         line(1, "}");
-        
+
         // schema method
         line(1, "public Schema getSchema() { return _SCHEMA; }");
         // get method
@@ -286,7 +286,7 @@ public class GoraCompiler {
         line(2, "default: throw new AvroRuntimeException(\"Bad index\");");
         line(2, "}");
         line(1, "}");
-        
+
         // java bean style getters and setters
         i = 0;
         for (Field field : schema.getFields()) {
@@ -305,7 +305,7 @@ public class GoraCompiler {
             break;
           case ARRAY:
             unboxed = unbox(fieldSchema.getElementType());
-            
+
             line(1, "public GenericArray<"+unboxed+"> get"+camelKey+"() {");
             line(2, "return (GenericArray<"+unboxed+">) get("+i+");");
             line(1, "}");
@@ -315,7 +315,6 @@ public class GoraCompiler {
             line(1, "}");
             break;
           case MAP:
-            String valueType = type(fieldSchema.getValueType());
             unboxed = unbox(fieldSchema.getValueType());
             line(1, "public Map<Utf8, "+unboxed+"> get"+camelKey+"() {");
             line(2, "return (Map<Utf8, "+unboxed+">) get("+i+");");
@@ -337,7 +336,7 @@ public class GoraCompiler {
           i++;
         }
         line(0, "}");
-        
+
         break;
       case ENUM:
         line(0, "public enum "+type(schema)+" { ");

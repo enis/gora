@@ -17,20 +17,22 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.gora.util.AvroUtils;
 
 /**
- * Contains utility methods for byte[] <-> field 
+ * Contains utility methods for byte[] <-> field
  * conversions.
  */
 public class HBaseByteInterface {
-  
-  public static final byte[] EMPTY_BYTES = new byte[0]; 
 
+  public static final byte[] EMPTY_BYTES = new byte[0];
+
+  @SuppressWarnings("rawtypes")
   private static final SpecificDatumWriter writer =
     new SpecificDatumWriter();
 
+  @SuppressWarnings("rawtypes")
   private static final SpecificDatumReader reader =
     new SpecificDatumReader();
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "deprecation" })
   public static Object fromBytes(Schema schema, byte[] val) throws IOException {
     Type type = schema.getType();
     switch (type) {
@@ -102,6 +104,7 @@ public class HBaseByteInterface {
     throw new RuntimeException("Can't parse data as class: " + clazz);
   }
 
+  @SuppressWarnings("unchecked")
   public static byte[] toBytes(Object o, Schema schema) throws IOException {
     Type type = schema.getType();
     switch (type) {

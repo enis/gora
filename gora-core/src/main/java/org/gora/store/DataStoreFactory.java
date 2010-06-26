@@ -106,7 +106,7 @@ public class DataStoreFactory {
     return getDataStore(c, keyClass, persistentClass);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public static synchronized DataStore getDataStore(
       String dataStoreClass, String keyClass, String persistentClass)
     throws ClassNotFoundException {

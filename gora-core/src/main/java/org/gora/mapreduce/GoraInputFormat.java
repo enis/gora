@@ -22,14 +22,14 @@ import org.gora.store.FileBackedDataStore;
 import org.gora.util.IOUtils;
 
 /**
- * {@link InputFormat} to fetch the input from gora data stores. The 
- * query to fetch the items from the datastore should be prepared and 
- * set via {@link #setQuery(Job, Query)}, before submitting the job. 
- * 
- * <p> The {@link InputSplit}s are prepared from the {@link PartitionQuery}s  
+ * {@link InputFormat} to fetch the input from gora data stores. The
+ * query to fetch the items from the datastore should be prepared and
+ * set via {@link #setQuery(Job, Query)}, before submitting the job.
+ *
+ * <p> The {@link InputSplit}s are prepared from the {@link PartitionQuery}s
  * obtained by calling {@link DataStore#getPartitions(Query)}.
  */
-public class GoraInputFormat<K, T extends Persistent> 
+public class GoraInputFormat<K, T extends Persistent>
   extends InputFormat<K, T> implements Configurable {
 
   public static final String QUERY_KEY   = "gora.inputformat.query";
@@ -39,8 +39,8 @@ public class GoraInputFormat<K, T extends Persistent>
   private Configuration conf;
 
   private Query<K, T> query;
-  
-  @SuppressWarnings("unchecked")
+
+  @SuppressWarnings({ "rawtypes" })
   private void setInputPath(PartitionQuery<K,T> partitionQuery
       , TaskAttemptContext context) throws IOException {
     //if the data store is file based
@@ -51,14 +51,14 @@ public class GoraInputFormat<K, T extends Persistent>
           split.getPath().toString());
     }
   }
-  
+
   @Override
   @SuppressWarnings("unchecked")
   public RecordReader<K, T> createRecordReader(InputSplit split,
       TaskAttemptContext context) throws IOException, InterruptedException {
-    PartitionQuery<K,T> partitionQuery = (PartitionQuery<K, T>) 
+    PartitionQuery<K,T> partitionQuery = (PartitionQuery<K, T>)
       ((GoraInputSplit)split).getQuery();
-    
+
     setInputPath(partitionQuery, context);
     return new GoraRecordReader<K, T>(partitionQuery);
   }
@@ -66,14 +66,14 @@ public class GoraInputFormat<K, T extends Persistent>
   @Override
   public List<InputSplit> getSplits(JobContext context) throws IOException,
       InterruptedException {
-    
+
     List<PartitionQuery<K, T>> queries = dataStore.getPartitions(query);
     List<InputSplit> splits = new ArrayList<InputSplit>(queries.size());
-    
+
     for(PartitionQuery<K,T> query : queries) {
       splits.add(new GoraInputSplit(context.getConfiguration(), query));
     }
-    
+
     return splits;
   }
 
@@ -92,18 +92,18 @@ public class GoraInputFormat<K, T extends Persistent>
       throw new RuntimeException(ex);
     }
   }
-  
+
   public static<K, T extends Persistent> void setQuery(Job job
       , Query<K, T> query) throws IOException {
     IOUtils.storeToConf(query, job.getConfiguration(), QUERY_KEY);
   }
-    
+
   public Query<K, T> getQuery(Configuration conf) throws IOException {
     return IOUtils.loadFromConf(conf, QUERY_KEY);
   }
-  
+
   /**
-   * Sets the input parameters for the job 
+   * Sets the input parameters for the job
    * @param job the job to set the properties for
    * @param query the query to get the inputs from
    * @param reuseObjects whether to reuse objects in serialization
@@ -113,9 +113,9 @@ public class GoraInputFormat<K, T extends Persistent>
       , Query<K1,V1> query, boolean reuseObjects) throws IOException {
     setInput(job, query, query.getDataStore(), reuseObjects);
   }
-  
+
   /**
-   * Sets the input parameters for the job 
+   * Sets the input parameters for the job
    * @param job the job to set the properties for
    * @param query the query to get the inputs from
    * @param dataStore the datastore as the input
@@ -123,13 +123,13 @@ public class GoraInputFormat<K, T extends Persistent>
    * @throws IOException
    */
   public static <K1, V1 extends Persistent> void setInput(Job job
-      , Query<K1,V1> query, DataStore<K1,V1> dataStore, boolean reuseObjects) 
+      , Query<K1,V1> query, DataStore<K1,V1> dataStore, boolean reuseObjects)
   throws IOException {
-    
+
     Configuration conf = job.getConfiguration();
-    
+
     GoraMapReduceUtils.setIOSerializations(conf, reuseObjects);
-    
+
     job.setInputFormatClass(GoraInputFormat.class);
     GoraInputFormat.setQuery(job, query);
   }

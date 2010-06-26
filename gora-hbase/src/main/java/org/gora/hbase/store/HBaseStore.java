@@ -63,11 +63,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
- * DataStore for HBase. 
- * 
+ * DataStore for HBase.
+ *
  * <p> Note: HBaseStore is not yet thread-safe.
  */
-public class HBaseStore<K, T extends Persistent> extends DataStoreBase<K, T> 
+public class HBaseStore<K, T extends Persistent> extends DataStoreBase<K, T>
 implements Configurable {
 
   public static final String PARSE_MAPPING_FILE_KEY = "gora.hbase.mapping.file";
@@ -82,18 +82,18 @@ implements Configurable {
   private List<HColumnDescriptor> colDescs;
 
   private HBaseAdmin admin;
-  
+
   private String tableName;
 
   private HTable table;
 
   private Configuration conf;
-  
+
   private boolean autoCreateSchema = true;
-  
+
   static {
     try {
-      docBuilder = 
+      docBuilder =
         DocumentBuilderFactory.newInstance().newDocumentBuilder();
     } catch (ParserConfigurationException e) {
       throw new RuntimeException(e);
@@ -112,9 +112,9 @@ implements Configurable {
     this.conf = new HBaseConfiguration();
     columnMap = new HashMap<String, HbaseColumn>();
     colDescs = new ArrayList<HColumnDescriptor>();
-    
+
     admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
-    
+
     try {
       parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEFAULT_FILE_NAME));
     } catch (Exception e) {
@@ -123,7 +123,7 @@ implements Configurable {
     if(autoCreateSchema) {
       createSchema();
     } else {
-     table = new HTable(tableName);  
+     table = new HTable(tableName);
     }
   }
 
@@ -156,7 +156,7 @@ implements Configurable {
   public boolean schemaExists() throws IOException {
     return admin.tableExists(tableName);
   }
-  
+
   @Override
   public T get(K key, String[] fields) throws IOException {
     fields = getFieldsToQuery(fields);
@@ -166,7 +166,7 @@ implements Configurable {
     return newInstance(result, fields);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public void put(K key, T persistent) throws IOException {
     Schema schema = persistent.getSchema();
@@ -204,7 +204,7 @@ implements Configurable {
                   delete.deleteColumn(hcol.getFamily(), qual);
                   break;
               }
-            }  
+            }
           } else {
             Set<Map.Entry> set = ((Map)o).entrySet();
             for(Entry entry: set) {
@@ -245,28 +245,28 @@ implements Configurable {
   }
 
   /**
-   * Deletes the object with the given key. 
+   * Deletes the object with the given key.
    * @return always true
    */
   @Override
   public boolean delete(K key) throws IOException {
     table.delete(new Delete(toBytes(key)));
-    //HBase does not return success information and executing a get for 
+    //HBase does not return success information and executing a get for
     //success is a bit costly
     return true;
   }
 
   @Override
   public long deleteByQuery(Query<K, T> query) throws IOException {
-    
+
     String[] fields = getFieldsToQuery(query.getFields());
-    //find whether all fields are queried, which means that complete 
+    //find whether all fields are queried, which means that complete
     //rows will be deleted
     boolean isAllFields = Arrays.equals(fields
         , getBeanFactory().getCachedPersistent().getFields());
-    
+
     org.gora.query.Result<K, T> result = query.execute();
-    
+
     ArrayList<Delete> deletes = new ArrayList<Delete>();
     while(result.next()) {
       Delete delete = new Delete(toBytes(result.getKey()));
@@ -276,12 +276,12 @@ implements Configurable {
       }
     }
     //TODO: delete by timestamp, etc
-    
+
     table.delete(deletes);
-    
+
     return deletes.size();
   }
-  
+
   @Override
   public void flush() throws IOException {
     table.flushCommits();
@@ -291,51 +291,51 @@ implements Configurable {
   public Query<K, T> newQuery() {
     return new HBaseQuery<K, T>(this);
   }
-  
+
   @Override
   public List<PartitionQuery<K, T>> getPartitions(Query<K, T> query)
       throws IOException {
-    
+
     // taken from o.a.h.hbase.mapreduce.TableInputFormatBase
     Pair<byte[][], byte[][]> keys = table.getStartEndKeys();
-    if (keys == null || keys.getFirst() == null || 
+    if (keys == null || keys.getFirst() == null ||
         keys.getFirst().length == 0) {
       throw new IOException("Expecting at least one region.");
     }
     if (table == null) {
       throw new IOException("No table was provided.");
     }
-    List<PartitionQuery<K,T>> partitions = new ArrayList<PartitionQuery<K,T>>(keys.getFirst().length); 
+    List<PartitionQuery<K,T>> partitions = new ArrayList<PartitionQuery<K,T>>(keys.getFirst().length);
     for (int i = 0; i < keys.getFirst().length; i++) {
       String regionLocation = table.getRegionLocation(keys.getFirst()[i]).
       getServerAddress().getHostname();
-      byte[] startRow = query.getStartKey() != null ? toBytes(query.getStartKey()) 
+      byte[] startRow = query.getStartKey() != null ? toBytes(query.getStartKey())
           : HConstants.EMPTY_START_ROW;
-      byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey()) 
+      byte[] stopRow = query.getEndKey() != null ? toBytes(query.getEndKey())
           : HConstants.EMPTY_END_ROW;
-      
+
       // determine if the given start an stop key fall into the region
       if ((startRow.length == 0 || keys.getSecond()[i].length == 0 ||
           Bytes.compareTo(startRow, keys.getSecond()[i]) < 0) &&
-          (stopRow.length == 0 || 
+          (stopRow.length == 0 ||
               Bytes.compareTo(stopRow, keys.getFirst()[i]) > 0)) {
 
-        byte[] splitStart = (startRow.length == 0 || 
-          Bytes.compareTo(keys.getFirst()[i], startRow) >= 0) ? 
+        byte[] splitStart = (startRow.length == 0 ||
+          Bytes.compareTo(keys.getFirst()[i], startRow) >= 0) ?
             keys.getFirst()[i] : startRow;
-            
-        byte[] splitStop = (stopRow.length == 0 || 
-            Bytes.compareTo(keys.getSecond()[i], stopRow) <= 0) ? 
+
+        byte[] splitStop = (stopRow.length == 0 ||
+            Bytes.compareTo(keys.getSecond()[i], stopRow) <= 0) ?
             keys.getSecond()[i] : stopRow;
 
-        K startKey = Arrays.equals(HConstants.EMPTY_START_ROW, splitStart) ? 
+        K startKey = Arrays.equals(HConstants.EMPTY_START_ROW, splitStart) ?
             null : HBaseByteInterface.fromBytes(keyClass, splitStart);
         K endKey = Arrays.equals(HConstants.EMPTY_END_ROW, splitStop) ?
             null : HBaseByteInterface.fromBytes(keyClass, splitStop);
 
         PartitionQuery<K, T> partition = new PartitionQueryImpl<K, T>(
             query, startKey, endKey, regionLocation);
-        
+
         partitions.add(partition);
       }
     }
@@ -348,7 +348,7 @@ implements Configurable {
 
     //check if query.fields is null
     query.setFields(getFieldsToQuery(query.getFields()));
-    
+
     if(query.getStartKey() != null && query.getStartKey().equals(
         query.getEndKey())) {
       Get get = new Get(toBytes(query.getStartKey()));
@@ -358,15 +358,15 @@ implements Configurable {
       return new HBaseGetResult<K,T>(this, query, result);
     } else {
       ResultScanner scanner = createScanner(query);
-      
-      org.gora.query.Result<K,T> result 
+
+      org.gora.query.Result<K,T> result
       = new HBaseScannerResult<K,T>(this,query, scanner);
-      
-      return result; 
+
+      return result;
     }
   }
-  
-  public ResultScanner createScanner(Query<K, T> query) 
+
+  public ResultScanner createScanner(Query<K, T> query)
   throws IOException {
     final Scan scan = new Scan();
     if (query.getStartKey() != null) {
@@ -376,7 +376,7 @@ implements Configurable {
       scan.setStopRow(toBytes(query.getEndKey()));
     }
     addFields(scan, query);
-    
+
     return table.getScanner(scan);
   }
 
@@ -384,10 +384,10 @@ implements Configurable {
     for (String f : fieldNames) {
       HbaseColumn col = columnMap.get(f);
       Schema fieldSchema = fieldMap.get(f).schema();
-      
+
       switch (fieldSchema.getType()) {
-        case MAP: 
-        case ARRAY: 
+        case MAP:
+        case ARRAY:
           get.addFamily(col.family); break;
         default:
           get.addColumn(col.family, col.qualifier); break;
@@ -406,13 +406,13 @@ implements Configurable {
         case ARRAY:
           scan.addFamily(col.family); break;
         default:
-          scan.addColumn(col.family, col.qualifier); break;    
+          scan.addColumn(col.family, col.qualifier); break;
       }
     }
   }
 
   //TODO: HBase Get, Scan, Delete should extend some common interface with addFamily, etc
-  private void addFields(Delete delete, Query<K,T> query) 
+  private void addFields(Delete delete, Query<K,T> query)
     throws IOException {
     String[] fields = query.getFields();
     for (String f : fields) {
@@ -427,7 +427,7 @@ implements Configurable {
       }
     }
   }
-  
+
   private void addTimeRange(Get get, Query<K, T> query) throws IOException {
     if(query.getStartTime() > 0 || query.getEndTime() > 0) {
       if(query.getStartTime() == query.getEndTime()) {
@@ -439,13 +439,13 @@ implements Configurable {
       }
     }
   }
-  
-  @SuppressWarnings("unchecked")
+
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   public T newInstance(Result result, String[] fields)
   throws IOException {
     if(result == null || result.isEmpty())
       return null;
-    
+
     T persistent = newPersistent();
     StateManager stateManager = persistent.getStateManager();
     for (String f : fields) {
@@ -462,7 +462,7 @@ implements Configurable {
           Schema valueSchema = fieldSchema.getValueType();
           Map map = new HashMap();
           for (Entry<byte[], byte[]> e : qualMap.entrySet()) {
-            map.put(new Utf8(Bytes.toString(e.getKey())), 
+            map.put(new Utf8(Bytes.toString(e.getKey())),
                 fromBytes(valueSchema, e.getValue()));
           }
           setField(persistent, field, map);
@@ -479,14 +479,14 @@ implements Configurable {
           }
           ListGenericArray arr = new ListGenericArray(fieldSchema, arrayList);
           setField(persistent, field, arr);
-          break;    
+          break;
         default:
           byte[] val =
             result.getValue(col.getFamily(), col.getQualifier());
           if (val == null) {
             continue;
           }
-          setField(persistent, field, val);   
+          setField(persistent, field, val);
           break;
       }
     }
@@ -494,7 +494,7 @@ implements Configurable {
     return persistent;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   private void setField(T persistent, Field field, Map map) {
     persistent.put(field.pos(), new StatefulHashMap(map));
   }
@@ -504,16 +504,16 @@ implements Configurable {
     persistent.put(field.pos(), fromBytes(field.schema(), val));
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   private void setField(T persistent, Field field, GenericArray list) {
     persistent.put(field.pos(), list);
   }
-  
+
   @SuppressWarnings("unchecked")
   private void parseMapping(String fileName)
   throws ClassNotFoundException, InstantiationException, IllegalAccessException,
   SecurityException, NoSuchFieldException {
-    try {      
+    try {
       InputStream stream =
         HBaseStore.class.getClassLoader().getResourceAsStream(fileName);
       Document doc = docBuilder.parse(stream);
@@ -531,14 +531,14 @@ implements Configurable {
             (Class<K>) Class.forName(XmlUtils.getAttribute(node, "keyClass"));
           Class<T> currentPersistentClass =
             (Class<T>) Class.forName(XmlUtils.getAttribute(node, "persistentClass"));
-          
+
           if (!currentKeyClass.equals(getKeyClass()) || !currentPersistentClass.equals(getPersistentClass())) {
             processInfo = false;
             continue;
           }
 
           tableName = XmlUtils.getAttribute(node, "name");
-          
+
           HBaseAdmin admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
           if (admin.tableExists(tableName)) {
             table = new HTable(tableName);
@@ -574,7 +574,7 @@ implements Configurable {
   @Override
   public void close() throws IOException {
     flush();
-    if(table != null) 
+    if(table != null)
       table.close();
   }
 

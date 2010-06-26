@@ -18,38 +18,38 @@ import org.gora.util.IOUtils;
 /**
  * PersistentDatumWriter writes, fields' dirty and readable information.
  */
-public class PersistentDatumWriter<T extends Persistent> 
+public class PersistentDatumWriter<T extends Persistent>
   extends SpecificDatumWriter<T> {
 
   private T persistent = null;
-  
+
   public PersistentDatumWriter() {
   }
-  
+
   public PersistentDatumWriter(Schema schema) {
     setSchema(schema);
   }
-  
+
   public void setPersistent(T persistent) {
     this.persistent = persistent;
   }
-  
+
   @Override
   /**exposing this function so that fields can be written individually*/
   public void write(Schema schema, Object datum, Encoder out)
       throws IOException {
     super.write(schema, datum, out);
   }
-  
+
   @Override
   @SuppressWarnings("unchecked")
   protected void writeRecord(Schema schema, Object datum, Encoder out)
       throws IOException {
-    
+
     if(persistent == null) {
       persistent = (T) datum;
     }
-    
+
     //check if top level schema
     if(schema.equals(persistent.getSchema())) {
       //write readable fields and dirty fields info
@@ -77,9 +77,9 @@ public class PersistentDatumWriter<T extends Persistent>
       super.writeRecord(schema, datum, out);
     }
   }
-  
+
   @Override
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   protected void writeMap(Schema schema, Object datum, Encoder out)
       throws IOException {
 
@@ -90,8 +90,8 @@ public class PersistentDatumWriter<T extends Persistent>
       out.writeString(e2.getKey());
       out.writeInt(e2.getValue().ordinal());
     }
-    
+
     super.writeMap(schema, datum, out);
   }
-  
+
 }

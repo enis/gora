@@ -29,23 +29,23 @@ import org.gora.store.impl.FileBackedDataStoreBase;
 import org.gora.util.OperationNotSupportedException;
 
 /**
- * An adapter DataStore for binary-compatible Avro serializations. 
+ * An adapter DataStore for binary-compatible Avro serializations.
  * AvroDataStore supports Binary and JSON serializations.
  * @param <T>
  */
-public class AvroStore<K, T extends Persistent> 
+public class AvroStore<K, T extends Persistent>
   extends FileBackedDataStoreBase<K, T> implements Configurable {
 
   /** The property key specifying avro encoder/decoder type to use. Can take values
    * "BINARY" or "JSON". */
   public static final String CODEC_TYPE_KEY = "codec.type";
-  
+
   /**
    * The type of the avro Encoder/Decoder.
    */
   public static enum CodecType {
     /** Avro binary encoder */
-    BINARY, 
+    BINARY,
     /** Avro JSON encoder */
     JSON,
   }
@@ -54,14 +54,14 @@ public class AvroStore<K, T extends Persistent>
   private DatumWriter<T> datumWriter;
   private Encoder encoder;
   private Decoder decoder;
-  
+
   private CodecType codecType = CodecType.JSON;
-  
+
   @Override
   public void initialize(Class<K> keyClass, Class<T> persistentClass,
       Properties properties) throws IOException {
     super.initialize(keyClass, persistentClass, properties);
-   
+
     if(properties != null) {
       if(this.codecType == null) {
         String codecType = DataStoreFactory.findProperty(
@@ -70,23 +70,23 @@ public class AvroStore<K, T extends Persistent>
       }
     }
   }
-  
+
   public void setCodecType(CodecType codecType) {
     this.codecType = codecType;
   }
-  
+
   public void setEncoder(Encoder encoder) {
     this.encoder = encoder;
   }
-  
+
   public void setDecoder(Decoder decoder) {
     this.decoder = decoder;
   }
-  
+
   public void setDatumReader(DatumReader<T> datumReader) {
     this.datumReader = datumReader;
   }
-  
+
   public void setDatumWriter(DatumWriter<T> datumWriter) {
     this.datumWriter = datumWriter;
   }
@@ -110,22 +110,22 @@ public class AvroStore<K, T extends Persistent>
   public long deleteByQuery(Query<K, T> query) throws IOException {
     throw new OperationNotSupportedException("delete is not supported for AvroStore");
   }
-  
+
   /**
    * Executes a normal Query reading the whole data. #execute() calls this function
    * for non-PartitionQuery's.
    */
   @Override
   protected Result<K,T> executeQuery(Query<K,T> query) throws IOException {
-    return new AvroResult<K,T>(this, (AvroQuery<K,T>)query, 
-        getDatumReader(), getDecoder());  
+    return new AvroResult<K,T>(this, (AvroQuery<K,T>)query,
+        getDatumReader(), getDecoder());
   }
-  
+
   /**
    * Executes a PartitialQuery, reading the data between start and end.
    */
   @Override
-  protected Result<K,T> executePartial(FileSplitPartitionQuery<K,T> query) 
+  protected Result<K,T> executePartial(FileSplitPartitionQuery<K,T> query)
   throws IOException {
     throw new OperationNotSupportedException("Not yet implemented");
   }
@@ -151,35 +151,35 @@ public class AvroStore<K, T extends Persistent>
   public void put(K key, T obj) throws IOException {
     getDatumWriter().write(obj, getEncoder());
   }
-  
+
   public Encoder getEncoder() throws IOException {
     if(encoder == null) {
       encoder = createEncoder();
     }
     return encoder;
   }
-  
+
   public Decoder getDecoder() throws IOException {
     if(decoder == null) {
       decoder = createDecoder();
     }
     return decoder;
   }
-  
+
   public DatumReader<T> getDatumReader() {
     if(datumReader == null) {
       datumReader = createDatumReader();
     }
     return datumReader;
   }
-  
+
   public DatumWriter<T> getDatumWriter() {
     if(datumWriter == null) {
       datumWriter = createDatumWriter();
     }
     return datumWriter;
   }
-  
+
   protected Encoder createEncoder() throws IOException {
     switch(codecType) {
       case BINARY:
@@ -189,7 +189,8 @@ public class AvroStore<K, T extends Persistent>
     }
     return null;
   }
-  
+
+  @SuppressWarnings("deprecation")
   protected Decoder createDecoder() throws IOException {
     switch(codecType) {
       case BINARY:
@@ -199,15 +200,15 @@ public class AvroStore<K, T extends Persistent>
     }
     return null;
   }
-  
+
   protected DatumWriter<T> createDatumWriter() {
     return new SpecificDatumWriter<T>(schema);
   }
-  
+
   protected DatumReader<T> createDatumReader() {
     return new SpecificDatumReader<T>(schema);
   }
-  
+
   @Override
   public Configuration getConf() {
     if(conf == null) {
@@ -215,12 +216,12 @@ public class AvroStore<K, T extends Persistent>
     }
     return conf;
   }
-  
+
   @Override
   public void write(DataOutput out) throws IOException {
     super.write(out);
   }
-  
+
   @Override
   public void readFields(DataInput in) throws IOException {
     super.readFields(in);

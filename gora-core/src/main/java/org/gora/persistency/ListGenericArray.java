@@ -17,17 +17,17 @@ public class ListGenericArray<T> implements GenericArray<T>
 
   private List<T> list;
   private Schema schema;
-  
+
   public ListGenericArray(Schema schema, List<T> list) {
     this.schema = schema;
     this.list = list;
   }
-  
+
   public ListGenericArray(Schema schema) {
     this.schema = schema;
     this.list = new ArrayList<T>();
   }
-  
+
   @Override
   public void add(T element) {
     list.add(element);
@@ -57,20 +57,20 @@ public class ListGenericArray<T> implements GenericArray<T>
   public Schema getSchema() {
     return schema;
   }
-  
+
   @Override
   public int hashCode() {
     return GenericData.get().hashCode(this, schema);
   }
-  
-  @SuppressWarnings("unchecked")
+
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Override
   public boolean equals(Object obj) {
-    if (obj == this) return true;                 
-    if (!(obj instanceof ListGenericArray)) return false;    
+    if (obj == this) return true;
+    if (!(obj instanceof ListGenericArray)) return false;
     ListGenericArray that = (ListGenericArray)obj;
     if (!schema.equals(that.schema))
-      return false;                             
+      return false;
     return this.compareTo(that) == 0;
   }
 
