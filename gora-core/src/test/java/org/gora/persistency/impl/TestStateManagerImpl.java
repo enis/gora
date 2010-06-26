@@ -6,7 +6,7 @@ import java.io.IOException;
 import junit.framework.Assert;
 
 import org.apache.avro.util.Utf8;
-import org.gora.example.generated.Employee;
+import org.gora.examples.generated.Employee;
 import org.gora.mock.persistency.MockPersistent;
 import org.junit.Before;
 import org.junit.Test;

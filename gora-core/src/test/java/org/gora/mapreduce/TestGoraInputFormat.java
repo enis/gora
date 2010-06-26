@@ -9,7 +9,7 @@ import junit.framework.Assert;
 
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
-import org.gora.example.generated.Employee;
+import org.gora.examples.generated.Employee;
 import org.gora.mock.persistency.MockPersistent;
 import org.gora.mock.query.MockQuery;
 import org.gora.mock.store.MockDataStore;

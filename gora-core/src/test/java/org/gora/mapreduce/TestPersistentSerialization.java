@@ -4,9 +4,9 @@ package org.gora.mapreduce;
 import junit.framework.Assert;
 
 import org.apache.avro.util.Utf8;
-import org.gora.example.WebPageDataCreator;
-import org.gora.example.generated.Employee;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.WebPageDataCreator;
+import org.gora.examples.generated.Employee;
+import org.gora.examples.generated.WebPage;
 import org.gora.memory.store.MemStore;
 import org.gora.query.Result;
 import org.gora.store.DataStoreFactory;

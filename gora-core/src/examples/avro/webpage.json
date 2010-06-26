@@ -1,7 +1,7 @@
 {
   "type": "record",
   "name": "WebPage",
-  "namespace": "org.gora.example.generated",
+  "namespace": "org.gora.examples.generated",
   "fields" : [
     {"name": "url", "type": "string"},
     {"name": "content", "type": "bytes"},

@@ -25,6 +25,10 @@
   <property name="job.file" value="${build.dir}/${module.name}.job" />
   <property name="dist.dir" value="${build.dir}/${final.name}" />
   
+  <property name="examples.src.dir" value="${basedir}/src/examples/java" />
+  <property name="examples.build.dir" value="${build.dir}/examples" />
+  <property name="examples.build.classes.dir" value="${examples.build.dir}/classes" />
+  
   <property name="test.src.dir" value="${basedir}/src/test/java" />
   <property name="test.conf.dir" value="${basedir}/src/test/conf" />
   <property name="test.build.dir" value="${build.dir}/test" />
@@ -66,6 +70,7 @@
 
   <!-- the unit test classpath: uses test.src.dir for configuration -->
   <path id="test.classpath">
+    <pathelement location="${examples.build.classes.dir}"/>
     <pathelement location="${conf.dir}"/>
     <pathelement location="${test.build.classes.dir}" />
     <pathelement location="${test.src.dir}"/>
@@ -81,6 +86,9 @@
   <target name="init" depends="ivy-init">
     <mkdir dir="${build.dir}"/>
     <mkdir dir="${build.classes.dir}"/>
+    
+    <mkdir dir="${examples.build.dir}"/>
+    <mkdir dir="${examples.build.classes.dir}"/>
 
     <mkdir dir="${test.build.dir}"/>
     <mkdir dir="${test.build.classes.dir}"/>
@@ -109,10 +117,28 @@
     </javac>
   </target>
 
+  <!-- ====================================================== -->
+  <!-- target: compile-examples                               -->
+  <!-- ====================================================== -->
+  <target name="compile-examples" depends="compile">
+    <javac 
+        encoding="${build.encoding}" 
+        srcdir="${examples.src.dir}"
+        includes="**/*.java"
+        destdir="${examples.build.classes.dir}"
+        debug="${javac.debug}"
+        optimize="${javac.optimize}"
+        target="${javac.version}"
+        source="${javac.version}"
+        deprecation="${javac.deprecation}">
+      <classpath refid="classpath"/>
+    </javac>
+  </target>
+
   <!-- ================================================================== -->
   <!-- target: compile-test                                               -->
   <!-- ================================================================== -->
-  <target name="compile-test" depends="compile, resolve-test">
+  <target name="compile-test" depends="compile-examples, resolve-test">
     <javac 
          encoding="${build.encoding}" 
          srcdir="${test.src.dir}"
@@ -146,6 +172,7 @@
   <!-- ================================================================== -->
   <target name="test-jar" depends="version, compile-test, jar" description="--> make a jar file for this project">
     <jar destfile="${test.jar.file}">
+      <fileset dir="${examples.build.classes.dir}" />
       <fileset dir="${test.build.classes.dir}" />
       <fileset dir="${test.conf.dir}" excludes="*.template" />
       <!--<zipfileset dir="${conf.dir}" excludes="*.template"/>-->

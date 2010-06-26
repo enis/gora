@@ -1,5 +1,5 @@
 
-package org.gora.example;
+package org.gora.examples;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.WebPage;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 

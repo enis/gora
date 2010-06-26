@@ -1,13 +1,13 @@
 
 package org.gora.store;
 
-import static org.gora.example.WebPageDataCreator.ANCHORS;
-import static org.gora.example.WebPageDataCreator.CONTENTS;
-import static org.gora.example.WebPageDataCreator.LINKS;
-import static org.gora.example.WebPageDataCreator.SORTED_URLS;
-import static org.gora.example.WebPageDataCreator.URLS;
-import static org.gora.example.WebPageDataCreator.URL_INDEXES;
-import static org.gora.example.WebPageDataCreator.createWebPageData;
+import static org.gora.examples.WebPageDataCreator.ANCHORS;
+import static org.gora.examples.WebPageDataCreator.CONTENTS;
+import static org.gora.examples.WebPageDataCreator.LINKS;
+import static org.gora.examples.WebPageDataCreator.SORTED_URLS;
+import static org.gora.examples.WebPageDataCreator.URLS;
+import static org.gora.examples.WebPageDataCreator.URL_INDEXES;
+import static org.gora.examples.WebPageDataCreator.createWebPageData;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,9 +22,9 @@ import junit.framework.Assert;
 
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.util.Utf8;
-import org.gora.example.WebPageDataCreator;
-import org.gora.example.generated.Employee;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.WebPageDataCreator;
+import org.gora.examples.generated.Employee;
+import org.gora.examples.generated.WebPage;
 import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;

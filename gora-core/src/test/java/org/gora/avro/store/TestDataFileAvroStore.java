@@ -1,8 +1,8 @@
 
 package org.gora.avro.store;
 
-import org.gora.example.generated.Employee;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.Employee;
+import org.gora.examples.generated.WebPage;
 
 /**
  * Test case for {@link DataFileAvroStore}.

@@ -1,21 +1,28 @@
-package org.gora.example.generated;
+package org.gora.examples.generated;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
-
-import org.apache.avro.AvroRuntimeException;
+import java.util.HashMap;
+import org.apache.avro.Protocol;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericArray;
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Protocol;
 import org.apache.avro.util.Utf8;
-import org.gora.persistency.ListGenericArray;
+import org.apache.avro.ipc.AvroRemoteException;
+import org.apache.avro.generic.GenericArray;
+import org.apache.avro.specific.SpecificExceptionBase;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.avro.specific.SpecificRecord;
+import org.apache.avro.specific.SpecificFixed;
 import org.gora.persistency.StateManager;
-import org.gora.persistency.StatefulHashMap;
 import org.gora.persistency.impl.PersistentBase;
 import org.gora.persistency.impl.StateManagerImpl;
+import org.gora.persistency.StatefulHashMap;
+import org.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")
 public class WebPage extends PersistentBase {
-  public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"WebPage\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"content\",\"type\":\"bytes\"},{\"name\":\"parsedContent\",\"type\":{\"type\":\"array\",\"items\":\"string\"}},{\"name\":\"outlinks\",\"type\":{\"type\":\"map\",\"values\":\"string\"}}]}");
+  public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"WebPage\",\"namespace\":\"org.gora.examples.generated\",\"fields\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"content\",\"type\":\"bytes\"},{\"name\":\"parsedContent\",\"type\":{\"type\":\"array\",\"items\":\"string\"}},{\"name\":\"outlinks\",\"type\":{\"type\":\"map\",\"values\":\"string\"}}]}");
   public static enum Field {
     URL(0,"url"),
     CONTENT(1,"content"),

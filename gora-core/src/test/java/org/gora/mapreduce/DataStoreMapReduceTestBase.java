@@ -5,7 +5,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.mapred.HadoopTestCase;
 import org.apache.hadoop.mapred.JobConf;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.WebPage;
 import org.gora.store.DataStore;
 import org.junit.Before;
 import org.junit.Test;

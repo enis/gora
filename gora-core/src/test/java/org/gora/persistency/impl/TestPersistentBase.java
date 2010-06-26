@@ -4,8 +4,8 @@ package org.gora.persistency.impl;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.util.Utf8;
-import org.gora.example.generated.Employee;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.Employee;
+import org.gora.examples.generated.WebPage;
 import org.junit.Assert;
 import org.junit.Test;
 

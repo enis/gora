@@ -16,9 +16,9 @@ done
 THIS_DIR=`dirname "$THIS"`
 GORA_HOME=`cd "$THIS_DIR/.." ; pwd`
 
-MODULE=gora-examples
-DIR=$MODULE/src/main/avro/
-OUTDIR=$MODULE/src/main/java/
+MODULE=gora-core
+DIR=$MODULE/src/examples/avro/
+OUTDIR=$MODULE/src/examples/java
 GORA_BIN=$GORA_HOME/bin/gora
 
 for f in `ls $DIR` ; do

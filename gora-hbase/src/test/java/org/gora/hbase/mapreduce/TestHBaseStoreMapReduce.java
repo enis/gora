@@ -2,8 +2,8 @@
 package org.gora.hbase.mapreduce;
 
 import org.apache.hadoop.hbase.HBaseClusterTestCase;
-import org.gora.example.generated.TokenDatum;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.TokenDatum;
+import org.gora.examples.generated.WebPage;
 import org.gora.hbase.store.HBaseStore;
 import org.gora.mapreduce.MapReduceTestUtils;
 import org.gora.store.DataStoreFactory;

@@ -1,5 +1,5 @@
 
-package org.gora.example.mapreduce;
+package org.gora.examples.mapreduce;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
@@ -11,8 +11,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.gora.example.generated.TokenDatum;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.TokenDatum;
+import org.gora.examples.generated.WebPage;
 import org.gora.mapreduce.GoraMapper;
 import org.gora.mapreduce.GoraReducer;
 import org.gora.query.Query;

@@ -1,4 +1,4 @@
-package org.gora.example.generated;
+package org.gora.examples.generated;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -22,7 +22,7 @@ import org.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")
 public class TokenDatum extends PersistentBase {
-  public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"TokenDatum\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"count\",\"type\":\"int\"}]}");
+  public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"TokenDatum\",\"namespace\":\"org.gora.examples.generated\",\"fields\":[{\"name\":\"count\",\"type\":\"int\"}]}");
   public static enum Field {
     COUNT(0,"count"),
     ;

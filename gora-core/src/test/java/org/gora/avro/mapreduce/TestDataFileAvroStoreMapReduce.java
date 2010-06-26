@@ -6,7 +6,7 @@ import static org.gora.avro.store.TestAvroStore.WEBPAGE_OUTPUT;
 import java.io.IOException;
 
 import org.gora.avro.store.DataFileAvroStore;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.WebPage;
 import org.gora.mapreduce.DataStoreMapReduceTestBase;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;

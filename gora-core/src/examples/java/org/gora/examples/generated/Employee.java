@@ -1,4 +1,4 @@
-package org.gora.example.generated;
+package org.gora.examples.generated;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -22,7 +22,7 @@ import org.gora.persistency.ListGenericArray;
 
 @SuppressWarnings("all")
 public class Employee extends PersistentBase {
-  public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"Employee\",\"namespace\":\"org.gora.example.generated\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"dateOfBirth\",\"type\":\"long\"},{\"name\":\"ssn\",\"type\":\"string\"},{\"name\":\"salary\",\"type\":\"int\"}]}");
+  public static final Schema _SCHEMA = Schema.parse("{\"type\":\"record\",\"name\":\"Employee\",\"namespace\":\"org.gora.examples.generated\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"dateOfBirth\",\"type\":\"long\"},{\"name\":\"ssn\",\"type\":\"string\"},{\"name\":\"salary\",\"type\":\"int\"}]}");
   public static enum Field {
     NAME(0,"name"),
     DATE_OF_BIRTH(1,"dateOfBirth"),

@@ -1,5 +1,5 @@
 
-package org.gora.example.mapreduce;
+package org.gora.examples.mapreduce;
 
 import java.io.IOException;
 

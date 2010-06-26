@@ -1,8 +1,8 @@
 
 package org.gora.memory.store;
 
-import org.gora.example.generated.Employee;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.Employee;
+import org.gora.examples.generated.WebPage;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 import org.gora.store.DataStoreTestBase;

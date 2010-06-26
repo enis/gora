@@ -1,9 +1,9 @@
 
 package org.gora.avro.store;
 
-import static org.gora.example.WebPageDataCreator.URLS;
-import static org.gora.example.WebPageDataCreator.URL_INDEXES;
-import static org.gora.example.WebPageDataCreator.createWebPageData;
+import static org.gora.examples.WebPageDataCreator.URLS;
+import static org.gora.examples.WebPageDataCreator.URL_INDEXES;
+import static org.gora.examples.WebPageDataCreator.createWebPageData;
 
 import java.io.IOException;
 
@@ -12,8 +12,8 @@ import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.gora.avro.store.AvroStore.CodecType;
-import org.gora.example.generated.Employee;
-import org.gora.example.generated.WebPage;
+import org.gora.examples.generated.Employee;
+import org.gora.examples.generated.WebPage;
 import org.gora.query.Query;
 import org.gora.query.Result;
 import org.gora.store.DataStore;
