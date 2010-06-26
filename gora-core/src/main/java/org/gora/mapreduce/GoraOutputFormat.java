@@ -61,7 +61,7 @@ public class GoraOutputFormat<K, T extends Persistent>
     Class<K> keyClass = (Class<K>) conf.getClass(OUTPUT_KEY_CLASS, null);
     Class<T> rowClass = (Class<T>) conf.getClass(OUTPUT_VALUE_CLASS, null);
     final DataStore<K, T> store =
-      DataStoreFactory.getDataStore(dataStoreClass, keyClass, rowClass);
+      DataStoreFactory.createDataStore(dataStoreClass, keyClass, rowClass);
 
     setOutputPath(store, context);
 
@@ -86,19 +86,27 @@ public class GoraOutputFormat<K, T extends Persistent>
    * @param dataStore the datastore as the output
    * @param reuseObjects whether to reuse objects in serialization
    */
-  public static <K2, V2 extends Persistent> void setOutput(Job job,
-      DataStore<K2,V2> dataStore, boolean reuseObjects) {
+  public static <K, V extends Persistent> void setOutput(Job job,
+      DataStore<K,V> dataStore, boolean reuseObjects) {
+    setOutput(job, dataStore.getKeyClass(), dataStore.getPersistentClass(),
+        dataStore.getClass(), reuseObjects);
+  }
+
+  @SuppressWarnings("rawtypes")
+  public static <K, V extends Persistent> void setOutput(Job job,
+      Class<K> keyClass, Class<V> persistentClass,
+      Class<? extends DataStore> dataStoreClass,
+      boolean reuseObjects) {
 
     Configuration conf = job.getConfiguration();
 
     GoraMapReduceUtils.setIOSerializations(conf, reuseObjects);
 
     job.setOutputFormatClass(GoraOutputFormat.class);
-    conf.setClass(GoraOutputFormat.DATA_STORE_CLASS
-        , dataStore.getClass(), DataStore.class);
-    conf.setClass(GoraOutputFormat.OUTPUT_KEY_CLASS,
-        dataStore.getKeyClass(), Object.class);
+    conf.setClass(GoraOutputFormat.DATA_STORE_CLASS, dataStoreClass,
+        DataStore.class);
+    conf.setClass(GoraOutputFormat.OUTPUT_KEY_CLASS, keyClass, Object.class);
     conf.setClass(GoraOutputFormat.OUTPUT_VALUE_CLASS,
-        dataStore.getPersistentClass(), Persistent.class);
+        persistentClass, Persistent.class);
   }
 }
