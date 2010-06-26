@@ -18,34 +18,34 @@ import org.junit.Test;
 
 public class TestGoraInputFormat {
 
-  public List<InputSplit> getInputSplits() 
+  public List<InputSplit> getInputSplits()
     throws IOException, InterruptedException {
-    
+
     Job job = new Job();
     MockDataStore store = MockDataStore.get();
-    
+
     MockQuery query = store.newQuery();
     query.setFields(Employee._ALL_FIELDS);
     GoraInputFormat.setInput(job, query, false);
-    
-    GoraInputFormat<String, MockPersistent> inputFormat 
-      = new GoraInputFormat<String, MockPersistent>(); 
-    
+
+    GoraInputFormat<String, MockPersistent> inputFormat
+      = new GoraInputFormat<String, MockPersistent>();
+
     inputFormat.setConf(job.getConfiguration());
-    
+
     return inputFormat.getSplits(job);
   }
-  
+
   @Test
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("rawtypes")
   public void testGetSplits() throws IOException, InterruptedException {
     List<InputSplit> splits = getInputSplits();
-    
+
     Assert.assertTrue(splits.size() > 0);
-    
+
     InputSplit split = splits.get(0);
     PartitionQuery query = ((GoraInputSplit)split).getQuery();
     Assert.assertTrue(Arrays.equals(Employee._ALL_FIELDS, query.getFields()));
   }
-  
+
 }

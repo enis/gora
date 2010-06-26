@@ -73,6 +73,7 @@ public class GoraSqlTestDriver extends GoraTestDriver {
     super.tearDown();
   }
 
+  @SuppressWarnings("unused")
   private Connection createConnection(String driverClassName
       , String url) throws Exception {
 

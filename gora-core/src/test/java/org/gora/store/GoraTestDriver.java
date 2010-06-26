@@ -21,8 +21,10 @@ public class GoraTestDriver {
 
   protected Class<?> dataStoreClass;
 
+  @SuppressWarnings("rawtypes")
   protected HashSet<DataStore> dataStores;
 
+  @SuppressWarnings("rawtypes")
   protected GoraTestDriver(Class<?> dataStoreClass) {
     this.dataStoreClass = dataStoreClass;
     this.dataStores = new HashSet<DataStore>();
@@ -51,6 +53,7 @@ public class GoraTestDriver {
   /** Should be called once after each test, probably in the
    * method annotated with org.junit.After
    */
+  @SuppressWarnings("rawtypes")
   public void tearDown() throws Exception {
     //delete everything
     try {

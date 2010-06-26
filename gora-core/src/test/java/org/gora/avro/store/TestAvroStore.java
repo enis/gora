@@ -28,11 +28,11 @@ import org.junit.Test;
  */
 public class TestAvroStore {
 
-  public static final String EMPLOYEE_OUTPUT = 
+  public static final String EMPLOYEE_OUTPUT =
     System.getProperty("test.build.data") + "/testavrostore/employee.data";
-  public static final String WEBPAGE_OUTPUT = 
+  public static final String WEBPAGE_OUTPUT =
     System.getProperty("test.build.data") + "/testavrostore/webpage.data";
-  
+
   protected AvroStore<String,Employee> employeeStore;
   protected AvroStore<String,WebPage> webPageStore;
   protected Configuration conf = new Configuration();
@@ -43,27 +43,28 @@ public class TestAvroStore {
     employeeStore.initialize(String.class, Employee.class, DataStoreFactory.properties);
     employeeStore.setOutputPath(EMPLOYEE_OUTPUT);
     employeeStore.setInputPath(EMPLOYEE_OUTPUT);
-    
+
     webPageStore = new AvroStore<String, WebPage>();
     webPageStore.initialize(String.class, WebPage.class, DataStoreFactory.properties);
     webPageStore.setOutputPath(WEBPAGE_OUTPUT);
     webPageStore.setInputPath(WEBPAGE_OUTPUT);
   }
 
+  @SuppressWarnings("unchecked")
   protected AvroStore<String, Employee> createEmployeeDataStore() {
     return (AvroStore<String, Employee>) DataStoreFactory.getDataStore(
         AvroStore.class, String.class, Employee.class);
   }
-  
+
   protected AvroStore<String, WebPage> createWebPageDataStore() {
     return new AvroStore<String, WebPage>();
   }
-  
+
   @After
   public void tearDown() throws Exception {
     deletePath(employeeStore.getOutputPath());
     deletePath(webPageStore.getOutputPath());
-    
+
     employeeStore.close();
     webPageStore.close();
   }
@@ -74,7 +75,7 @@ public class TestAvroStore {
       path.getFileSystem(conf).delete(path, true);
     }
   }
-  
+
   @Test
   public void testNewInstance() throws IOException {
     DataStoreTestUtil.testNewPersistent(employeeStore);
@@ -114,9 +115,9 @@ public class TestAvroStore {
     testQueryWebPages(webPageStore);
   }
 
-  //AvroStore should be closed so that Hadoop file is completely flushed, 
+  //AvroStore should be closed so that Hadoop file is completely flushed,
   //so below test is copied and modified to close the store after pushing data
-  public static void testQueryWebPages(DataStore<String, WebPage> store) 
+  public static void testQueryWebPages(DataStore<String, WebPage> store)
   throws IOException {
 
     Query<String, WebPage> query = store.newQuery();

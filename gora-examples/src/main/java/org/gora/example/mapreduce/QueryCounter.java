@@ -23,24 +23,24 @@ public class QueryCounter<K, T extends Persistent> extends Configured implements
 
   public static final String COUNTER_GROUP = "QueryCounter";
   public static final String ROWS = "ROWS";
-  
+
   public QueryCounter(Configuration conf) {
     setConf(conf);
   }
-  
-  public static class QueryCounterMapper<K, T extends Persistent> 
+
+  public static class QueryCounterMapper<K, T extends Persistent>
   extends GoraMapper<K, T
     , NullWritable, NullWritable> {
-    
+
     @Override
-    protected void map(K key, T value, 
+    protected void map(K key, T value,
         Context context) throws IOException ,InterruptedException {
-      
+
       context.getCounter(COUNTER_GROUP, ROWS).increment(1L);
     };
   }
-  
-  /** Returns the Query to count the results of. Subclasses can 
+
+  /** Returns the Query to count the results of. Subclasses can
    * override this function to customize the query.
    * @return the Query object to count the results of.
    */
@@ -48,7 +48,7 @@ public class QueryCounter<K, T extends Persistent> extends Configured implements
     Query<K,T> query = dataStore.newQuery();
     return query;
   }
-  
+
   /**
    * Creates and returns the {@link Job} for submitting to Hadoop mapreduce.
    * @param dataStore
@@ -58,74 +58,74 @@ public class QueryCounter<K, T extends Persistent> extends Configured implements
    */
   public Job createJob(DataStore<K,T> dataStore, Query<K,T> query) throws IOException {
     Job job = new Job(getConf());
-   
+
     job.setJobName("QueryCounter");
     job.setNumReduceTasks(0);
     job.setJarByClass(getClass());
     /* Mappers are initialized with GoraMapper.initMapper()*/
     GoraMapper.initMapperJob(job, query, dataStore, NullWritable.class
         , NullWritable.class, QueryCounterMapper.class, true);
-    
+
     job.setOutputFormatClass(NullOutputFormat.class);
     return job;
   }
 
-  
+
   /**
    * Returns the number of results to the Query
    */
   public long countQuery(DataStore<K,T> dataStore, Query<K,T> query) throws Exception {
     Job job = createJob(dataStore, query);
     job.waitForCompletion(true);
-    
-    return job.getCounters().findCounter(COUNTER_GROUP, ROWS).getValue();    
+
+    return job.getCounters().findCounter(COUNTER_GROUP, ROWS).getValue();
   }
-  
+
   /**
-   * Returns the number of results to the Query obtained by the 
+   * Returns the number of results to the Query obtained by the
    * {@link #getQuery(DataStore)} method.
    */
   public long countQuery(DataStore<K,T> dataStore) throws Exception {
     Query<K,T> query = getQuery(dataStore);
-    
+
     Job job = createJob(dataStore, query);
     job.waitForCompletion(true);
-    
-    return job.getCounters().findCounter(COUNTER_GROUP, ROWS).getValue();    
+
+    return job.getCounters().findCounter(COUNTER_GROUP, ROWS).getValue();
   }
-  
+
   @SuppressWarnings("unchecked")
   @Override
   public int run(String[] args) throws Exception {
-    
+
     if(args.length < 2) {
       System.err.println("Usage QueryCounter <keyClass> <persistentClass> [dataStoreClass]");
       return 1;
     }
-    
-    Class<K> keyClass = (Class<K>) Class.forName(args[0]); 
+
+    Class<K> keyClass = (Class<K>) Class.forName(args[0]);
     Class<T> persistentClass = (Class<T>) Class.forName(args[1]);
-    
+
     DataStore<K,T> dataStore;
-    
+
     if(args.length > 2) {
-      Class<? extends DataStore<K,T>> dataStoreClass 
+      Class<? extends DataStore<K,T>> dataStoreClass
           = (Class<? extends DataStore<K, T>>) Class.forName(args[2]);
       dataStore = DataStoreFactory.getDataStore(dataStoreClass, keyClass, persistentClass);
     }
     else {
       dataStore = DataStoreFactory.getDataStore(keyClass, persistentClass);
     }
-    
+
     long results = countQuery(dataStore);
-    
+
     System.out.println("Number of result to the query:" + results);
-    
+
     return 0;
   }
 
-  
-  @SuppressWarnings("unchecked")
+
+  @SuppressWarnings("rawtypes")
   public static void main(String[] args) throws Exception {
     int ret = ToolRunner.run(new QueryCounter(new Configuration()), args);
     System.exit(ret);
