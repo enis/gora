@@ -37,6 +37,7 @@ import org.gora.util.StringUtils;
 public class DataStoreTestUtil {
 
   public static final long YEAR_IN_MS = 365L * 24L * 60L * 60L * 1000L;
+  private static final int NUM_KEYS = 4;
 
   public static <K, T extends Persistent> void testNewPersistent(
       DataStore<K,T> dataStore) throws IOException {
@@ -319,6 +320,7 @@ public class DataStoreTestUtil {
     while(result.next()) {
       actualNumResults++;
     }
+    result.close();
     Assert.assertEquals(numResults, actualNumResults);
   }
 
@@ -414,7 +416,6 @@ public class DataStoreTestUtil {
 
     Query<String, WebPage> query;
 
-
     //test 1 - delete all
     WebPageDataCreator.createWebPageData(store);
 
@@ -449,16 +450,22 @@ public class DataStoreTestUtil {
 
     //test 4 - delete some
     WebPageDataCreator.createWebPageData(store);
-    int numKeys = 4;
-
     query = store.newQuery();
-    query.setEndKey(SORTED_URLS[numKeys]);
+    query.setEndKey(SORTED_URLS[NUM_KEYS]);
 
     assertNumResults(store.newQuery(), URLS.length);
     store.deleteByQuery(query);
-    assertNumResults(store.newQuery(), URLS.length - numKeys);
+    assertNumResults(store.newQuery(), URLS.length - (NUM_KEYS+1));
 
-
+    store.truncateSchema();
+    
+  }
+  
+  public static void testDeleteByQueryFields(DataStore<String, WebPage> store)
+  throws IOException {
+    
+    Query<String, WebPage> query;    
+    
     //test 5 - delete all with some fields
     WebPageDataCreator.createWebPageData(store);
 
@@ -488,14 +495,14 @@ public class DataStoreTestUtil {
         Assert.assertNull(page.getContent());
       }
     }
-
+    
     //test 6 - delete some with some fields
     WebPageDataCreator.createWebPageData(store);
 
     query = store.newQuery();
     query.setFields(WebPage.Field.URL.getName());
-    String startKey = SORTED_URLS[numKeys];
-    String endKey = SORTED_URLS[SORTED_URLS.length - numKeys];
+    String startKey = SORTED_URLS[NUM_KEYS];
+    String endKey = SORTED_URLS[SORTED_URLS.length - NUM_KEYS];
     query.setStartKey(startKey);
     query.setEndKey(endKey);
 
@@ -503,7 +510,7 @@ public class DataStoreTestUtil {
     store.deleteByQuery(query);
     store.deleteByQuery(query);
     store.deleteByQuery(query);//don't you love that HBase sometimes does not delete arbitrarily
-    System.out.println(Arrays.toString(SORTED_URLS));
+
     assertNumResults(store.newQuery(), URLS.length);
 
     //assert that data is deleted
@@ -523,6 +530,6 @@ public class DataStoreTestUtil {
         Assert.assertTrue(page.getParsedContent().size() > 0);
       }
     }
-
+    
   }
 }

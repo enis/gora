@@ -47,6 +47,7 @@ import org.gora.sql.statement.InsertStatement;
 import org.gora.sql.statement.SelectStatement;
 import org.gora.sql.statement.Where;
 import org.gora.sql.store.SqlTypeInterface.JdbcType;
+import org.gora.sql.util.SqlUtils;
 import org.gora.store.DataStoreFactory;
 import org.gora.store.impl.DataStoreBase;
 import org.gora.util.AvroUtils;
@@ -150,6 +151,8 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
   @Override
   public void close() throws IOException {
+    flush();
+    
     if(connection!=null) {
       try {
         connection.commit();
@@ -174,12 +177,15 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         query.setColumnConstraint(sqlTable.findColumn(column.getName()), constraint);
       }
 
+      PreparedStatement statement = null;
       try {
-        PreparedStatement statement = connection.prepareStatement(query.validate().toString());
+        statement = connection.prepareStatement(query.validate().toString());
 
         statement.executeUpdate();
       } catch (SQLException ex) {
         throw new IOException(ex);
+      } finally {
+        SqlUtils.close(statement);
       }
     }
   }
@@ -195,17 +201,20 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   public void deleteSchema() throws IOException {
     flush();
     if(schemaExists()) {
+      PreparedStatement statement = null;
       try {
         log.info("dropping schema:" + sqlTable.getAbsoluteName());
 
         //DropQuery does not work
-        PreparedStatement statement = connection.prepareStatement(
+        statement = connection.prepareStatement(
             "DROP TABLE " + sqlTable.getAbsoluteName());
         statement.executeUpdate();
 
         connection.commit();
       } catch (SQLException ex) {
         throw new IOException(ex);
+      } finally { 
+        SqlUtils.close(statement);
       }
     }
   }
@@ -225,7 +234,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     } catch (Exception ex) {
       throw new IOException(ex);
     } finally {
-      close(resultSet);
+      SqlUtils.close(resultSet);
     }
 
     return false;
@@ -236,14 +245,18 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     Delete delete = new Delete(); 
     delete.from(sqlTable.getName())
           .where().equals(primaryColumn.getName(), "?");
+    
+    PreparedStatement statement = null;
     try {
-      PreparedStatement statement = connection.prepareStatement(delete.toString());
+      statement = connection.prepareStatement(delete.toString());
       setObject(statement, 1, key, keySqlType, primaryColumn);
       
       int ret = statement.executeUpdate();
       return ret > 0;
     } catch (SQLException ex) {
       throw new IOException(ex);
+    } finally {
+      SqlUtils.close(statement);
     }
   }
 
@@ -251,29 +264,40 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   public long deleteByQuery(Query<K, T> query) throws IOException {
     Delete delete = new Delete().from(sqlTable.getName());
     delete.where(constructWhereClause(query));
+    
+    PreparedStatement statement = null;
     try {
-      PreparedStatement statement = connection.prepareStatement(delete.toString());
+      statement = connection.prepareStatement(delete.toString());
       setParametersForPreparedStatement(statement, query);
       
       return statement.executeUpdate();
       
     } catch (SQLException ex) {
       throw new IOException(ex);
+    } finally {
+      SqlUtils.close(statement);
     }
   }
 
   @Override
   public void flush() throws IOException {
+    Exception deferred = null;
     synchronized (writeCache) {
       for(PreparedStatement stmt : writeCache) {
         try {
           stmt.executeBatch();
         } catch (SQLException ex) {
-          throw new IOException(ex);
+          deferred = ex;
+          break;
         }
+      }
+      for(PreparedStatement stmt : writeCache) {
+        SqlUtils.close(stmt);
       }
       writeCache.clear();
     }
+    if(deferred != null)
+      throw new IOException(deferred);
     try {
       connection.commit();
     } catch (SQLException ex) {
@@ -286,6 +310,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     requestFields = getFieldsToQuery(requestFields);
 
     ResultSet resultSet = null;
+    PreparedStatement statement = null;
     try {
       Where where = new Where();
       SelectStatement select = new SelectStatement(mapping.getTableName());
@@ -309,7 +334,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       }
 
       where.equals(primaryColumn.getName(), "?");
-      PreparedStatement statement = getConnection().prepareStatement(select.toString());
+      statement = getConnection().prepareStatement(select.toString());
 
       setObject(statement, 1, key, keySqlType, primaryColumn);
 
@@ -323,7 +348,8 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     } catch (SQLException ex) {
       throw new IOException(ex);
     } finally {
-      close(resultSet);
+      SqlUtils.close(resultSet);
+      SqlUtils.close(statement);
     }
   }
 
@@ -333,6 +359,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     String[] requestFields = query.getFields();
 
     ResultSet resultSet = null;
+    PreparedStatement statement = null;
     try {
       Where where = constructWhereClause(query);
       SelectStatement select = new SelectStatement(mapping.getTableName());
@@ -348,13 +375,13 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         select.setLimit(query.getLimit());
       }
 
-      PreparedStatement statement = getConnection().prepareStatement(select.toString());
+      statement = getConnection().prepareStatement(select.toString());
 
       setParametersForPreparedStatement(statement, query);
 
       resultSet = statement.executeQuery();
-
-      return new SqlResult<K, T>(this, query, resultSet);
+      
+      return new SqlResult<K, T>(this, query, resultSet, statement);
     } catch (SQLException ex) {
       throw new IOException(ex);
     }
@@ -686,7 +713,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       dbMixedCaseIdentifiers = metadata.storesMixedCaseIdentifiers();
       dbLowerCaseIdentifiers = metadata.storesLowerCaseIdentifiers();
       dbUpperCaseIdentifiers = metadata.storesUpperCaseIdentifiers();
-      
+
     } catch (SQLException ex) {
       throw new IOException();
     }
@@ -776,13 +803,4 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
     return mapping;
   }
-
-  private void close(ResultSet rs) {
-    if(rs != null) {
-      try {
-        rs.close();
-      } catch (SQLException ignore) { }
-    }
-  }
-
 }

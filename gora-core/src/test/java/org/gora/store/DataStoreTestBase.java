@@ -62,12 +62,15 @@ public abstract class DataStoreTestBase {
   public void setUp() throws Exception {
     log.info("setting up test");
     if(testDriver != null) {
-      testDriver.setUp();
       employeeStore = testDriver.createDataStore(String.class, Employee.class);
       webPageStore = testDriver.createDataStore(String.class, WebPage.class);
+      testDriver.setUp();
     } else {
       employeeStore =  createEmployeeDataStore();
       webPageStore = createWebPageDataStore();
+      
+      employeeStore.truncateSchema();
+      webPageStore.truncateSchema();
     }
   }
 
@@ -189,4 +192,10 @@ public abstract class DataStoreTestBase {
   public void testDeleteByQuery() throws IOException {
     DataStoreTestUtil.testDeleteByQuery(webPageStore);
   }
+  
+  @Test
+  public void testDeleteByQueryFields() throws IOException {
+    DataStoreTestUtil.testDeleteByQueryFields(webPageStore);
+  }
+  
 }

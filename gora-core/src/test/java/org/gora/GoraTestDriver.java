@@ -50,6 +50,13 @@ public class GoraTestDriver {
    * method annotated with org.junit.Before
    */
   public void setUp() throws Exception {
+    try {
+      for(DataStore store : dataStores) {
+        store.flush();
+        store.truncateSchema();
+      }
+    }catch (IOException ignore) {
+    }
   }
 
   /** Should be called once after each test, probably in the
@@ -60,6 +67,7 @@ public class GoraTestDriver {
     //delete everything
     try {
       for(DataStore store : dataStores) {
+        store.flush();
         store.deleteSchema();
         store.close();
       }
