@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.gora.GoraTestDriver;
 import org.gora.example.generated.Employee;
 import org.gora.example.generated.WebPage;
 import org.junit.After;

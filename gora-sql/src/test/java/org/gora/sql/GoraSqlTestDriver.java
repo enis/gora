@@ -6,8 +6,8 @@ import java.sql.DriverManager;
 import java.util.Properties;
 
 import org.apache.hadoop.util.StringUtils;
+import org.gora.GoraTestDriver;
 import org.gora.sql.store.SqlStore;
-import org.gora.store.GoraTestDriver;
 import org.hsqldb.Server;
 
 public class GoraSqlTestDriver extends GoraTestDriver {

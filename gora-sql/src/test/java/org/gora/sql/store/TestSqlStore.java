@@ -31,4 +31,8 @@ public class TestSqlStore extends DataStoreTestBase {
     return null;
   }
 
+  
+  public static void main(String[] args) throws IOException {
+    new TestSqlStore().testDeleteByQuery();
+  }
 }
