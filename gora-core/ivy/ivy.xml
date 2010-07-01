@@ -36,9 +36,6 @@
     <dependency org="org.apache.hadoop" name="hadoop-test" rev="0.20.2" conf="test->master"/>
     <dependency org="junit" name="junit" rev="4.6" conf="test->default"/>
 
-    <!-- tests depends on gora-examples -->
-    <dependency org="org.gora" name="gora-examples" rev="latest.integration" changing="true" conf="test->test"/>
-
   </dependencies>
 </ivy-module>
 

@@ -18,7 +18,6 @@
   <dependencies>
     <!-- conf="*->@" means every conf is mapped to the conf of the same name of the artifact-->
     <dependency org="org.gora" name="gora-core" rev="latest.integration" changing="true" conf="*->@"/> 
-    <!--<dependency org="org.gora" name="gora-examples" rev="latest.integration" changing="true" conf="*->compile"/> -->
     <dependency org="org.jdom" name="jdom" rev="1.1" conf="*->master"/>
     <dependency org="com.healthmarketscience.sqlbuilder" name="sqlbuilder" rev="2.0.6" conf="*->default"/>
 
