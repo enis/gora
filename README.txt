@@ -65,7 +65,10 @@ module you wish to develop. Also add dependency to the gora-core project.
 Gora development 
 ----------------
 
-Gora is currently developed by a small team. However, we encourage all kinds of help 
+Gora is currently developed by a small team. The contributers of Gora 
+can be found at http://wiki.github.com/enis/gora/who-we-are
+
+However, we encourage all kinds of help 
 from the community. More information can be found at
 http://wiki.github.com/enis/gora/how-to-contribute
 
