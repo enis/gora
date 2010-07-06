@@ -2,16 +2,20 @@
 package org.gora.avro;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericArray;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.io.Decoder;
 import org.apache.avro.io.ResolvingDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.util.Utf8;
 import org.gora.mapreduce.FakeResolvingDecoder;
+import org.gora.persistency.ListGenericArray;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.State;
 import org.gora.persistency.StatefulHashMap;
@@ -164,4 +168,61 @@ public class PersistentDatumReader<T extends Persistent>
     return new StatefulHashMap<Object, Object>();
   }
 
+  /** Called to create new array instances.  Subclasses may override to use a
+   * different array implementation.  By default, this returns a {@link
+   * GenericData.Array}.*/
+  @Override
+  @SuppressWarnings("rawtypes")
+  protected Object newArray(Object old, int size, Schema schema) {
+    if (old instanceof ListGenericArray) {
+      ((GenericArray) old).clear();
+      return old;
+    } else return new ListGenericArray(size, schema);
+  }
+  
+  public Persistent clone(Persistent persistent, Schema schema) {
+    Persistent cloned = persistent.newInstance(new StateManagerImpl());
+    List<Field> fields = schema.getFields();
+    for(Field field: fields) {
+      int pos = field.pos();
+      switch(field.schema().getType()) {
+        case MAP    :
+        case ARRAY  :
+        case RECORD : 
+        case STRING : cloned.put(pos, cloneObject(
+            field.schema(), persistent.get(pos), cloned.get(pos))); break;
+        case NULL   : break;
+        default     : cloned.put(pos, persistent.get(pos)); break;
+      }
+    }
+    
+    return cloned;
+  }
+  
+  @SuppressWarnings("unchecked")
+  protected Object cloneObject(Schema schema, Object toClone, Object cloned) {
+    if(toClone == null) {
+      return null;
+    }
+    
+    switch(schema.getType()) {
+      case MAP    :
+        Map<Utf8, Object> map = (Map<Utf8, Object>)newMap(cloned, 0);
+        for(Map.Entry<Utf8, Object> entry: ((Map<Utf8, Object>)toClone).entrySet()) {
+          map.put((Utf8)createString(entry.getKey().toString())
+              , cloneObject(schema.getValueType(), entry.getValue(), null));
+        }
+        return map;
+      case ARRAY  :
+        GenericArray<Object> array = (GenericArray<Object>) 
+          newArray(cloned, (int)((GenericArray<?>)toClone).size(), schema);
+        for(Object element: (GenericArray<Object>)toClone) {
+          array.add(cloneObject(schema.getElementType(), element, null));
+        }
+        return array;
+      case RECORD : return clone((Persistent)toClone, schema);
+      case STRING : return createString(toClone.toString());
+      default     : return toClone; //shallow copy is enough
+    }
+  }
 }

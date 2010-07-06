@@ -8,6 +8,7 @@ import java.util.Map;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.specific.SpecificRecord;
+import org.gora.avro.PersistentDatumReader;
 import org.gora.persistency.ListGenericArray;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.StateManager;
@@ -24,6 +25,9 @@ public abstract class PersistentBase implements Persistent {
   protected static Map<Class<?>, String[]> FIELDS =
     new HashMap<Class<?>, String[]>();
 
+  protected static final PersistentDatumReader<Persistent> datumReader =
+    new PersistentDatumReader<Persistent>();
+    
   private StateManager stateManager;
 
   protected PersistentBase() {
@@ -239,5 +243,24 @@ public abstract class PersistentBase implements Persistent {
     for (int j = buf.limit() - 1; j >= p; j--)
           h = 31 * h + buf.get(j);
     return h;
+  }
+  
+  @Override
+  public Persistent clone() {
+    return datumReader.clone(this, getSchema());
+  }
+  
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+    builder.append(super.toString());
+    builder.append(" {\n");
+    List<Field> fields = getSchema().getFields();
+    for(int i=0; i<fields.size(); i++) {
+      builder.append("  \"").append(fields.get(i).name()).append("\":\"");
+      builder.append(get(i)).append("\"\n");
+    }
+    builder.append("}");
+    return builder.toString();
   }
 }

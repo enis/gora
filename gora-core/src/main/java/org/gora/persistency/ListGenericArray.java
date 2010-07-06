@@ -15,6 +15,8 @@ import org.apache.avro.generic.GenericData;
 public class ListGenericArray<T> implements GenericArray<T>
   , Comparable<ListGenericArray<T>> {
 
+  private static final int LIST_DEFAULT_SIZE = 10;
+  
   private List<T> list;
   private Schema schema;
 
@@ -24,8 +26,12 @@ public class ListGenericArray<T> implements GenericArray<T>
   }
 
   public ListGenericArray(Schema schema) {
+    this(LIST_DEFAULT_SIZE, schema);
+  }
+  
+  public ListGenericArray(int size, Schema schema) {
     this.schema = schema;
-    this.list = new ArrayList<T>();
+    this.list = new ArrayList<T>(size);
   }
 
   @Override
@@ -77,5 +83,10 @@ public class ListGenericArray<T> implements GenericArray<T>
   @Override
   public int compareTo(ListGenericArray<T> o) {
     return GenericData.get().compare(this, o, schema);
+  }
+  
+  @Override
+  public String toString() {
+    return list.toString();
   }
 }

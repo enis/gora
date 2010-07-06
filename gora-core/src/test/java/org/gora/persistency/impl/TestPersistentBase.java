@@ -1,11 +1,15 @@
 
 package org.gora.persistency.impl;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.avro.util.Utf8;
 import org.gora.examples.generated.Employee;
 import org.gora.examples.generated.WebPage;
+import org.gora.memory.store.MemStore;
+import org.gora.store.DataStoreFactory;
+import org.gora.store.DataStoreTestUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -88,5 +92,17 @@ public class TestPersistentBase {
     //test primitive fields
     Employee employee = new Employee();
     employee.clear();
+  }
+  
+  @Test
+  public void testClone() throws IOException {
+    //more tests for clone are in TestPersistentDatumReader
+    @SuppressWarnings("unchecked")
+    MemStore<String, Employee> store = DataStoreFactory.getDataStore(
+        MemStore.class, String.class, Employee.class);
+
+    Employee employee = DataStoreTestUtil.createEmployee(store);
+    
+    Assert.assertEquals(employee, employee.clone());
   }
 }
