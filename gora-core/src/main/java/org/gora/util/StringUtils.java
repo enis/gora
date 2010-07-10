@@ -1,18 +1,19 @@
 
 package org.gora.util;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * An utility class for String related functionality. 
+ * An utility class for String related functionality.
  */
 public class StringUtils {
 
   /**
-   * Joins the two given arrays, removing dup elements. 
+   * Joins the two given arrays, removing dup elements.
    */
   public static String[] joinStringArrays(String[] arr1, String... arr2) {
     HashSet<String> set = new HashSet<String>();
@@ -29,11 +30,13 @@ public class StringUtils {
   public static String join(String[] strs) {
     return join(new StringBuilder(), strs).toString();
   }
-  
-  public static StringBuilder join(StringBuilder builder, List<String> strs) {
-    for (int i = 0; i < strs.size(); i++) {
+
+  public static StringBuilder join(StringBuilder builder, Collection<String> strs) {
+    int i = 0;
+    for (String s : strs) {
       if(i != 0) builder.append(',');
-      builder.append(strs.get(i));
+      builder.append(s);
+      i++;
     }
     return builder;
   }
@@ -45,12 +48,12 @@ public class StringUtils {
     }
     return builder;
   }
-  
+
   /** helper for string null and empty checking*/
   public static boolean is(String str) {
-    return str != null && str.length() > 0; 
+    return str != null && str.length() > 0;
   }
-  
+
   //below is taken from:http://jvalentino.blogspot.com/2007/02/shortcut-to-calculating-power-set-using.html
   /**
    * Returns the power set from the given set by using a binary counter
@@ -115,8 +118,8 @@ public class StringUtils {
   public static int parseInt(String str, int defaultValue) {
     if(str == null) {
       return defaultValue;
-    } 
+    }
     return Integer.parseInt(str);
   }
-  
+
 }

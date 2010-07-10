@@ -23,7 +23,7 @@ import org.apache.hadoop.io.VLongWritable;
 import org.apache.hadoop.io.Writable;
 
 /**
- * Contains utility methods related to type conversion between 
+ * Contains utility methods related to type conversion between
  * java, avro and SQL types.
  */
 public class SqlTypeInterface {
@@ -31,7 +31,7 @@ public class SqlTypeInterface {
   /**
    * Encapsules java.sql.Types as an enum
    */
-  public static enum JdbcType { 
+  public static enum JdbcType {
     ARRAY(Types.ARRAY),
     BIT(Types.BIT),
     BIGINT(Types.BIGINT),
@@ -69,7 +69,7 @@ public class SqlTypeInterface {
     ;
 
     private int order;
-    private String sqlType; 
+    private String sqlType;
 
     private JdbcType(int order) {
       this.order = order;
@@ -104,7 +104,7 @@ public class SqlTypeInterface {
 
   public static int getSqlType(Class<?> clazz) {
 
-    //jdo default types 
+    //jdo default types
     if (Boolean.class.isAssignableFrom(clazz)) {
       return Types.BIT;
     } else if (Character.class.isAssignableFrom(clazz)) {
@@ -170,7 +170,7 @@ public class SqlTypeInterface {
     return Types.OTHER;
   }
 
-  public static JdbcType getJdbcType(Schema schema) throws IOException {
+  public static JdbcType getJdbcType(Schema schema, int length, int scale) throws IOException {
     Type type = schema.getType();
 
     switch(type) {
@@ -179,17 +179,40 @@ public class SqlTypeInterface {
       case BOOLEAN: return JdbcType.BIT;
       case BYTES  : return JdbcType.BLOB;
       case DOUBLE : return JdbcType.DOUBLE;
-      case ENUM   : return JdbcType.VARCHAR;        
-      case FIXED  : return JdbcType.BINARY; 
+      case ENUM   : return JdbcType.VARCHAR;
+      case FIXED  : return JdbcType.BINARY;
       case FLOAT  : return JdbcType.FLOAT;
-      case INT    : return JdbcType.INTEGER;  
-      case LONG   : return JdbcType.BIGINT; 
+      case INT    : return JdbcType.INTEGER;
+      case LONG   : return JdbcType.BIGINT;
       case NULL   : break;
       case RECORD : return JdbcType.BLOB;
-      case STRING : return JdbcType.VARCHAR;        
+      case STRING : return JdbcType.VARCHAR;
       case UNION  : throw new IOException("Union is not supported yet");
     }
     return null;
+  }
+
+  public static JdbcType getJdbcType(Class<?> clazz, int length, int scale) throws IOException {
+    if (clazz.equals(Enum.class)) {
+      return JdbcType.VARCHAR;
+    } else if (clazz.equals(Byte.TYPE) || clazz.equals(Byte.class)) {
+      return JdbcType.BLOB;
+    } else if (clazz.equals(Boolean.TYPE) || clazz.equals(Boolean.class)) {
+      return JdbcType.BIT;
+    } else if (clazz.equals(Short.TYPE) || clazz.equals(Short.class)) {
+      return JdbcType.INTEGER;
+    } else if (clazz.equals(Integer.TYPE) || clazz.equals(Integer.class)) {
+      return JdbcType.INTEGER;
+    } else if (clazz.equals(Long.TYPE) || clazz.equals(Long.class)) {
+      return JdbcType.BIGINT;
+    } else if (clazz.equals(Float.TYPE) || clazz.equals(Float.class)) {
+      return JdbcType.FLOAT;
+    } else if (clazz.equals(Double.TYPE) || clazz.equals(Double.class)) {
+      return JdbcType.FLOAT;
+    } else if (clazz.equals(String.class)) {
+      return JdbcType.VARCHAR;
+    }
+    throw new RuntimeException("Can't parse data as class: " + clazz);
   }
 
   public static JdbcType stringToJdbcType(String type) {

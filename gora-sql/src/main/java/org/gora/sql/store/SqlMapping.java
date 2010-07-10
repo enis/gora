@@ -5,52 +5,50 @@ import java.util.HashMap;
 
 import org.gora.sql.store.SqlTypeInterface.JdbcType;
 
-class SqlMapping {
+public class SqlMapping {
 
   private String tableName;
   private HashMap<String, Column> fields;
-  private String primaryKeyField;
-  
+  private Column primaryColumn;
+
   public SqlMapping() {
     fields = new HashMap<String, Column>();
   }
-  
+
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
-  
+
   public String getTableName() {
     return tableName;
   }
-  
+
   public void addField(String fieldname, String column) {
     fields.put(fieldname, new Column(column));
   }
-  
-  public void addField(String fieldname, String columnName, JdbcType jdbcType, boolean isPrimaryKey
-      , int length, int scale) {
-    Column column = new Column(columnName, jdbcType, isPrimaryKey, length, scale);
-    fields.put(fieldname, column);
-    if(isPrimaryKey)
-      setPrimaryKeyField(fieldname);
+
+  public void addField(String fieldName, String columnName, JdbcType jdbcType,
+      int length, int scale) {
+    fields.put(fieldName, new Column(columnName, false, jdbcType, length, scale));
   }
-  
+
   public Column getColumn(String fieldname) {
     return fields.get(fieldname);
   }
-  
-  public String getPrimaryKeyField() {
-    return primaryKeyField;
+
+  public void setPrimaryKey(String columnName, JdbcType jdbcType,
+      int length, int scale) {
+    primaryColumn = new Column(columnName, true, jdbcType, length, scale);
   }
-  
-  public void setPrimaryKeyField(String primaryKeyField) {
-    this.primaryKeyField = primaryKeyField;
-  }
-  
+
   public Column getPrimaryColumn() {
-    return getColumn(primaryKeyField);
+    return primaryColumn;
   }
-  
+
+  public String getPrimaryColumnName() {
+    return primaryColumn.getName();
+  }
+
   public HashMap<String, Column> getFields() {
     return fields;
   }

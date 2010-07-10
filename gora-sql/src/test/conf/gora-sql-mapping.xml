@@ -2,17 +2,19 @@
 
 <gora-orm>
 <table name="Employee" keyClass="java.lang.String" persistentClass="org.gora.examples.generated.Employee">
+  <primarykey column="id" length="16"/>
   <fields>
     <field name="name" column="name" length="128"/>
+    <field name="ssn" column="ssn" length="16"/>
     <field name="dateOfBirth" column="dateOfBirth"/>
-    <field name="ssn" column="ssn" primarykey="true" length="16"/>
     <field name="salary" column="salary"/>
   </fields>
 </table>
 
 <table name="WebPage" keyClass="java.lang.String" persistentClass="org.gora.examples.generated.WebPage">
+  <primarykey column="id" length="128"/>
   <fields>
-    <field name="url" column="url" length="128" primarykey="true"/>
+    <field name="url" column="url" length="128"/>
     <field name="content" column="content"/>
     <field name="parsedContent" column="parsedContent"/>
     <field name="outlinks" column="outlinks"/>

@@ -151,8 +151,44 @@ public class DataStoreTestUtil {
   throws IOException {
     dataStore.createSchema();
     Employee employee = DataStoreTestUtil.createEmployee(dataStore);
-    dataStore.put(employee.getSsn().toString(), employee);
     return employee;
+  }
+
+  public static void testUpdateEmployee(DataStore<String, Employee> dataStore)
+  throws IOException {
+    dataStore.createSchema();
+    long ssn = 1234567890L;
+    long now = System.currentTimeMillis();
+
+    /*for (int i = 0; i < 5; i++) {
+      Employee employee = dataStore.newPersistent();
+      employee.setName(new Utf8("John Doe " + i));
+      employee.setDateOfBirth(now - 20L *  YEAR_IN_MS);
+      employee.setSalary(100000);
+      employee.setSsn(new Utf8(Long.toString(ssn + i)));
+      dataStore.put(employee.getSsn().toString(), employee);
+    }
+
+    dataStore.flush();*/
+
+    for (int i = 0; i < 1; i++) {
+      Employee employee = dataStore.newPersistent();
+      employee.setName(new Utf8("John Doe " + (i + 5)));
+      employee.setDateOfBirth(now - 18L *  YEAR_IN_MS);
+      employee.setSalary(120000);
+      employee.setSsn(new Utf8(Long.toString(ssn + i)));
+      dataStore.put(employee.getSsn().toString(), employee);
+    }
+
+    dataStore.flush();
+
+    for (int i = 0; i < 1; i++) {
+      String key = Long.toString(ssn + i);
+      Employee employee = dataStore.get(key);
+      Assert.assertEquals(now - 18L * YEAR_IN_MS, employee.getDateOfBirth());
+      Assert.assertEquals("John Doe " + (i + 5), employee.getName().toString());
+      Assert.assertEquals(120000, employee.getSalary());
+    }
   }
 
   public static void assertWebPage(WebPage page, int i) {
@@ -397,20 +433,20 @@ public class DataStoreTestUtil {
   public static void testDelete(DataStore<String, WebPage> store) throws IOException {
     WebPageDataCreator.createWebPageData(store);
     //delete one by one
-    
+
     int deletedSoFar = 0;
     for(String url : URLS) {
       Assert.assertTrue(store.delete(url));
       store.flush();
-      
+
       //assert that it is actually deleted
       Assert.assertNull(store.get(url));
-      
+
       //assert that other records are not deleted
-      assertNumResults(store.newQuery(), URLS.length - ++deletedSoFar);  
+      assertNumResults(store.newQuery(), URLS.length - ++deletedSoFar);
     }
   }
-  
+
   public static void testDeleteByQuery(DataStore<String, WebPage> store)
     throws IOException {
 
@@ -458,14 +494,14 @@ public class DataStoreTestUtil {
     assertNumResults(store.newQuery(), URLS.length - (NUM_KEYS+1));
 
     store.truncateSchema();
-    
+
   }
-  
+
   public static void testDeleteByQueryFields(DataStore<String, WebPage> store)
   throws IOException {
-    
-    Query<String, WebPage> query;    
-    
+
+    Query<String, WebPage> query;
+
     //test 5 - delete all with some fields
     WebPageDataCreator.createWebPageData(store);
 
@@ -495,7 +531,7 @@ public class DataStoreTestUtil {
         Assert.assertNull(page.getContent());
       }
     }
-    
+
     //test 6 - delete some with some fields
     WebPageDataCreator.createWebPageData(store);
 
@@ -530,6 +566,6 @@ public class DataStoreTestUtil {
         Assert.assertTrue(page.getParsedContent().size() > 0);
       }
     }
-    
+
   }
 }

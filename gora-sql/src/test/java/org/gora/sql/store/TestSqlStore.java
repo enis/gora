@@ -35,24 +35,24 @@ public class TestSqlStore extends DataStoreTestBase {
     store.initialize(String.class, WebPage.class, DataStoreFactory.properties);
     return store;
   }
-  
-  @Override
+
+  //@Override
   public void testDeleteByQueryFields() {
     //TODO: implement delete fields in SqlStore
   }
-  
-  @Override
+
+  //@Override
   public void testDeleteByQuery() throws IOException {
-    //HSQLDB somehow hangs for this test. we need to solve the issue or switch to 
+    //HSQLDB somehow hangs for this test. we need to solve the issue or switch to
     //another embedded db.
   }
-  
+
   public static void main(String[] args) throws Exception {
     TestSqlStore test = new TestSqlStore();
-    test.setUpClass();
+    TestSqlStore.setUpClass();
     test.setUp();
     test.testDeleteByQuery();
     test.tearDown();
-    test.tearDownClass();
+    TestSqlStore.tearDownClass();
   }
 }

@@ -68,7 +68,7 @@ public abstract class DataStoreTestBase {
     } else {
       employeeStore =  createEmployeeDataStore();
       webPageStore = createWebPageDataStore();
-      
+
       employeeStore.truncateSchema();
       webPageStore.truncateSchema();
     }
@@ -134,6 +134,11 @@ public abstract class DataStoreTestBase {
   }
 
   @Test
+  public void testUpdate() throws IOException {
+    DataStoreTestUtil.testUpdateEmployee(employeeStore);
+  }
+
+  @Test
   public void testGet() throws IOException {
     DataStoreTestUtil.testGetEmployee(employeeStore);
   }
@@ -187,15 +192,14 @@ public abstract class DataStoreTestBase {
   public void testDelete() throws IOException {
     DataStoreTestUtil.testDelete(webPageStore);
   }
-  
+
   @Test
   public void testDeleteByQuery() throws IOException {
     DataStoreTestUtil.testDeleteByQuery(webPageStore);
   }
-  
+
   @Test
   public void testDeleteByQueryFields() throws IOException {
     DataStoreTestUtil.testDeleteByQueryFields(webPageStore);
   }
-  
 }

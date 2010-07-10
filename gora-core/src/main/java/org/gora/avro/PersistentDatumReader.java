@@ -35,10 +35,13 @@ public class PersistentDatumReader<T extends Persistent>
   private WeakHashMap<Decoder, ResolvingDecoder> decoderCache
     = new WeakHashMap<Decoder, ResolvingDecoder>();
 
+  private boolean readDirtyBits = true;
+
   public PersistentDatumReader() {
   }
 
-  public PersistentDatumReader(Schema schema) {
+  public PersistentDatumReader(Schema schema, boolean readDirtyBits) {
+    this.readDirtyBits = readDirtyBits;
     setSchema(schema);
   }
 
@@ -99,7 +102,7 @@ public class PersistentDatumReader<T extends Persistent>
     Object record = newRecord(old, expected);
 
     //check if top-level
-    if(expected.equals(rootSchema)) {
+    if(expected.equals(rootSchema) && readDirtyBits) {
       T persistent = (T)record;
       persistent.clear();
 
@@ -147,13 +150,14 @@ public class PersistentDatumReader<T extends Persistent>
 
     StatefulMap<Utf8, ?> map = (StatefulMap<Utf8, ?>) newMap(old, 0);
     map.clearStates();
-    int size = in.readInt();
-    for (int j = 0; j < size; j++) {
-      Utf8 key = in.readString(null);
-      State state = State.values()[in.readInt()];
-      map.putState(key, state);
+    if (readDirtyBits) {
+      int size = in.readInt();
+      for (int j = 0; j < size; j++) {
+        Utf8 key = in.readString(null);
+        State state = State.values()[in.readInt()];
+        map.putState(key, state);
+      }
     }
-
     return super.readMap(map, expected, in);
   }
 

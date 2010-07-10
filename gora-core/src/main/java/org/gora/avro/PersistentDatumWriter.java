@@ -23,11 +23,14 @@ public class PersistentDatumWriter<T extends Persistent>
 
   private T persistent = null;
 
+  private boolean writeDirtyBits = true;
+
   public PersistentDatumWriter() {
   }
 
-  public PersistentDatumWriter(Schema schema) {
+  public PersistentDatumWriter(Schema schema, boolean writeDirtyBits) {
     setSchema(schema);
+    this.writeDirtyBits = writeDirtyBits;
   }
 
   public void setPersistent(T persistent) {
@@ -48,6 +51,11 @@ public class PersistentDatumWriter<T extends Persistent>
 
     if(persistent == null) {
       persistent = (T) datum;
+    }
+
+    if (!writeDirtyBits) {
+      super.writeRecord(schema, datum, out);
+      return;
     }
 
     //check if top level schema
@@ -83,14 +91,15 @@ public class PersistentDatumWriter<T extends Persistent>
   protected void writeMap(Schema schema, Object datum, Encoder out)
       throws IOException {
 
-    // write extra state information for maps
-    StatefulMap<Utf8, ?> map = (StatefulMap) datum;
-    out.writeInt(map.states().size());
-    for (Entry<Utf8, State> e2 : map.states().entrySet()) {
-      out.writeString(e2.getKey());
-      out.writeInt(e2.getValue().ordinal());
+    if (writeDirtyBits) {
+      // write extra state information for maps
+      StatefulMap<Utf8, ?> map = (StatefulMap) datum;
+      out.writeInt(map.states().size());
+      for (Entry<Utf8, State> e2 : map.states().entrySet()) {
+        out.writeString(e2.getKey());
+        out.writeInt(e2.getValue().ordinal());
+      }
     }
-
     super.writeMap(schema, datum, out);
   }
 

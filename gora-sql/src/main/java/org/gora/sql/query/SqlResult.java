@@ -31,10 +31,11 @@ public class SqlResult<K, T extends Persistent> extends ResultBase<K, T> {
         close();
         return false;
       }
-      
-      persistent = ((SqlStore<K,T>)dataStore).readObject(
-          resultSet, persistent, query.getFields());
-      
+
+      SqlStore<K, T> sqlStore = ((SqlStore<K,T>)dataStore);
+      key = sqlStore.readPrimaryKey(resultSet);
+      persistent = sqlStore.readObject(resultSet, persistent, query.getFields());
+
       return true;
     } catch (Exception ex) {
       throw new IOException(ex);

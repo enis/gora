@@ -3,14 +3,14 @@ package org.gora.sql.store;
 
 import org.gora.sql.store.SqlTypeInterface.JdbcType;
 
-class Column {
+public class Column {
 
   public static enum MappingStrategy {
-    SERIALIZED, 
+    SERIALIZED,
     JOIN_TABLE,
     SECONDARY_TABLE,
   }
-  
+
   private String tableName;
   private String name;
   private JdbcType jdbcType;
@@ -18,87 +18,82 @@ class Column {
   private int length = -1;
   private int scale = -1;
   private MappingStrategy mappingStrategy;
-  
+
   //index, not-null, default-value
-  
+
   public Column() {
   }
-  
+
   public Column(String name) {
     this.name = name;
   }
-  
-  public Column(String name, JdbcType jdbcType, boolean isPrimaryKey, int length, int scale) {
+
+  public Column(String name, boolean isPrimaryKey, JdbcType jdbcType, int length, int scale) {
     this.name = name;
-    this.jdbcType = jdbcType;
     this.isPrimaryKey = isPrimaryKey;
+    this.jdbcType = jdbcType;
     this.length = length;
     this.scale = scale;
     this.mappingStrategy = MappingStrategy.SERIALIZED;
   }
-  
+
   public Column(String name, boolean isPrimaryKey) {
     this.name = name;
-    this.isPrimaryKey = isPrimaryKey;
   }
-  
+
   public String getName() {
     return name;
   }
-  
+
   public void setName(String name) {
     this.name = name;
   }
-  
+
   public JdbcType getJdbcType() {
     return jdbcType;
   }
-  
+
   public void setJdbcType(JdbcType jdbcType) {
     this.jdbcType = jdbcType;
   }
-  
-  public void setPrimaryKey() {
-    this.isPrimaryKey = true;
-  }
-  
-  public boolean isPrimaryKey() {
-    return isPrimaryKey;
-  }
-  
+
   public void setLength(int length) {
     this.length = length;
   }
-  
+
   public int getLength() {
     return length;
   }
-  
+
   public int getScale() {
     return scale;
   }
-  
+
   public void setScale(int scale) {
     this.scale = scale;
   }
-  
+
   public int getScaleOrLength() {
-    return length > 0 ? length : scale;  
+    return length > 0 ? length : scale;
   }
-  
+
   public String getTableName() {
     return tableName;
   }
-  
+
   public void setTableName(String tableName) {
     this.tableName = tableName;
   }
-  
+
   public MappingStrategy getMappingStrategy() {
     return mappingStrategy;
   }
-  
+
   public void setMappingStrategy(MappingStrategy mappingStrategy) {
     this.mappingStrategy = mappingStrategy;
+  }
+
+  public boolean isPrimaryKey() {
+    return isPrimaryKey;
   }
 }

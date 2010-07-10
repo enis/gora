@@ -10,8 +10,12 @@ import org.gora.sql.store.SqlStore;
  */
 public class SqlQuery<K, T extends Persistent> extends QueryBase<K, T> {
 
+  public SqlQuery() {
+    super(null);
+  }
+
   public SqlQuery(SqlStore<K, T> dataStore) {
     super(dataStore);
   }
-  
+
 }
