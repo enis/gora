@@ -3,6 +3,7 @@ package org.gora.hbase.store;
 import static org.gora.hbase.util.HBaseByteInterface.fromBytes;
 import static org.gora.hbase.util.HBaseByteInterface.toBytes;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -11,10 +12,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,6 +27,8 @@ import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.util.Utf8;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -70,9 +73,13 @@ import org.w3c.dom.Node;
 public class HBaseStore<K, T extends Persistent> extends DataStoreBase<K, T>
 implements Configurable {
 
+  public static final Log log = LogFactory.getLog(HBaseStore.class);
+  
   public static final String PARSE_MAPPING_FILE_KEY = "gora.hbase.mapping.file";
 
-  public static final String DEFAULT_FILE_NAME = "hbase-mapping.xml";
+  @Deprecated
+  private static final String DEPRECATED_MAPPING_FILE = "hbase-mapping.xml";
+  public static final String DEFAULT_MAPPING_FILE = "gora-hbase-mapping.xml";
 
   private static final DocumentBuilder docBuilder;
 
@@ -116,7 +123,19 @@ implements Configurable {
     admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
 
     try {
-      parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEFAULT_FILE_NAME));
+      parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEFAULT_MAPPING_FILE));
+    } catch (FileNotFoundException ex) {
+      try {
+        parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEPRECATED_MAPPING_FILE));
+        log.warn(DEPRECATED_MAPPING_FILE + " is deprecated, please rename the file to " 
+            + DEFAULT_MAPPING_FILE);
+      } catch (FileNotFoundException ex1) {
+        throw ex; //throw the original exception
+      } catch (Exception ex1) {
+        log.warn(DEPRECATED_MAPPING_FILE + " is deprecated, please rename the file to " 
+            + DEFAULT_MAPPING_FILE);
+        throw new RuntimeException(ex1);
+      }
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -512,10 +531,11 @@ implements Configurable {
   @SuppressWarnings("unchecked")
   private void parseMapping(String fileName)
   throws ClassNotFoundException, InstantiationException, IllegalAccessException,
-  SecurityException, NoSuchFieldException {
+  SecurityException, NoSuchFieldException, FileNotFoundException {
     try {
       InputStream stream =
         HBaseStore.class.getClassLoader().getResourceAsStream(fileName);
+      if(stream == null) throw new FileNotFoundException(fileName + "cannot be found on classpath");
       Document doc = docBuilder.parse(stream);
       NodeWalker walker = new NodeWalker(doc.getFirstChild());
       boolean processInfo = false;
@@ -565,9 +585,10 @@ implements Configurable {
           colDescs.add(new HColumnDescriptor(familyName));
         }
       }
-
-    } catch (Exception e) {
-      throw new RuntimeException(e);
+    } catch(FileNotFoundException ex) {
+      throw ex;
+    } catch (Exception ex) {
+      throw new RuntimeException(ex);
     }
   }
 
