@@ -95,7 +95,7 @@ public abstract class DataStoreTestBase {
     assertCreateSchema();
   }
 
-  /** Override this to assert that schema is created correctly */
+  // Override this to assert that schema is created correctly
   public void assertCreateSchema() throws IOException {
   }
 
@@ -135,7 +135,8 @@ public abstract class DataStoreTestBase {
 
   @Test
   public void testUpdate() throws IOException {
-    DataStoreTestUtil.testUpdateEmployee(employeeStore);
+    //DataStoreTestUtil.testUpdateEmployee(employeeStore);
+    DataStoreTestUtil.testUpdateWebPage(webPageStore);
   }
 
   @Test

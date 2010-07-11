@@ -583,7 +583,6 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       //jdbc already should cache the ps
       PreparedStatement insert = insertStatement.toStatement(connection);
       insert.addBatch();
-
       synchronized (writeCache) {
         writeCache.add(insert);
       }
@@ -654,13 +653,15 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   throws SQLException   {
 
     switch(column.getJdbcType()) {
-      case BLOB          : Blob blob = connection.createBlob();
-                           blob.setBytes(1, value);
-                           statement.setBlob(index, blob); break;
-      case BINARY        :
-      case VARBINARY     : statement.setBytes(index, value); break;
-      case LONGVARBINARY : statement.setBinaryStream(index,
-        new ByteArrayInputStream(value)); break;
+      case BLOB:
+        statement.setBlob(index, new ByteArrayInputStream(value), value.length);
+        break;
+      case BINARY: case VARBINARY:
+        statement.setBytes(index, value);
+        break;
+      case LONGVARBINARY:
+        statement.setBinaryStream(index, new ByteArrayInputStream(value));
+        break;
     }
   }
 

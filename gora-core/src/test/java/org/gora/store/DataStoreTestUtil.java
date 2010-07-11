@@ -10,6 +10,7 @@ import static org.gora.examples.WebPageDataCreator.URL_INDEXES;
 import static org.gora.examples.WebPageDataCreator.createWebPageData;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import org.gora.persistency.Persistent;
 import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.Result;
+import org.gora.util.ByteUtils;
 import org.gora.util.StringUtils;
 
 /**
@@ -160,7 +162,7 @@ public class DataStoreTestUtil {
     long ssn = 1234567890L;
     long now = System.currentTimeMillis();
 
-    /*for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) {
       Employee employee = dataStore.newPersistent();
       employee.setName(new Utf8("John Doe " + i));
       employee.setDateOfBirth(now - 20L *  YEAR_IN_MS);
@@ -169,7 +171,7 @@ public class DataStoreTestUtil {
       dataStore.put(employee.getSsn().toString(), employee);
     }
 
-    dataStore.flush();*/
+    dataStore.flush();
 
     for (int i = 0; i < 1; i++) {
       Employee employee = dataStore.newPersistent();
@@ -188,6 +190,89 @@ public class DataStoreTestUtil {
       Assert.assertEquals(now - 18L * YEAR_IN_MS, employee.getDateOfBirth());
       Assert.assertEquals("John Doe " + (i + 5), employee.getName().toString());
       Assert.assertEquals(120000, employee.getSalary());
+    }
+  }
+
+  public static void testUpdateWebPage(DataStore<String, WebPage> dataStore)
+  throws IOException {
+    dataStore.createSchema();
+
+    String[] urls = {"http://a.com/a", "http://b.com/b", "http://c.com/c",
+        "http://d.com/d", "http://e.com/e", "http://f.com/f", "http://g.com/g"};
+    String content = "content";
+    String parsedContent = "parsedContent";
+    String anchor = "anchor";
+
+    int parsedContentCount = 0;
+
+
+    for (int i = 0; i < urls.length; i++) {
+      WebPage webPage = dataStore.newPersistent();
+      webPage.setUrl(new Utf8(urls[i]));
+      for (parsedContentCount = 0; parsedContentCount < 5; parsedContentCount++) {
+        webPage.addToParsedContent(new Utf8(parsedContent + i + "," + parsedContentCount));
+      }
+      for (int j = 0; j < urls.length; j += 2) {
+        webPage.putToOutlinks(new Utf8(anchor + j), new Utf8(urls[j]));
+      }
+      dataStore.put(webPage.getUrl().toString(), webPage);
+    }
+
+    dataStore.flush();
+    
+    for (int i = 0; i < urls.length; i++) {
+      WebPage webPage = dataStore.get(urls[i]);
+      webPage.setContent(ByteBuffer.wrap(ByteUtils.toBytes(content + i)));
+      for (parsedContentCount = 5; parsedContentCount < 10; parsedContentCount++) {
+        webPage.addToParsedContent(new Utf8(parsedContent + i + "," + parsedContentCount));
+      }
+      webPage.getOutlinks().clear();
+      for (int j = 1; j < urls.length; j += 2) {
+        webPage.putToOutlinks(new Utf8(anchor + j), new Utf8(urls[j]));
+      }
+      dataStore.put(webPage.getUrl().toString(), webPage);
+    }
+
+    dataStore.flush();
+
+    for (int i = 0; i < urls.length; i++) {
+      WebPage webPage = dataStore.get(urls[i]);
+      Assert.assertEquals(content + i, ByteUtils.toString(webPage.getContent().array()));
+      Assert.assertEquals(10, webPage.getParsedContent().size());
+      int j = 0;
+      for (Utf8 pc : webPage.getParsedContent()) {
+        Assert.assertEquals(parsedContent + i + "," + j, pc.toString());
+        j++;
+      }
+      int count = 0;
+      for (j = 1; j < urls.length; j += 2) {
+        Utf8 link = webPage.getOutlinks().get(new Utf8(anchor + j));
+        Assert.assertNotNull(link);
+        Assert.assertEquals(urls[j], link.toString());
+        count++;
+      }
+      Assert.assertEquals(count, webPage.getOutlinks().size());
+    }
+    
+    for (int i = 0; i < urls.length; i++) {
+      WebPage webPage = dataStore.get(urls[i]);
+      for (int j = 0; j < urls.length; j += 2) {
+        webPage.putToOutlinks(new Utf8(anchor + j), new Utf8(urls[j]));
+      }
+      dataStore.put(webPage.getUrl().toString(), webPage);
+    }
+    
+    dataStore.flush();
+    
+    for (int i = 0; i < urls.length; i++) {
+      WebPage webPage = dataStore.get(urls[i]);
+      int count = 0;
+      for (int j = 0; j < urls.length; j++) {
+        Utf8 link = webPage.getOutlinks().get(new Utf8(anchor + j));
+        Assert.assertNotNull(link);
+        Assert.assertEquals(urls[j], link.toString());
+        count++;
+      }
     }
   }
 
