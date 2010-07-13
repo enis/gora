@@ -25,7 +25,6 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
-import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.ipc.ByteBufferOutputStream;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.util.Utf8;
@@ -517,8 +516,8 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       case BLOB          : Blob blob = resultSet.getBlob(columnName);
                            if (blob != null) is = blob.getBinaryStream(); break;
       case BINARY        :
-      case VARBINARY     : bytes = resultSet.getBytes(columnName); break;
-      case LONGVARBINARY : is = resultSet.getBinaryStream(columnName); break;
+      case VARBINARY     :
+      case LONGVARBINARY : bytes = resultSet.getBytes(columnName); break;
     }
 
     if(bytes!=null)
@@ -686,10 +685,9 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     switch(column.getJdbcType()) {
       case BLOB          : statement.setBlob(index, blob); break;
       case BINARY        :
-      case VARBINARY     : statement.setBytes(index
-          , IOUtils.getAsBytes(((ByteBufferOutputStream)os).getBufferList())); break;
-      case LONGVARBINARY : statement.setBinaryStream(index,
-          new ByteBufferInputStream(((ByteBufferOutputStream)os).getBufferList())); break;
+      case VARBINARY     : 
+      case LONGVARBINARY : byte[] val = IOUtils.getAsBytes(((ByteBufferOutputStream)os).getBufferList());
+                           statement.setBytes(index, val); break;
     }
   }
 

@@ -174,10 +174,10 @@ public class SqlTypeInterface {
     Type type = schema.getType();
 
     switch(type) {
-      case MAP    : return JdbcType.BLOB;
-      case ARRAY  : return JdbcType.BLOB;
+      case MAP    : return JdbcType.LONGVARBINARY;
+      case ARRAY  : return JdbcType.LONGVARBINARY;
       case BOOLEAN: return JdbcType.BIT;
-      case BYTES  : return JdbcType.BLOB;
+      case BYTES  : return JdbcType.LONGVARBINARY;
       case DOUBLE : return JdbcType.DOUBLE;
       case ENUM   : return JdbcType.VARCHAR;
       case FIXED  : return JdbcType.BINARY;
@@ -185,7 +185,7 @@ public class SqlTypeInterface {
       case INT    : return JdbcType.INTEGER;
       case LONG   : return JdbcType.BIGINT;
       case NULL   : break;
-      case RECORD : return JdbcType.BLOB;
+      case RECORD : return JdbcType.LONGVARBINARY;
       case STRING : return JdbcType.VARCHAR;
       case UNION  : throw new IOException("Union is not supported yet");
     }
@@ -196,7 +196,7 @@ public class SqlTypeInterface {
     if (clazz.equals(Enum.class)) {
       return JdbcType.VARCHAR;
     } else if (clazz.equals(Byte.TYPE) || clazz.equals(Byte.class)) {
-      return JdbcType.BLOB;
+      return JdbcType.LONGVARBINARY;
     } else if (clazz.equals(Boolean.TYPE) || clazz.equals(Boolean.class)) {
       return JdbcType.BIT;
     } else if (clazz.equals(Short.TYPE) || clazz.equals(Short.class)) {
