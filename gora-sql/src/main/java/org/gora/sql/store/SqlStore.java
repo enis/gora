@@ -44,7 +44,6 @@ import org.gora.sql.query.SqlResult;
 import org.gora.sql.statement.Delete;
 import org.gora.sql.statement.InsertUpdateStatement;
 import org.gora.sql.statement.InsertUpdateStatementFactory;
-import org.gora.sql.statement.MySqlInsertUpdateStatement;
 import org.gora.sql.statement.SelectStatement;
 import org.gora.sql.statement.Where;
 import org.gora.sql.store.SqlTypeInterface.JdbcType;
@@ -70,6 +69,22 @@ import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
  */
 public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
+  /** The vendor of the DB */
+  public static enum DBVendor {
+    MYSQL,
+    HSQL,
+    GENERIC;
+    
+    static DBVendor getVendor(String dbProductName) {
+      String name = dbProductName.toLowerCase();
+      if(name.contains("mysql"))
+        return MYSQL;
+      else if(name.contains("hsql"))
+        return HSQL;
+      return GENERIC;
+    }
+  }
+  
   private static final Log log = LogFactory.getLog(SqlStore.class);
 
   /** The JDBC Driver class name */
@@ -112,6 +127,8 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
   private String dbProductName;
 
+  private DBVendor dbVendor;
+  
   @Override
   public void initialize(Class<K> keyClass, Class<T> persistentClass,
       Properties properties) throws IOException {
@@ -157,6 +174,9 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     flush();
     if(connection!=null) {
       try {
+        if(dbVendor == DBVendor.HSQL)
+          hsqlClose();
+        
         connection.commit();
         connection.close();
       } catch (SQLException ex) {
@@ -165,6 +185,10 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
   }
 
+  private void hsqlClose() throws SQLException {
+    connection.prepareStatement("SHUTDOWN").executeUpdate();
+  }
+  
   private void setColumnConstraintForQuery(CreateTableQuery query, Column column) {
     ColumnConstraint constraint = getColumnConstraint(column);
     if(constraint != null) {
@@ -567,8 +591,8 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       List<Field> fields = schema.getFields();
 
       InsertUpdateStatement<K, T> insertStatement =
-        InsertUpdateStatementFactory.createStatement(this, mapping, dbProductName);
-        new MySqlInsertUpdateStatement<K, T>(this, mapping, mapping.getTableName());
+        InsertUpdateStatementFactory.createStatement(this, mapping, dbVendor);
+      
       insertStatement.setObject(key, null, mapping.getPrimaryColumn());
       for (int i = 0; i < fields.size(); i++) {
         Field field = fields.get(i);
@@ -721,6 +745,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       dbLowerCaseIdentifiers = metadata.storesLowerCaseIdentifiers();
       dbUpperCaseIdentifiers = metadata.storesUpperCaseIdentifiers();
       dbProductName          = metadata.getDatabaseProductName();
+      dbVendor               = DBVendor.getVendor(dbProductName);
     } catch (SQLException ex) {
       throw new IOException();
     }
