@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.avro.Protocol;
-import org.apache.avro.Schema;
 import org.apache.avro.Protocol.Message;
+import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.specific.SpecificData;
 
@@ -275,6 +275,7 @@ public class GoraCompiler {
         // put method
         line(1, "@SuppressWarnings(value=\"unchecked\")");
         line(1, "public void put(int _field, Object _value) {");
+        line(2, "if(isFieldEqual(_field, _value)) return;");
         line(2, "getStateManager().setDirty(this, _field);");
         line(2, "switch (_field) {");
         i = 0;

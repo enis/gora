@@ -67,6 +67,7 @@ public class WebPage extends PersistentBase {
   }
   @SuppressWarnings(value="unchecked")
   public void put(int _field, Object _value) {
+    if(isFieldEqual(_field, _value)) return;
     getStateManager().setDirty(this, _field);
     switch (_field) {
     case 0:url = (Utf8)_value; break;
