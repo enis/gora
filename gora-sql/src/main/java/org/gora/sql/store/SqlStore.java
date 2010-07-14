@@ -514,7 +514,9 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         case UNION:
           throw new IOException("Union is not supported yet");
       }
+      persistent.setDirty(field.pos());
     }
+    persistent.clearDirty();
     return persistent;
   }
 
