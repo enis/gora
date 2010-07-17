@@ -266,7 +266,10 @@ public abstract class PersistentBase implements Persistent {
   
   protected boolean isFieldEqual(int index, Object value) {
     Object old = get(index);
-    return (old == null && value == null)
-      || (value.equals(old));
+    if (old == null && value == null)
+      return true;
+    if (old == null || value == null)
+      return false;
+    return value.equals(old);
   }
 }
