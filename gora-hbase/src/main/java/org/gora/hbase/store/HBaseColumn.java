@@ -2,15 +2,25 @@ package org.gora.hbase.store;
 
 import java.util.Arrays;
 
-public class HbaseColumn {
+/**
+ * Stores tablename, family, qualifier tuple 
+ */
+class HBaseColumn {
+  
+  String tableName;
   byte[] family;
   byte[] qualifier;
   
-  public HbaseColumn(byte[] family, byte[] qualifier) {
+  public HBaseColumn(String tableName, byte[] family, byte[] qualifier) {
+    this.tableName = tableName;
     this.family = family;
     this.qualifier = qualifier;
   }
 
+  public String getTableName() {
+    return tableName;
+  }
+  
   public byte[] getFamily() {
     return family;
   }
@@ -36,12 +46,11 @@ public class HbaseColumn {
       return false;
     if (getClass() != obj.getClass())
       return false;
-    HbaseColumn other = (HbaseColumn) obj;
+    HBaseColumn other = (HBaseColumn) obj;
     if (!Arrays.equals(family, other.family))
       return false;
     if (!Arrays.equals(qualifier, other.qualifier))
       return false;
     return true;
   }
-
 }

@@ -1,41 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <gora-orm>
-<table name="Employee" keyClass="java.lang.String" persistentClass="org.gora.examples.generated.Employee">
-  <description>
-    <family name="info"/> <!-- This can also have params like compression, bloom filters -->
-  </description>
-  <fields>
-    <field name="name" family="info" qualifier="nm"/>
-    <field name="dateOfBirth" family="info" qualifier="db"/>
-    <field name="ssn" family="info" qualifier="sn"/>
-    <field name="salary" family="info" qualifier="sl"/>
-  </fields>
-</table>
 
-<table name="WebPage" keyClass="java.lang.String" persistentClass="org.gora.examples.generated.WebPage">
-  <description>
+  <table name="Employee"> <!-- optional descriptors for tables -->
+    <family name="info"/> <!-- This can also have params like compression, bloom filters -->
+  </table>
+
+  <table name="WebPage">
     <family name="common"/>
     <family name="content"/>
     <family name="parsedContent"/>
     <family name="outlinks"/>
-  </description>
-  <fields>
+  </table>
+
+  <class name="org.gora.examples.generated.Employee" keyClass="java.lang.String" table="Employee">
+    <field name="name" family="info" qualifier="nm"/>
+    <field name="dateOfBirth" family="info" qualifier="db"/>
+    <field name="ssn" family="info" qualifier="sn"/>
+    <field name="salary" family="info" qualifier="sl"/>
+  </class>
+
+  <class name="org.gora.examples.generated.WebPage" keyClass="java.lang.String" table="WebPage">
     <field name="url" family="common" qualifier="u"/>
     <field name="content" family="content"/>
     <field name="parsedContent" family="parsedContent"/>
     <field name="outlinks" family="outlinks"/>
-  </fields>
-</table>
+  </class>
 
 
-<table name="TokenDatum" keyClass="java.lang.String" persistentClass="org.gora.examples.generated.TokenDatum">
-  <description>
-    <family name="common"/>
-  </description>
-  <fields>
+  <class name="org.gora.examples.generated.TokenDatum" keyClass="java.lang.String">
     <field name="count" family="common" qualifier="count"/>
-  </fields>
-</table>
+  </class>
 
 </gora-orm>

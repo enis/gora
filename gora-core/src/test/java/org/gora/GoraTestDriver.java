@@ -21,13 +21,13 @@ public class GoraTestDriver {
 
   protected static final Log log = LogFactory.getLog(GoraTestDriver.class);
 
-  protected Class<?> dataStoreClass;
+  protected Class<? extends DataStore> dataStoreClass;
 
   @SuppressWarnings("rawtypes")
   protected HashSet<DataStore> dataStores;
 
   @SuppressWarnings("rawtypes")
-  protected GoraTestDriver(Class<?> dataStoreClass) {
+  protected GoraTestDriver(Class<? extends DataStore> dataStoreClass) {
     this.dataStoreClass = dataStoreClass;
     this.dataStores = new HashSet<DataStore>();
   }
@@ -88,5 +88,9 @@ public class GoraTestDriver {
     dataStores.add(dataStore);
 
     return dataStore;
+  }
+  
+  public Class<?> getDataStoreClass() {
+    return dataStoreClass;
   }
 }

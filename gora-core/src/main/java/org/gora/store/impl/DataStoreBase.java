@@ -18,6 +18,7 @@ import org.gora.persistency.impl.BeanFactoryImpl;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
 import org.gora.util.AvroUtils;
+import org.gora.util.StringUtils;
 
 /**
  * A Base class for {@link DataStore}s.
@@ -40,6 +41,8 @@ implements DataStore<K, T> {
 
   protected boolean autoCreateSchema;
 
+  protected Properties properties;
+  
   public DataStoreBase() {
   }
 
@@ -54,6 +57,7 @@ implements DataStore<K, T> {
     fieldMap = AvroUtils.getFieldMap(schema);
 
     autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
+    this.properties = properties;
   }
 
   @Override
@@ -178,4 +182,22 @@ public T get(K key) throws IOException {
     createSchema();
   }
 
+  /**
+   * Returns the name of the schema to use for the persistent class. If the mapping schema name is 
+   * provided it is returned first, else the properties file is searched, and the default schema name is 
+   * returned if found. Else, the class name, without the package, of the persistent class is returned. 
+   * @param mappingSchemaName the name of the schema as read from the mapping file
+   * @param persistentClass persistent class
+   */
+  protected String getSchemaName(String mappingSchemaName, Class<?> persistentClass) {
+    if(mappingSchemaName != null) {
+      return mappingSchemaName;
+    }
+    
+    String schemaName = DataStoreFactory.getDefaultSchemaName(properties, this);
+    if(schemaName != null)
+      return schemaName;
+    
+    return StringUtils.getClassname(persistentClass);
+  }
 }

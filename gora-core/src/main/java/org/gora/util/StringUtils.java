@@ -122,4 +122,19 @@ public class StringUtils {
     return Integer.parseInt(str);
   }
 
+  /**
+   * Returns the name of the class without the package name.
+   */
+  public static String getClassname(Class<?> clazz) {
+    return getClassname(clazz.getName());
+  }
+
+  /**
+   * Returns the name of the class without the package name.
+   */
+  public static String getClassname(String classname) {
+    String[] parts = classname.split("\\.");
+    return parts[parts.length-1];
+  }
+
 }

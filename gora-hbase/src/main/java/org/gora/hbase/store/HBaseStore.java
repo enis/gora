@@ -5,7 +5,6 @@ import static org.gora.hbase.util.HBaseByteInterface.toBytes;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,7 +31,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.Delete;
@@ -43,7 +41,6 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.io.hfile.Compression.Algorithm;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.util.Pair;
 import org.gora.hbase.query.HBaseGetResult;
@@ -60,10 +57,9 @@ import org.gora.query.PartitionQuery;
 import org.gora.query.Query;
 import org.gora.query.impl.PartitionQueryImpl;
 import org.gora.store.impl.DataStoreBase;
-import org.gora.util.NodeWalker;
-import org.gora.util.XmlUtils;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.input.SAXBuilder;
 
 /**
  * DataStore for HBase.
@@ -83,14 +79,7 @@ implements Configurable {
 
   private static final DocumentBuilder docBuilder;
 
-  // a map from field name to hbase column
-  private Map<String, HbaseColumn> columnMap;
-
-  private List<HColumnDescriptor> colDescs;
-
   private HBaseAdmin admin;
-
-  private String tableName;
 
   private HTable table;
 
@@ -98,6 +87,8 @@ implements Configurable {
 
   private boolean autoCreateSchema = true;
 
+  private HBaseMapping mapping;
+  
   static {
     try {
       docBuilder =
@@ -117,16 +108,14 @@ implements Configurable {
       Properties properties) throws IOException {
     super.initialize(keyClass, persistentClass, properties);
     this.conf = new HBaseConfiguration();
-    columnMap = new HashMap<String, HbaseColumn>();
-    colDescs = new ArrayList<HColumnDescriptor>();
 
     admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
 
     try {
-      parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEFAULT_MAPPING_FILE));
+      mapping = readMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEFAULT_MAPPING_FILE));
     } catch (FileNotFoundException ex) {
       try {
-        parseMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEPRECATED_MAPPING_FILE));
+        mapping = readMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEPRECATED_MAPPING_FILE));
         log.warn(DEPRECATED_MAPPING_FILE + " is deprecated, please rename the file to " 
             + DEFAULT_MAPPING_FILE);
       } catch (FileNotFoundException ex1) {
@@ -142,38 +131,37 @@ implements Configurable {
     if(autoCreateSchema) {
       createSchema();
     } else {
-     table = new HTable(tableName);
+     table = new HTable(mapping.getTableName());
     }
   }
 
   @Override
   public void createSchema() throws IOException {
-    if(admin.tableExists(tableName)) {
+    if(admin.tableExists(mapping.getTableName())) {
       return;
     }
-    HTableDescriptor tableDesc = new HTableDescriptor(tableName);
-    for (HColumnDescriptor colDesc : colDescs) {
-      tableDesc.addFamily(colDesc);
-    }
+    HTableDescriptor tableDesc = mapping.getTable();
+    System.out.println("creating schema:" + Bytes.toString(tableDesc.getName()));
+    
     admin.createTable(tableDesc);
-    table = new HTable(tableName);
+    table = new HTable(mapping.getTableName());
   }
 
   @Override
   public void deleteSchema() throws IOException {
-    if(!admin.tableExists(tableName)) {
+    if(!admin.tableExists(mapping.getTableName())) {
       if(table != null) {
         table.getWriteBuffer().clear();
       }
       return;
     }
-    admin.disableTable(tableName);
-    admin.deleteTable(tableName);
+    admin.disableTable(mapping.getTableName());
+    admin.deleteTable(mapping.getTableName());
   }
 
   @Override
   public boolean schemaExists() throws IOException {
-    return admin.tableExists(tableName);
+    return admin.tableExists(mapping.getTableName());
   }
 
   @Override
@@ -203,7 +191,7 @@ implements Configurable {
       }
       Type type = field.schema().getType();
       Object o = persistent.get(i);
-      HbaseColumn hcol = columnMap.get(field.name());
+      HBaseColumn hcol = mapping.getColumn(field.name());
       switch(type) {
         case MAP:
           if(o instanceof StatefulMap) {
@@ -401,7 +389,7 @@ implements Configurable {
 
   private void addFields(Get get, String[] fieldNames) {
     for (String f : fieldNames) {
-      HbaseColumn col = columnMap.get(f);
+      HBaseColumn col = mapping.getColumn(f);
       Schema fieldSchema = fieldMap.get(f).schema();
 
       switch (fieldSchema.getType()) {
@@ -418,7 +406,7 @@ implements Configurable {
   throws IOException {
     String[] fields = query.getFields();
     for (String f : fields) {
-      HbaseColumn col = columnMap.get(f);
+      HBaseColumn col = mapping.getColumn(f);
       Schema fieldSchema = fieldMap.get(f).schema();
       switch (fieldSchema.getType()) {
         case MAP:
@@ -435,7 +423,7 @@ implements Configurable {
     throws IOException {
     String[] fields = query.getFields();
     for (String f : fields) {
-      HbaseColumn col = columnMap.get(f);
+      HBaseColumn col = mapping.getColumn(f);
       Schema fieldSchema = fieldMap.get(f).schema();
       switch (fieldSchema.getType()) {
         case MAP:
@@ -468,7 +456,7 @@ implements Configurable {
     T persistent = newPersistent();
     StateManager stateManager = persistent.getStateManager();
     for (String f : fields) {
-      HbaseColumn col = columnMap.get(f);
+      HBaseColumn col = mapping.getColumn(f);
       Field field = fieldMap.get(f);
       Schema fieldSchema = field.schema();
       switch(fieldSchema.getType()) {
@@ -529,67 +517,67 @@ implements Configurable {
   }
 
   @SuppressWarnings("unchecked")
-  private void parseMapping(String fileName)
-  throws ClassNotFoundException, InstantiationException, IllegalAccessException,
-  SecurityException, NoSuchFieldException, FileNotFoundException {
+  private HBaseMapping readMapping(String filename) throws IOException {
+    
+    HBaseMapping mapping = new HBaseMapping();
+    
     try {
-      InputStream stream =
-        HBaseStore.class.getClassLoader().getResourceAsStream(fileName);
-      if(stream == null) throw new FileNotFoundException(fileName + "cannot be found on classpath");
-      Document doc = docBuilder.parse(stream);
-      NodeWalker walker = new NodeWalker(doc.getFirstChild());
-      boolean processInfo = false;
-
-      while (walker.hasNext()) {
-        Node node = walker.nextNode();
-        if (node.getNodeType() == Node.TEXT_NODE) {
-          continue;
-        }
-        if (node.getNodeName().equals("table")) {
-          processInfo = true;
-          Class<K> currentKeyClass =
-            (Class<K>) Class.forName(XmlUtils.getAttribute(node, "keyClass"));
-          Class<T> currentPersistentClass =
-            (Class<T>) Class.forName(XmlUtils.getAttribute(node, "persistentClass"));
-
-          if (!currentKeyClass.equals(getKeyClass()) || !currentPersistentClass.equals(getPersistentClass())) {
-            processInfo = false;
-            continue;
-          }
-
-          tableName = XmlUtils.getAttribute(node, "name");
-
-          HBaseAdmin admin = new HBaseAdmin(new HBaseConfiguration(getConf()));
-          if (admin.tableExists(tableName)) {
-            table = new HTable(tableName);
-            table.setAutoFlush(false);
-          } else {
-            table = null;
-          }
-          schema = getPersistentClass().newInstance().getSchema();
-        } else if (node.getNodeName().equals("field") && processInfo) {
-          String fieldName = XmlUtils.getAttribute(node, "name");
-          String familyStr = XmlUtils.getAttribute(node, "family");
-          String qualifierStr = XmlUtils.getAttribute(node, "qualifier");
-          byte[] family = Bytes.toBytes(familyStr);
-          byte[] qualifier =
-            qualifierStr != null ? Bytes.toBytes(qualifierStr) : null;
-            columnMap.put(fieldName, new HbaseColumn(family, qualifier));
-        } else if (node.getNodeName().equals("family") && processInfo) {
-          String familyName = XmlUtils.getAttribute(node, "name");
-          String compression =
-            XmlUtils.getAttribute(node, "compression",
-                HColumnDescriptor.DEFAULT_COMPRESSION.toUpperCase());
-          HColumnDescriptor colDesc = new HColumnDescriptor(familyName);
-          colDesc.setCompressionType(Algorithm.valueOf(compression));
-          colDescs.add(new HColumnDescriptor(familyName));
+      SAXBuilder builder = new SAXBuilder();
+      Document doc = builder.build(getClass().getClassLoader()
+          .getResourceAsStream(filename));
+      Element root = doc.getRootElement();
+      
+      List<Element> tableElements = root.getChildren("table");
+      for(Element tableElement : tableElements) {
+        String tableName = tableElement.getAttributeValue("name");
+        mapping.addTable(tableName);
+        
+        List<Element> fieldElements = tableElement.getChildren("field");
+        for(Element fieldElement : fieldElements) {
+          String familyName  = fieldElement.getAttributeValue("name");
+          String compression = fieldElement.getAttributeValue("compression");
+          String blockCache  = fieldElement.getAttributeValue("blockCache");
+          String blockSize   = fieldElement.getAttributeValue("blockSize");
+          String bloomFilter = fieldElement.getAttributeValue("bloomFilter");
+          String maxVersions = fieldElement.getAttributeValue("maxVersions");
+          String timeToLive  = fieldElement.getAttributeValue("timeToLive");
+          String inMemory    = fieldElement.getAttributeValue("inMemory");
+          String mapFileIndexInterval  = tableElement.getAttributeValue("mapFileIndexInterval");
+          
+          mapping.addColumnFamily(tableName, familyName, compression, blockCache, blockSize
+              , bloomFilter, maxVersions, timeToLive, inMemory, mapFileIndexInterval);
         }
       }
-    } catch(FileNotFoundException ex) {
+      
+      List<Element> classElements = root.getChildren("class");
+      for(Element classElement: classElements) {
+        if(classElement.getAttributeValue("keyClass").equals(keyClass.getCanonicalName())
+            && classElement.getAttributeValue("name").equals(
+                persistentClass.getCanonicalName())) {
+
+          String tableName = getSchemaName(classElement.getAttributeValue("table"), persistentClass);
+          mapping.addTable(tableName);
+          mapping.setTableName(tableName);
+          
+          List<Element> fields = classElement.getChildren("field");
+          for(Element field:fields) {
+            String fieldName =  field.getAttributeValue("name");
+            String family =  field.getAttributeValue("family");
+            String qualifier = field.getAttributeValue("qualifier");
+            mapping.addField(fieldName, mapping.getTableName(), family, qualifier);
+            mapping.addColumnFamily(mapping.getTableName(), family);//implicit family definition
+          }
+
+          break;
+        }
+      }
+    } catch(IOException ex) {
       throw ex;
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
+    } catch(Exception ex) {
+      throw new IOException(ex);
     }
+    
+    return mapping;
   }
 
   @Override

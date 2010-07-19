@@ -27,6 +27,8 @@ public class DataStoreFactory {
 
   public static final String DATASTORE = "datastore";
 
+  private static final String GORA_DATASTORE = GORA + "." + DATASTORE + ".";
+  
   public static final String AUTO_CREATE_SCHEMA = "autocreateschema";
 
   public static final String INPUT_PATH  = "input.path";
@@ -35,6 +37,8 @@ public class DataStoreFactory {
 
   public static final String MAPPING_FILE = "mapping.file";
 
+  public static final String SCHEMA_NAME = "schema.name";
+  
   private static String propertiesFile = GORA_DEFAULT_PROPERTIES_FILE;
 
   private static String defaultDataStoreClass;
@@ -68,8 +72,15 @@ public class DataStoreFactory {
 
   public static <D extends DataStore<K,T>, K, T extends Persistent>
   D createDataStore(Class<D> dataStoreClass
-      , Class<K> keyClass, Class<T> persistent, Properties properties) {
+      , Class<K> keyClass, Class<T> persistent, String schemaName) {
+    return createDataStore(dataStoreClass, keyClass, persistent, properties, schemaName);
+  }
+  
+  public static <D extends DataStore<K,T>, K, T extends Persistent>
+  D createDataStore(Class<D> dataStoreClass, Class<K> keyClass
+      , Class<T> persistent, Properties properties, String schemaName) {
     try {
+      setDefaultSchemaName(properties, schemaName);
       D dataStore =
         ReflectionUtils.newInstance(dataStoreClass);
       initializeDataStore(dataStore, keyClass, persistent, properties);
@@ -81,6 +92,12 @@ public class DataStoreFactory {
     }
   }
 
+  public static <D extends DataStore<K,T>, K, T extends Persistent>
+  D createDataStore(Class<D> dataStoreClass
+      , Class<K> keyClass, Class<T> persistent, Properties properties) {
+    return createDataStore(dataStoreClass, keyClass, persistent, properties, null);
+  }
+  
   @SuppressWarnings("unchecked")
   public static <D extends DataStore<K,T>, K, T extends Persistent>
   D getDataStore( Class<D> dataStoreClass, Class<K> keyClass,
@@ -153,12 +170,6 @@ public class DataStoreFactory {
     return null;
   }
 
-  private static String getClassname(Class<?> clazz) {
-    String classname = clazz.getName();
-    String[] parts = classname.split("\\.");
-    return parts[parts.length-1];
-  }
-
   /**
    * Tries to find a property with the given baseKey. First the property
    * key constructed as "gora.&lt;classname&gt;.&lt;baseKey&gt;" is searched.
@@ -173,7 +184,7 @@ public class DataStoreFactory {
     //recursively try the class names until the base class
     Class<?> clazz = store.getClass();
     while(true) {
-      String fullKey = GORA + "." + getClassname(clazz) + "." + baseKey;
+      String fullKey = GORA + "." + org.gora.util.StringUtils.getClassname(clazz) + "." + baseKey;
       String value = getProperty(properties, fullKey);
       if(value != null) {
         return value;
@@ -248,5 +259,43 @@ public class DataStoreFactory {
       return defaultValue;
     }
     return result;
+  }
+  
+  /**
+   * Sets a property for all the datastores
+   */
+  private static void setProperty(Properties properties, String baseKey, String value) {
+    if(value != null)
+      properties.setProperty(GORA_DATASTORE + baseKey, value);
+  }
+  
+  /**
+   * Sets a property for the datastores of the given class
+   */
+  private static<D extends DataStore<K,T>, K, T extends Persistent> 
+    void setProperty(Properties properties, Class<D> dataStoreClass, String baseKey, String value) {
+    properties.setProperty(GORA+"."+org.gora.util.StringUtils.getClassname(dataStoreClass)+"."+baseKey, value);
+  }
+  
+  /**
+   * Gets the default schema name to be used by the datastore
+   */
+  public static String getDefaultSchemaName(Properties properties, DataStore<?,?> store) {
+    return findProperty(properties, store, SCHEMA_NAME, null);
+  }
+  
+  /**
+   * Sets the default schema name to be used by the datastores
+   */
+  public static void setDefaultSchemaName(Properties properties, String schemaName) {
+    setProperty(properties, SCHEMA_NAME, schemaName);
+  }
+  
+  /**
+   * Sets the default schema name to be used by the datastores of the given class
+   */
+  public static<D extends DataStore<K,T>, K, T extends Persistent>
+  void setDefaultSchemaName(Properties properties, Class<D> dataStoreClass, String schemaName) {
+    setProperty(properties, dataStoreClass, SCHEMA_NAME, schemaName);
   }
 }

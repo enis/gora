@@ -167,6 +167,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     //TODO: get the table metadata if the table exists previously, and fill sql types with correct information
 
     this.conf = getOrCreateConf();
+    
   }
 
   @Override
@@ -174,10 +175,10 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     flush();
     if(connection!=null) {
       try {
-        if(dbVendor == DBVendor.HSQL)
-          hsqlClose();
-        
         connection.commit();
+        if(dbVendor == DBVendor.HSQL && jdbcUrl.contains(":file:")) {
+          connection.prepareStatement("SHUTDOWN").executeUpdate();
+        }
         connection.close();
       } catch (SQLException ex) {
         throw new IOException(ex);
@@ -185,10 +186,6 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
   }
 
-  private void hsqlClose() throws SQLException {
-    connection.prepareStatement("SHUTDOWN").executeUpdate();
-  }
-  
   private void setColumnConstraintForQuery(CreateTableQuery query, Column column) {
     ColumnConstraint constraint = getColumnConstraint(column);
     if(constraint != null) {
@@ -256,7 +253,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     try {
       DatabaseMetaData metadata = connection.getMetaData();
       String tableName = mapping.getTableName();
-
+      
       resultSet = metadata.getTables(null, null, tableName, null);
 
       if(resultSet.next())
@@ -754,6 +751,8 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   }
 
   protected String getIdentifier(String identifier) {
+    if(identifier == null)
+      return identifier;
     if(!dbMixedCaseIdentifiers) {
       if(dbLowerCaseIdentifiers) {
         return identifier.toLowerCase();
@@ -824,18 +823,21 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       Document doc = builder.build(getClass().getClassLoader()
           .getResourceAsStream(filename));
 
-      List<Element> tables = doc.getRootElement().getChildren("table");
+      List<Element> classes = doc.getRootElement().getChildren("class");
 
-      for(Element table: tables) {
-        if(table.getAttributeValue("keyClass").equals(keyClass.getCanonicalName())
-            && table.getAttributeValue("persistentClass").equals(
+      for(Element classElement: classes) {
+        if(classElement.getAttributeValue("keyClass").equals(keyClass.getCanonicalName())
+            && classElement.getAttributeValue("name").equals(
                 persistentClass.getCanonicalName())) {
-          mapping.setTableName(getIdentifier(table.getAttributeValue("name")));
+          
+          String tableName = getIdentifier(getSchemaName(
+              classElement.getAttributeValue("table"), persistentClass));
+          mapping.setTableName(tableName);
 
-          Element primaryKeyEl = table.getChild("primarykey");
+          Element primaryKeyEl = classElement.getChild("primarykey");
           addField(mapping, null, primaryKeyEl);
 
-          List<Element> fields = table.getChild("fields").getChildren("field");
+          List<Element> fields = classElement.getChildren("field");
 
           for(Element field:fields) {
             String fieldName = field.getAttributeValue("name");
