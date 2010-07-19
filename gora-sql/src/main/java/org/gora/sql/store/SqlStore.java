@@ -74,7 +74,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     MYSQL,
     HSQL,
     GENERIC;
-    
+
     static DBVendor getVendor(String dbProductName) {
       String name = dbProductName.toLowerCase();
       if(name.contains("mysql"))
@@ -84,7 +84,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       return GENERIC;
     }
   }
-  
+
   private static final Log log = LogFactory.getLog(SqlStore.class);
 
   /** The JDBC Driver class name */
@@ -128,7 +128,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   private String dbProductName;
 
   private DBVendor dbVendor;
-  
+
   @Override
   public void initialize(Class<K> keyClass, Class<T> persistentClass,
       Properties properties) throws IOException {
@@ -167,7 +167,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     //TODO: get the table metadata if the table exists previously, and fill sql types with correct information
 
     this.conf = getOrCreateConf();
-    
+
   }
 
   @Override
@@ -253,7 +253,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     try {
       DatabaseMetaData metadata = connection.getMetaData();
       String tableName = mapping.getTableName();
-      
+
       resultSet = metadata.getTables(null, null, tableName, null);
 
       if(resultSet.next())
@@ -581,6 +581,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
   @Override
   public void put(K key, T persistent) throws IOException {
+    boolean hasDirty = false;
     try {
       //TODO: INSERT or UPDATE
 
@@ -591,16 +592,21 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
       InsertUpdateStatement<K, T> insertStatement =
         InsertUpdateStatementFactory.createStatement(this, mapping, dbVendor);
-      
+
       insertStatement.setObject(key, null, mapping.getPrimaryColumn());
       for (int i = 0; i < fields.size(); i++) {
         Field field = fields.get(i);
         if (!stateManager.isDirty(persistent, i)) {
           continue;
         }
+        hasDirty = true;
 
         Column column = mapping.getColumn(field.name());
         insertStatement.setObject(persistent.get(i), field.schema(), column);
+      }
+
+      if (!hasDirty) {
+        return;
       }
 
       //jdbc already should cache the ps
@@ -829,7 +835,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         if(classElement.getAttributeValue("keyClass").equals(keyClass.getCanonicalName())
             && classElement.getAttributeValue("name").equals(
                 persistentClass.getCanonicalName())) {
-          
+
           String tableName = getIdentifier(getSchemaName(
               classElement.getAttributeValue("table"), persistentClass));
           mapping.setTableName(tableName);

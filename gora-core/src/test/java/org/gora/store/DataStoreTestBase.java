@@ -134,8 +134,13 @@ public abstract class DataStoreTestBase {
   }
 
   @Test
+  public void testEmptyUpdate() throws IOException {
+    DataStoreTestUtil.testEmptyUpdateEmployee(employeeStore);
+  }
+
+  @Test
   public void testUpdate() throws IOException {
-    //DataStoreTestUtil.testUpdateEmployee(employeeStore);
+    DataStoreTestUtil.testUpdateEmployee(employeeStore);
     DataStoreTestUtil.testUpdateWebPage(webPageStore);
   }
 
