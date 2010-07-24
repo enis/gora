@@ -1,6 +1,7 @@
 
 package org.gora.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -201,6 +202,27 @@ public class TestIOUtils {
       }
       
       testSerializeDeserialize(new StringArrayWrapper(arr));
+    }
+  }
+  
+  @Test
+  public void testReadFullyBufferLimit() throws IOException {
+    for(int i=-2; i<=2; i++) {
+      byte[] bytes = new byte[IOUtils.BUFFER_SIZE + i];
+      for(int j=0; j<bytes.length; j++) {
+        bytes[j] = (byte)j;
+      }
+      ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+      
+      byte[] readBytes = IOUtils.readFully(is);
+      assertByteArrayEquals(bytes, readBytes);
+    }
+  }
+  
+  public void assertByteArrayEquals(byte[] expected, byte[] actual) {
+    Assert.assertEquals("Array lengths do not match", expected.length, actual.length);
+    for(int j=0; j<expected.length; j++) {
+      Assert.assertEquals("bytes at position "+j+" do not match", expected[j], actual[j]);
     }
   }
 }

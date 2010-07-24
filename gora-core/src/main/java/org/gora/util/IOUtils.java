@@ -40,7 +40,7 @@ public class IOUtils {
   private static SerializationFactory serializationFactory = null;
   private static Configuration conf;
 
-  private static final int BUFFER_SIZE = 8192;
+  public static final int BUFFER_SIZE = 8192;
 
   private static Configuration getOrCreateConf(Configuration conf) {
     if(conf == null) {
@@ -448,9 +448,11 @@ public class IOUtils {
     List<ByteBuffer> buffers = new ArrayList<ByteBuffer>(4);
     while(true) {
       ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-      buffers.add(buffer);
       int count = in.read(buffer.array(), 0, BUFFER_SIZE);
-      buffer.limit(count);
+      if(count > 0) {
+        buffer.limit(count);
+        buffers.add(buffer);  
+      }
       if(count < BUFFER_SIZE) break;
     }
 
