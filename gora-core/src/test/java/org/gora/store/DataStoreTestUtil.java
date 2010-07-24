@@ -156,6 +156,36 @@ public class DataStoreTestUtil {
     return employee;
   }
 
+  public static void testEmptyUpdateEmployee(DataStore<String, Employee> dataStore)
+  throws IOException {
+    dataStore.createSchema();
+    long ssn = 1234567890L;
+    String ssnStr = Long.toString(ssn);
+    long now = System.currentTimeMillis();
+
+    Employee employee = dataStore.newPersistent();
+    employee.setName(new Utf8("John Doe"));
+    employee.setDateOfBirth(now - 20L *  YEAR_IN_MS);
+    employee.setSalary(100000);
+    employee.setSsn(new Utf8(ssnStr));
+    dataStore.put(employee.getSsn().toString(), employee);
+
+    dataStore.flush();
+
+    employee = dataStore.get(ssnStr);
+    dataStore.put(ssnStr, employee);
+
+    dataStore.flush();
+
+    employee = dataStore.newPersistent();
+    dataStore.put(Long.toString(ssn + 1), employee);
+
+    dataStore.flush();
+
+    employee = dataStore.get(Long.toString(ssn + 1));
+    Assert.assertNull(employee);
+  }
+
   public static void testUpdateEmployee(DataStore<String, Employee> dataStore)
   throws IOException {
     dataStore.createSchema();
@@ -219,7 +249,7 @@ public class DataStoreTestUtil {
     }
 
     dataStore.flush();
-    
+
     for (int i = 0; i < urls.length; i++) {
       WebPage webPage = dataStore.get(urls[i]);
       webPage.setContent(ByteBuffer.wrap(ByteUtils.toBytes(content + i)));
@@ -253,7 +283,7 @@ public class DataStoreTestUtil {
       }
       Assert.assertEquals(count, webPage.getOutlinks().size());
     }
-    
+
     for (int i = 0; i < urls.length; i++) {
       WebPage webPage = dataStore.get(urls[i]);
       for (int j = 0; j < urls.length; j += 2) {
@@ -261,9 +291,9 @@ public class DataStoreTestUtil {
       }
       dataStore.put(webPage.getUrl().toString(), webPage);
     }
-    
+
     dataStore.flush();
-    
+
     for (int i = 0; i < urls.length; i++) {
       WebPage webPage = dataStore.get(urls[i]);
       int count = 0;
