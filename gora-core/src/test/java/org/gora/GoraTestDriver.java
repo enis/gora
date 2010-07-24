@@ -50,24 +50,25 @@ public class GoraTestDriver {
    * method annotated with org.junit.Before
    */
   public void setUp() throws Exception {
+    log.info("setting up test");
     try {
       for(DataStore store : dataStores) {
-        store.flush();
         store.truncateSchema();
       }
     }catch (IOException ignore) {
     }
   }
-
+    
   /** Should be called once after each test, probably in the
    * method annotated with org.junit.After
    */
   @SuppressWarnings("rawtypes")
   public void tearDown() throws Exception {
+    log.info("tearing down test");
     //delete everything
     try {
       for(DataStore store : dataStores) {
-        store.flush();
+        //store.flush();
         store.deleteSchema();
         store.close();
       }

@@ -39,7 +39,7 @@
   <property name="test.log.dir" value="${test.build.dir}/logs"/>
   <property name="test.include" value="Test*"/>
   <property name="test.junit.output" value="no"/>
-  <property name="test.junit.timeout" value="1500000"/>
+  <property name="test.junit.timeout" value="3600000"/>
   <property name="test.junit.output.format" value="plain"/>
   <property name="test.junit.fork.mode" value="perTest" />
   <property name="test.junit.printsummary" value="yes" />

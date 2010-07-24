@@ -16,11 +16,6 @@ import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
@@ -77,8 +72,6 @@ implements Configurable {
   private static final String DEPRECATED_MAPPING_FILE = "hbase-mapping.xml";
   public static final String DEFAULT_MAPPING_FILE = "gora-hbase-mapping.xml";
 
-  private static final DocumentBuilder docBuilder;
-
   private HBaseAdmin admin;
 
   private HTable table;
@@ -88,17 +81,6 @@ implements Configurable {
   private boolean autoCreateSchema = true;
 
   private HBaseMapping mapping;
-  
-  static {
-    try {
-      docBuilder =
-        DocumentBuilderFactory.newInstance().newDocumentBuilder();
-    } catch (ParserConfigurationException e) {
-      throw new RuntimeException(e);
-    } catch (FactoryConfigurationError e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   public HBaseStore()  {
   }

@@ -413,7 +413,7 @@ public class DataStoreTestUtil {
     testQueryWebPageKeyRange(store, true, true);
   }
 
-  public static void testQueryWebPageQueryEmptyResults(DataStore<String, WebPage> store)
+  public static void testQueryWebPageEmptyResults(DataStore<String, WebPage> store)
     throws IOException {
     createWebPageData(store);
 

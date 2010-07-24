@@ -10,6 +10,10 @@ import org.gora.GoraTestDriver;
 import org.gora.sql.store.SqlStore;
 import org.hsqldb.Server;
 
+/**
+ * Helper class for third part tests using gora-sql backend. 
+ * @see GoraTestDriver
+ */
 public class GoraSqlTestDriver extends GoraTestDriver {
 
   public GoraSqlTestDriver() {
