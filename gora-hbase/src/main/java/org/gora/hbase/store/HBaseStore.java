@@ -112,9 +112,9 @@ implements Configurable {
     }
     if(autoCreateSchema) {
       createSchema();
-    } else {
-     table = new HTable(mapping.getTableName());
-    }
+    } 
+    
+    table = new HTable(mapping.getTableName());
   }
 
   @Override
@@ -123,10 +123,8 @@ implements Configurable {
       return;
     }
     HTableDescriptor tableDesc = mapping.getTable();
-    System.out.println("creating schema:" + Bytes.toString(tableDesc.getName()));
     
     admin.createTable(tableDesc);
-    table = new HTable(mapping.getTableName());
   }
 
   @Override
