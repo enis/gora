@@ -23,16 +23,12 @@ import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericFixed;
-import org.apache.avro.io.BinaryDecoder;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.ipc.ByteBufferOutputStream;
 import org.apache.avro.specific.SpecificFixed;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.gora.avro.PersistentDatumReader;
-import org.gora.avro.PersistentDatumWriter;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.StateManager;
 import org.gora.query.PartitionQuery;
@@ -118,11 +114,6 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
   private DbTable sqlTable;
 
-  private PersistentDatumReader<T> datumReader;
-  private PersistentDatumWriter<T> datumWriter;
-
-  private BinaryDecoder decoder;
-
   private Column primaryColumn;
 
   private String dbProductName;
@@ -156,9 +147,6 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     writeCache = new HashSet<PreparedStatement>();
 
     keySqlType = SqlTypeInterface.getSqlType(keyClass);
-
-    datumReader = new PersistentDatumReader<T>(schema, false);
-    datumWriter = new PersistentDatumWriter<T>(schema, false);
 
     if(autoCreateSchema) {
       createSchema();
@@ -545,22 +533,10 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
 
     if(bytes!=null)
-      return readField(field, schema, bytes);
+      return IOUtils.deserialize(bytes, datumReader, schema, field);
     else if(is != null)
-      return readField(field, schema, is);
+      return IOUtils.deserialize(is, datumReader, schema, field);
     return field; //field is empty
-  }
-
-  protected Object readField(Object field, Schema schema, byte[] bytes)
-    throws IOException {
-    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(bytes, decoder);
-    return datumReader.read(field, schema, decoder);
-  }
-
-  protected Object readField(Object field, Schema schema, InputStream is)
-    throws IOException {
-    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(is, decoder);
-    return datumReader.read(field, schema, decoder);
   }
 
   @Override

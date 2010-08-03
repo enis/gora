@@ -28,6 +28,7 @@ import org.apache.avro.Schema.Type;
 import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.io.WritableUtils;
+import org.gora.avro.PersistentDatumWriter;
 
 //  This code is copied almost directly from HBase project's Bytes class.
 /**
@@ -679,7 +680,8 @@ public class ByteUtils {
     }
   }
 
-  public static byte[] toBytes(Object o, Schema schema)
+  public static byte[] toBytes(Object o, Schema schema
+      , PersistentDatumWriter<?> datumWriter)
   throws IOException {
     Type type = schema.getType();
     switch (type) {
@@ -691,9 +693,9 @@ public class ByteUtils {
     case DOUBLE:  return toBytes((Double)o);
     case BOOLEAN: return (Boolean)o ? new byte[] {1} : new byte[] {0};
     case ENUM:    return new byte[] { (byte)((Enum<?>) o).ordinal() };
-    case RECORD:;
+    case RECORD:  //fall
     case MAP:
-    case ARRAY:
+    case ARRAY:   return IOUtils.serialize(datumWriter, schema, o);
     default: throw new RuntimeException("Unknown type: "+type);
     }
   }

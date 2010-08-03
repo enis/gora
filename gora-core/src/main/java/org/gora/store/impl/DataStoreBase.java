@@ -12,6 +12,8 @@ import org.apache.avro.Schema.Field;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
+import org.gora.avro.PersistentDatumReader;
+import org.gora.avro.PersistentDatumWriter;
 import org.gora.persistency.BeanFactory;
 import org.gora.persistency.Persistent;
 import org.gora.persistency.impl.BeanFactoryImpl;
@@ -42,7 +44,11 @@ implements DataStore<K, T> {
   protected boolean autoCreateSchema;
 
   protected Properties properties;
-  
+
+  protected PersistentDatumReader<T> datumReader;
+
+  protected PersistentDatumWriter<T> datumWriter;
+
   public DataStoreBase() {
   }
 
@@ -58,6 +64,9 @@ implements DataStore<K, T> {
 
     autoCreateSchema = DataStoreFactory.getAutoCreateSchema(properties, this);
     this.properties = properties;
+
+    datumReader = new PersistentDatumReader<T>(schema, false);
+    datumWriter = new PersistentDatumWriter<T>(schema, false);
   }
 
   @Override
@@ -183,9 +192,9 @@ public T get(K key) throws IOException {
   }
 
   /**
-   * Returns the name of the schema to use for the persistent class. If the mapping schema name is 
-   * provided it is returned first, else the properties file is searched, and the default schema name is 
-   * returned if found. Else, the class name, without the package, of the persistent class is returned. 
+   * Returns the name of the schema to use for the persistent class. If the mapping schema name is
+   * provided it is returned first, else the properties file is searched, and the default schema name is
+   * returned if found. Else, the class name, without the package, of the persistent class is returned.
    * @param mappingSchemaName the name of the schema as read from the mapping file
    * @param persistentClass persistent class
    */
@@ -193,11 +202,11 @@ public T get(K key) throws IOException {
     if(mappingSchemaName != null) {
       return mappingSchemaName;
     }
-    
+
     String schemaName = DataStoreFactory.getDefaultSchemaName(properties, this);
     if(schemaName != null)
       return schemaName;
-    
+
     return StringUtils.getClassname(persistentClass);
   }
 }

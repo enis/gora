@@ -1,6 +1,7 @@
 
 package org.gora.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -15,8 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.avro.Schema;
+import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.Decoder;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.Encoder;
 import org.apache.avro.ipc.ByteBufferInputStream;
 import org.apache.avro.ipc.ByteBufferOutputStream;
@@ -29,6 +32,7 @@ import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.io.serializer.Deserializer;
 import org.apache.hadoop.io.serializer.SerializationFactory;
 import org.apache.hadoop.io.serializer.Serializer;
+import org.gora.avro.PersistentDatumReader;
 import org.gora.avro.PersistentDatumWriter;
 import org.gora.persistency.Persistent;
 
@@ -41,6 +45,8 @@ public class IOUtils {
   private static Configuration conf;
 
   public static final int BUFFER_SIZE = 8192;
+
+  private static BinaryDecoder decoder;
 
   private static Configuration getOrCreateConf(Configuration conf) {
     if(conf == null) {
@@ -148,6 +154,16 @@ public class IOUtils {
     encoder.flush();
   }
 
+  /**
+   * Serializes the field object using the datumWriter.
+   */
+  public static<T extends Persistent> byte[] serialize(PersistentDatumWriter<T> datumWriter
+      , Schema schema, Object object) throws IOException {
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    serialize(os, datumWriter, schema, object);
+    return os.toByteArray();
+  }
+
   /** Deserializes the object in the given datainput using
    * available Hadoop serializations.
    * @throws IOException
@@ -213,6 +229,39 @@ public class IOUtils {
     DataInputBuffer buffer = new DataInputBuffer();
     buffer.reset(in, in.length);
     return deserialize(conf, buffer, obj);
+  }
+
+  /**
+   * Deserializes the field object using the datumReader.
+   */
+  @SuppressWarnings("unchecked")
+  public static<K, T extends Persistent> K deserialize(InputStream is,
+      PersistentDatumReader<T> datumReader, Schema schema, K object)
+      throws IOException {
+    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(is, decoder);
+    return (K)datumReader.read(object, schema, decoder);
+  }
+
+  /**
+   * Deserializes the field object using the datumReader.
+   */
+  @SuppressWarnings("unchecked")
+  public static<K, T extends Persistent> K deserialize(byte[] bytes,
+      PersistentDatumReader<T> datumReader, Schema schema, K object)
+      throws IOException {
+    decoder = DecoderFactory.defaultFactory().createBinaryDecoder(bytes, decoder);
+    return (K)datumReader.read(object, schema, decoder);
+  }
+
+
+  /**
+   * Serializes the field object using the datumWriter.
+   */
+  public static<T extends Persistent> byte[] deserialize(PersistentDatumWriter<T> datumWriter
+      , Schema schema, Object object) throws IOException {
+    ByteArrayOutputStream os = new ByteArrayOutputStream();
+    serialize(os, datumWriter, schema, object);
+    return os.toByteArray();
   }
 
   /**
@@ -451,7 +500,7 @@ public class IOUtils {
       int count = in.read(buffer.array(), 0, BUFFER_SIZE);
       if(count > 0) {
         buffer.limit(count);
-        buffers.add(buffer);  
+        buffers.add(buffer);
       }
       if(count < BUFFER_SIZE) break;
     }
