@@ -230,7 +230,7 @@ public class SimpleCassandraClient implements CassandraClient {
   public List<TokenRange> describeRing() throws IOException {
     try {
       return client.describe_ring(keySpace);
-    } catch (TException e) {
+    } catch (Exception e) {
       throw new IOException(e);
     }
   }
