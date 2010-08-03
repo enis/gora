@@ -28,7 +28,7 @@ public class DataStoreFactory {
   public static final String DATASTORE = "datastore";
 
   private static final String GORA_DATASTORE = GORA + "." + DATASTORE + ".";
-  
+
   public static final String AUTO_CREATE_SCHEMA = "autocreateschema";
 
   public static final String INPUT_PATH  = "input.path";
@@ -38,7 +38,7 @@ public class DataStoreFactory {
   public static final String MAPPING_FILE = "mapping.file";
 
   public static final String SCHEMA_NAME = "schema.name";
-  
+
   private static String propertiesFile = GORA_DEFAULT_PROPERTIES_FILE;
 
   private static String defaultDataStoreClass;
@@ -75,7 +75,7 @@ public class DataStoreFactory {
       , Class<K> keyClass, Class<T> persistent, String schemaName) {
     return createDataStore(dataStoreClass, keyClass, persistent, properties, schemaName);
   }
-  
+
   public static <D extends DataStore<K,T>, K, T extends Persistent>
   D createDataStore(Class<D> dataStoreClass, Class<K> keyClass
       , Class<T> persistent, Properties properties, String schemaName) {
@@ -97,7 +97,7 @@ public class DataStoreFactory {
       , Class<K> keyClass, Class<T> persistent, Properties properties) {
     return createDataStore(dataStoreClass, keyClass, persistent, properties, null);
   }
-  
+
   @SuppressWarnings("unchecked")
   public static <D extends DataStore<K,T>, K, T extends Persistent>
   D getDataStore( Class<D> dataStoreClass, Class<K> keyClass,
@@ -212,6 +212,24 @@ public class DataStoreFactory {
     return defaultValue;
   }
 
+  /**
+   * Tries to find a property with the given baseKey. First the property
+   * key constructed as "gora.&lt;classname&gt;.&lt;baseKey&gt;" is searched.
+   * If not found, the property keys for all superclasses is recursively
+   * tested. Lastly, the property key constructed as
+   * "gora.datastore.&lt;baseKey&gt;" is searched.
+   * @return the first found value, or throws IOException
+   */
+  public static String findPropertyOrDie(Properties properties
+      , DataStore<?, ?> store, String baseKey) throws IOException {
+    String val = findProperty(properties, store, baseKey, null);
+    if(val == null) {
+      throw new IOException("Property with base name \""+baseKey+"\" could not be found, make " +
+      		"sure to include this property in gora.properties file");
+    }
+    return val;
+  }
+
   public static boolean findBooleanProperty(Properties properties
       , DataStore<?, ?> store, String baseKey, String defaultValue) {
     return Boolean.parseBoolean(findProperty(properties, store, baseKey, defaultValue));
@@ -260,7 +278,7 @@ public class DataStoreFactory {
     }
     return result;
   }
-  
+
   /**
    * Sets a property for all the datastores
    */
@@ -268,29 +286,29 @@ public class DataStoreFactory {
     if(value != null)
       properties.setProperty(GORA_DATASTORE + baseKey, value);
   }
-  
+
   /**
    * Sets a property for the datastores of the given class
    */
-  private static<D extends DataStore<K,T>, K, T extends Persistent> 
+  private static<D extends DataStore<K,T>, K, T extends Persistent>
     void setProperty(Properties properties, Class<D> dataStoreClass, String baseKey, String value) {
     properties.setProperty(GORA+"."+org.gora.util.StringUtils.getClassname(dataStoreClass)+"."+baseKey, value);
   }
-  
+
   /**
    * Gets the default schema name to be used by the datastore
    */
   public static String getDefaultSchemaName(Properties properties, DataStore<?,?> store) {
     return findProperty(properties, store, SCHEMA_NAME, null);
   }
-  
+
   /**
    * Sets the default schema name to be used by the datastores
    */
   public static void setDefaultSchemaName(Properties properties, String schemaName) {
     setProperty(properties, SCHEMA_NAME, schemaName);
   }
-  
+
   /**
    * Sets the default schema name to be used by the datastores of the given class
    */
