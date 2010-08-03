@@ -143,7 +143,8 @@ extends DataStoreBase<K, T> {
 
   private void setField(T persistent, Field field, byte[] val)
   throws IOException {
-    persistent.put(field.pos(), ByteUtils.fromBytes(val, field.schema()));
+    persistent.put(field.pos()
+        , ByteUtils.fromBytes(val, field.schema(), datumReader, persistent.get(field.pos())));
   }
 
   @SuppressWarnings("rawtypes")
@@ -178,7 +179,7 @@ extends DataStoreBase<K, T> {
           StatefulMap map = new StatefulHashMap();
           for (Entry<String, byte[]> e : qualMap.entrySet()) {
             Utf8 mapKey = new Utf8(e.getKey());
-            map.put(mapKey, ByteUtils.fromBytes(e.getValue(), valueSchema));
+            map.put(mapKey, ByteUtils.fromBytes(e.getValue(), valueSchema, datumReader, null));
             map.putState(mapKey, State.CLEAN);
           }
           setField(persistent, field, map);
@@ -195,7 +196,7 @@ extends DataStoreBase<K, T> {
           valueSchema = fieldSchema.getElementType();
           ArrayList arrayList = new ArrayList();
           for (Entry<String, byte[]> e : qualMap.entrySet()) {
-            arrayList.add(ByteUtils.fromBytes(e.getValue(), valueSchema));
+            arrayList.add(ByteUtils.fromBytes(e.getValue(), valueSchema, datumReader, null));
           }
           ListGenericArray arr = new ListGenericArray(fieldSchema, arrayList);
           setField(persistent, field, arr);
