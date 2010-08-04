@@ -72,6 +72,7 @@ public class Mutate {
 
   public Mutate deleteAll(String columnFamily) {
     Deletion deletion = new Deletion();
+    deletion.setTimestamp(Long.MAX_VALUE); //TODO: check this
     deletion.predicate = new SlicePredicate();
     SliceRange sliceRange =
       new SliceRange(new byte[0], new byte[0], false, Integer.MAX_VALUE);
@@ -113,5 +114,9 @@ public class Mutate {
 
   /*package*/ Map<String, List<Mutation>> getMutationMap() {
     return mutationMap;
+  }
+  
+  public boolean isEmpty() {
+    return mutationMap.isEmpty();
   }
 }

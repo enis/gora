@@ -6,9 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -304,7 +304,8 @@ extends DataStoreBase<K, T> {
       }
     }
 
-    client.mutate(key.toString(), mutate);
+    if(!mutate.isEmpty())
+      client.mutate(key.toString(), mutate);
   }
 
   @Override
