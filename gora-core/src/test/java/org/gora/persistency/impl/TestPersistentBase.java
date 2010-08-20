@@ -17,33 +17,28 @@ import org.junit.Test;
  * Testcase for PersistentBase class
  */
 public class TestPersistentBase {
-
-  private static final String[] WEBPAGE_FIELDS = {"url", "content", 
-    "parsedContent", "outlinks"};
   
-  
-  private static final String[] EMPLOYEE_FIELDS = {"name","dateOfBirth","ssn","salary",};
   @Test
   public void testGetFields() {
     WebPage page = new WebPage();
     String[] fields = page.getFields();
-    Assert.assertArrayEquals(WEBPAGE_FIELDS, fields);
+    Assert.assertArrayEquals(WebPage._ALL_FIELDS, fields);
   }
   
   @Test
   public void testGetField() {
     WebPage page = new WebPage();
-    for(int i=0; i<WEBPAGE_FIELDS.length; i++) {
+    for(int i=0; i<WebPage._ALL_FIELDS.length; i++) {
       String field = page.getField(i);
-      Assert.assertEquals(WEBPAGE_FIELDS[i], field);
+      Assert.assertEquals(WebPage._ALL_FIELDS[i], field);
     }
   }
   
   @Test
   public void testGetFieldIndex() {
     WebPage page = new WebPage();
-    for(int i=0; i<WEBPAGE_FIELDS.length; i++) {
-      int index = page.getFieldIndex(WEBPAGE_FIELDS[i]);
+    for(int i=0; i<WebPage._ALL_FIELDS.length; i++) {
+      int index = page.getFieldIndex(WebPage._ALL_FIELDS[i]);
       Assert.assertEquals(i, index);
     }
   }
@@ -51,13 +46,13 @@ public class TestPersistentBase {
   @Test
   public void testFieldsWithTwoClasses() {
     WebPage page = new WebPage();
-    for(int i=0; i<WEBPAGE_FIELDS.length; i++) {
-      int index = page.getFieldIndex(WEBPAGE_FIELDS[i]);
+    for(int i=0; i<WebPage._ALL_FIELDS.length; i++) {
+      int index = page.getFieldIndex(WebPage._ALL_FIELDS[i]);
       Assert.assertEquals(i, index);
     }
     Employee employee = new Employee();
-    for(int i=0; i<EMPLOYEE_FIELDS.length; i++) {
-      int index = employee.getFieldIndex(EMPLOYEE_FIELDS[i]);
+    for(int i=0; i<Employee._ALL_FIELDS.length; i++) {
+      int index = employee.getFieldIndex(Employee._ALL_FIELDS[i]);
       Assert.assertEquals(i, index);
     }
   }

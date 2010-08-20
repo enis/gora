@@ -491,7 +491,8 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
         case NULL:
           break;
         case RECORD:
-          readField(rs, persistent.get(field.pos()), fieldSchema, column);
+          Object o = readField(rs, persistent.get(field.pos()), fieldSchema, column);
+          persistent.put(field.pos(), o);
           break;
         case STRING:
           persistent.put(field.pos(), new Utf8(rs.getString(columnName)));

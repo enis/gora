@@ -14,6 +14,7 @@
     <field name="content" path="p:cnt:c"/>
     <field name="parsedContent" path="p:parsedContent"/>
     <field name="outlinks" path="p:outlinks"/>
+    <field name="metadata" path="c:mt"/>
   </class>
 
   <class name="org.gora.examples.generated.TokenDatum" keyClass="java.lang.String" keyspace="TokenDatum">

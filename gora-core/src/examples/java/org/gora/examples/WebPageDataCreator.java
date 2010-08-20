@@ -9,6 +9,7 @@ import java.util.HashMap;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.gora.examples.generated.Metadata;
 import org.gora.examples.generated.WebPage;
 import org.gora.store.DataStore;
 import org.gora.store.DataStoreFactory;
@@ -104,6 +105,11 @@ public class WebPageDataCreator {
       for(int j=0; j<LINKS[i].length; j++) {
         page.putToOutlinks(new Utf8(URLS[LINKS[i][j]]), new Utf8(ANCHORS[i][j]));
       }
+      
+      Metadata metadata = new Metadata();
+      metadata.setVersion(1);
+      metadata.putToData(new Utf8("metakey"), new Utf8("metavalue"));
+      page.setMetadata(metadata);
       
       dataStore.put(URLS[i], page);
     }

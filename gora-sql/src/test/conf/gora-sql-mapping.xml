@@ -15,6 +15,7 @@
     <field name="content" column="content"/>
     <field name="parsedContent" column="parsedContent"/>
     <field name="outlinks" column="outlinks"/>
+    <field name="metadata" column="metadata"/>
   </class>
 
 <!--

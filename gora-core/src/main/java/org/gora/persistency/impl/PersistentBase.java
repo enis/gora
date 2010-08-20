@@ -92,6 +92,10 @@ public abstract class PersistentBase implements Persistent {
             }
           }
           break;
+        case RECORD :
+          Persistent field = ((Persistent)get(i));
+          if(field != null) field.clear();
+          break;
         case BOOLEAN: put(i, false); break;
         case INT    : put(i, 0); break;
         case DOUBLE : put(i, 0d); break;
