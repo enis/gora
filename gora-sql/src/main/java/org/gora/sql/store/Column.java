@@ -14,6 +14,7 @@ public class Column {
   private String tableName;
   private String name;
   private JdbcType jdbcType;
+  private String sqlType;
   private boolean isPrimaryKey;
   private int length = -1;
   private int scale = -1;
@@ -28,15 +29,22 @@ public class Column {
     this.name = name;
   }
 
-  public Column(String name, boolean isPrimaryKey, JdbcType jdbcType, int length, int scale) {
+  public Column(String name, boolean isPrimaryKey, JdbcType jdbcType, String sqlType
+      , int length, int scale) {
     this.name = name;
     this.isPrimaryKey = isPrimaryKey;
     this.jdbcType = jdbcType;
     this.length = length;
     this.scale = scale;
     this.mappingStrategy = MappingStrategy.SERIALIZED;
+    this.sqlType = sqlType == null ? jdbcType.getSqlType() : sqlType;
   }
 
+  public Column(String name, boolean isPrimaryKey, JdbcType jdbcType
+      , int length, int scale) {
+    this(name, isPrimaryKey, jdbcType, null, length, scale);
+  }
+  
   public Column(String name, boolean isPrimaryKey) {
     this.name = name;
   }
@@ -57,6 +65,14 @@ public class Column {
     this.jdbcType = jdbcType;
   }
 
+  public String getSqlType() {
+    return sqlType;
+  }
+  
+  public void setSqlType(String sqlType) {
+    this.sqlType = sqlType;
+  }
+  
   public void setLength(int length) {
     this.length = length;
   }

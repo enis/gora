@@ -28,8 +28,8 @@ public class SqlMapping {
   }
 
   public void addField(String fieldName, String columnName, JdbcType jdbcType,
-      int length, int scale) {
-    fields.put(fieldName, new Column(columnName, false, jdbcType, length, scale));
+      String sqlType, int length, int scale) {
+    fields.put(fieldName, new Column(columnName, false, jdbcType, sqlType, length, scale));
   }
 
   public Column getColumn(String fieldname) {

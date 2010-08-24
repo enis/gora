@@ -55,6 +55,7 @@ public class SqlTypeInterface {
     NULL(Types.NULL),
     NUMERIC(Types.NUMERIC),
     NVARCHAR(Types.NVARCHAR),
+    OTHER(Types.OTHER),
     REAL(Types.REAL),
     REF(Types.REF),
     ROWID(Types.ROWID),
@@ -216,7 +217,11 @@ public class SqlTypeInterface {
   }
 
   public static JdbcType stringToJdbcType(String type) {
-    return JdbcType.valueOf(type);
+    try {
+      return JdbcType.valueOf(type);
+    }catch (IllegalArgumentException ex) {
+      return JdbcType.OTHER; //db specific type
+    }
   }
 
 }

@@ -5,7 +5,7 @@
     <primarykey column="id" length="16"/>
     <field name="name" column="name" length="128"/>
     <field name="dateOfBirth" column="dateOfBirth"/>
-    <field name="ssn" column="ssn" length="16"/>
+    <field name="ssn" column="ssn" jdbc-type="VARCHAR_IGNORECASE" length="16"/> <!-- jdbc-type is HSQLDB specific for testing -->
     <field name="salary" column="salary"/>
   </class>
 
