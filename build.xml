@@ -47,7 +47,17 @@
     <subant target="jar" buildpathref="build-path" />
   </target>
 
+  <target name="jar-snapshot" depends="-buildlist, jar" description="copies the jar files to append timestamp to artifact name">
+    <subant target="jar-snapshot" buildpathref="build-path" />
+  </target>
+
   <target name="compile-test" depends="publish-local-all-test">
+  </target>
+
+  <target name="test-jar" depends="publish-local-all-test"/>
+
+  <target name="test-jar-snapshot" depends="test-jar" description="copies the jar files to append timestamp to artifact name">
+    <subant target="test-jar-snapshot" buildpathref="build-path" />
   </target>
 
   <target name="test" depends="publish-local-all-test">

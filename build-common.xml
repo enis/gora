@@ -183,6 +183,25 @@
     </jar>
   </target>
 
+  <target name="jar-snapshot" description="copies the jar files to append timestamp to artifact name">
+    <tstamp>
+      <format property="now" pattern="yyyyMMddHHmmss"/>
+    </tstamp>
+    <copy file="${jar.file}" tofile="${build.dir}/${module.name}-${now}.jar"/>
+    <echo message="New snapshot jar file copied to ${build.dir}/${module.name}-${now}.jar"/>
+  </target>
+
+  <target name="test-jar-snapshot" description="copies the jar files to append timestamp to artifact name">
+    <tstamp>
+      <format property="now" pattern="yyyyMMddHHmmss"/>
+    </tstamp>
+    <copy file="${jar.file}" tofile="${build.dir}/${module.name}-${now}.jar"/>
+    <copy file="${test.jar.file}" tofile="${build.dir}/${ant.project.name}-test-${version}-${now}.jar"/>
+
+    <echo message="New snapshot jar file copied to ${build.dir}/${module.name}-${now}.jar"/>
+    <echo message="New snapshot jar file copied to ${build.dir}/${ant.project.name}-test-${version}-${now}.jar"/>
+  </target>
+
   <!-- ================================================================== -->
   <!-- target: job                                                        -->
   <!-- ================================================================== -->
