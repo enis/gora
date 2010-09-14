@@ -68,7 +68,7 @@ public abstract class ResultBase<K, T extends Persistent>
    * Returns whether the limit for the query is reached. 
    */
   protected boolean isLimitReached() {
-    if(limit > 0 && offset++ > limit) {
+    if(limit > 0 && offset >= limit) {
       return true;
     }
     return false;
@@ -85,14 +85,21 @@ public abstract class ResultBase<K, T extends Persistent>
   
   @Override
   public final boolean next() throws IOException {
-    if(isLimitReached()) { 
+    if(isLimitReached()) {
       return false;
     }
     
     clear();
     persistent = getOrCreatePersistent(persistent);
     
-    return nextInner();
+    boolean ret = nextInner();
+    if(ret) ++offset;
+    return ret;
+  }
+  
+  @Override
+  public long getOffset() {
+    return offset;
   }
   
   /**

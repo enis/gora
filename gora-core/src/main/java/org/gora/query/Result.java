@@ -57,6 +57,12 @@ public interface Result<K,T extends Persistent> extends Closeable {
   public abstract Class<T> getPersistentClass();
   
   /**
+   * Returns the number of times next() is called with return value true.
+   * @return the number of results so far
+   */
+  public long getOffset();
+  
+  /**
    * Returns how far along the result has iterated, a value between 0 and 1.
    */
   public float getProgress() throws IOException;
