@@ -226,4 +226,9 @@ public class AvroStore<K, T extends Persistent>
   public void readFields(DataInput in) throws IOException {
     super.readFields(in);
   }
+
+  @Override
+  public String getSchemaName() {
+    return "default";
+  }
 }

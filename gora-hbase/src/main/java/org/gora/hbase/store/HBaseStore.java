@@ -65,7 +65,7 @@ public class HBaseStore<K, T extends Persistent> extends DataStoreBase<K, T>
 implements Configurable {
 
   public static final Log log = LogFactory.getLog(HBaseStore.class);
-  
+
   public static final String PARSE_MAPPING_FILE_KEY = "gora.hbase.mapping.file";
 
   @Deprecated
@@ -98,12 +98,12 @@ implements Configurable {
     } catch (FileNotFoundException ex) {
       try {
         mapping = readMapping(getConf().get(PARSE_MAPPING_FILE_KEY, DEPRECATED_MAPPING_FILE));
-        log.warn(DEPRECATED_MAPPING_FILE + " is deprecated, please rename the file to " 
+        log.warn(DEPRECATED_MAPPING_FILE + " is deprecated, please rename the file to "
             + DEFAULT_MAPPING_FILE);
       } catch (FileNotFoundException ex1) {
         throw ex; //throw the original exception
       } catch (Exception ex1) {
-        log.warn(DEPRECATED_MAPPING_FILE + " is deprecated, please rename the file to " 
+        log.warn(DEPRECATED_MAPPING_FILE + " is deprecated, please rename the file to "
             + DEFAULT_MAPPING_FILE);
         throw new RuntimeException(ex1);
       }
@@ -112,9 +112,14 @@ implements Configurable {
     }
     if(autoCreateSchema) {
       createSchema();
-    } 
-    
+    }
+
     table = new HTable(mapping.getTableName());
+  }
+
+  @Override
+  public String getSchemaName() {
+    return mapping.getTableName();
   }
 
   @Override
@@ -123,7 +128,7 @@ implements Configurable {
       return;
     }
     HTableDescriptor tableDesc = mapping.getTable();
-    
+
     admin.createTable(tableDesc);
   }
 
@@ -498,20 +503,20 @@ implements Configurable {
 
   @SuppressWarnings("unchecked")
   private HBaseMapping readMapping(String filename) throws IOException {
-    
+
     HBaseMapping mapping = new HBaseMapping();
-    
+
     try {
       SAXBuilder builder = new SAXBuilder();
       Document doc = builder.build(getClass().getClassLoader()
           .getResourceAsStream(filename));
       Element root = doc.getRootElement();
-      
+
       List<Element> tableElements = root.getChildren("table");
       for(Element tableElement : tableElements) {
         String tableName = tableElement.getAttributeValue("name");
         mapping.addTable(tableName);
-        
+
         List<Element> fieldElements = tableElement.getChildren("field");
         for(Element fieldElement : fieldElements) {
           String familyName  = fieldElement.getAttributeValue("name");
@@ -523,12 +528,12 @@ implements Configurable {
           String timeToLive  = fieldElement.getAttributeValue("timeToLive");
           String inMemory    = fieldElement.getAttributeValue("inMemory");
           String mapFileIndexInterval  = tableElement.getAttributeValue("mapFileIndexInterval");
-          
+
           mapping.addColumnFamily(tableName, familyName, compression, blockCache, blockSize
               , bloomFilter, maxVersions, timeToLive, inMemory, mapFileIndexInterval);
         }
       }
-      
+
       List<Element> classElements = root.getChildren("class");
       for(Element classElement: classElements) {
         if(classElement.getAttributeValue("keyClass").equals(keyClass.getCanonicalName())
@@ -538,7 +543,7 @@ implements Configurable {
           String tableName = getSchemaName(classElement.getAttributeValue("table"), persistentClass);
           mapping.addTable(tableName);
           mapping.setTableName(tableName);
-          
+
           List<Element> fields = classElement.getChildren("field");
           for(Element field:fields) {
             String fieldName =  field.getAttributeValue("name");
@@ -556,7 +561,7 @@ implements Configurable {
     } catch(Exception ex) {
       throw new IOException(ex);
     }
-    
+
     return mapping;
   }
 

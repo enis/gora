@@ -24,7 +24,7 @@ import org.gora.store.impl.DataStoreBase;
  * Memory based {@link DataStore} implementation for tests.
  */
 public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
- 
+
   public static class MemQuery<K, T extends Persistent> extends QueryBase<K, T> {
     public MemQuery() {
       super(null);
@@ -33,7 +33,7 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       super(dataStore);
     }
   }
-  
+
   public static class MemResult<K, T extends Persistent> extends ResultBase<K, T> {
     private NavigableMap<K, T> map;
     private Iterator<K> iterator;
@@ -49,25 +49,30 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     public float getProgress() throws IOException {
       return 0;
     }
-    
+
     @Override
-    protected void clear() {  } //do not clear the object in the store 
-    
+    protected void clear() {  } //do not clear the object in the store
+
     @Override
     public boolean nextInner() throws IOException {
       if(!iterator.hasNext()) {
-        return false; 
+        return false;
       }
-      
+
       key = iterator.next();
       persistent = map.get(key);
-      
+
       return true;
     }
   }
-  
-  private TreeMap<K, T> map = new TreeMap<K, T>();  
-  
+
+  private TreeMap<K, T> map = new TreeMap<K, T>();
+
+  @Override
+  public String getSchemaName() {
+    return "default";
+  }
+
   @Override
   public boolean delete(K key) throws IOException {
     return map.remove(key) != null;
@@ -77,15 +82,15 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   public long deleteByQuery(Query<K, T> query) throws IOException {
     long deletedRows = 0;
     Result<K,T> result = query.execute();
-    
+
     while(result.next()) {
       if(delete(result.getKey()))
         deletedRows++;
     }
-    
+
     return 0;
   }
-  
+
   @Override
   public Result<K, T> execute(Query<K, T> query) throws IOException {
     K startKey = query.getStartKey();
@@ -96,12 +101,12 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     if(endKey == null) {
       endKey = map.lastKey();
     }
-    
+
     //check if query.fields is null
     query.setFields(getFieldsToQuery(query.getFields()));
-    
+
     NavigableMap<K, T> submap = map.subMap(startKey, true, endKey, true);
-    
+
     return new MemResult<K,T>(this, query, submap);
   }
 
@@ -112,7 +117,7 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   }
 
   /**
-   * Returns a clone with exactly the requested fields shallowly copied 
+   * Returns a clone with exactly the requested fields shallowly copied
    */
   @SuppressWarnings("unchecked")
   private static<T extends Persistent> T getPersistent(T obj, String[] fields) {
@@ -126,7 +131,7 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
     return newObj;
   }
-  
+
   @Override
   public Query<K, T> newQuery() {
     return new MemQuery<K, T>(this);
@@ -147,7 +152,7 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     list.add(new PartitionQueryImpl<K, T>(query));
     return list;
   }
-  
+
   @Override
   public void close() throws IOException {
     map.clear();
@@ -155,17 +160,17 @@ public class MemStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
   @Override
   public void createSchema() throws IOException { }
-  
+
   @Override
   public void deleteSchema() throws IOException {
     map.clear();
   }
-  
+
   @Override
   public boolean schemaExists() throws IOException {
     return true;
   }
-  
+
   @Override
   public void flush() throws IOException { }
 }

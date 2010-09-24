@@ -75,6 +75,11 @@ extends DataStoreBase<K, T> {
   }
 
   @Override
+  public String getSchemaName() {
+    return mapping.getKeySpace();
+  }
+
+  @Override
   public void createSchema() throws IOException {
     throw new UnsupportedOperationException(ERROR_MESSAGE);
   }

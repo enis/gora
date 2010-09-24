@@ -106,11 +106,11 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
   private SqlMapping mapping;
 
   private Connection connection; //no connection pooling yet
-  
+
   private DatabaseMetaData metadata;
   private boolean dbMixedCaseIdentifiers, dbLowerCaseIdentifiers, dbUpperCaseIdentifiers;
   private HashMap<String, JdbcType> dbTypeMap;
-  
+
   private HashSet<PreparedStatement> writeCache;
 
   private int keySqlType;
@@ -156,6 +156,11 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     }
 
     this.conf = getOrCreateConf();
+  }
+
+  @Override
+  public String getSchemaName() {
+    return mapping.getTableName();
   }
 
   @Override
@@ -444,7 +449,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
     if(rs == null) {
       return null;
     }
-    
+
     for(int i=0; i<requestFields.length; i++) {
       String f = requestFields[i];
       Field field = fieldMap.get(f);
@@ -453,7 +458,7 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       Column column = mapping.getColumn(field.name());
       String columnName = column.getName();
       int columnIndex = rs.findColumn(columnName);
-      
+
       if (rs.getObject(columnIndex) == null) {
         continue;
       }
@@ -524,9 +529,9 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
     InputStream is = null;
     byte[] bytes = null;
-    
+
     JdbcType type = JdbcType.get(resultSet.getMetaData().getColumnType(columnIndex));
-    
+
     switch(type) {
       case BLOB          : Blob blob = resultSet.getBlob(columnIndex);
                            if (blob != null) is = blob.getBinaryStream(); break;
@@ -680,9 +685,9 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
 
     OutputStream os = null;
     Blob blob = null;
-    
+
     JdbcType type = column.getJdbcType();
-    
+
     switch(type) {
       case BLOB          : blob = connection.createBlob();
                            os = blob.setBinaryStream(1); break;
@@ -733,16 +738,16 @@ public class SqlStore<K, T extends Persistent> extends DataStoreBase<K, T> {
       dbUpperCaseIdentifiers = metadata.storesUpperCaseIdentifiers();
       dbProductName          = metadata.getDatabaseProductName();
       dbVendor               = DBVendor.getVendor(dbProductName);
-      
+
       ResultSet rs = metadata.getTypeInfo();
       dbTypeMap = new HashMap<String, JdbcType>();
-      
+
       while(rs.next()) {
         JdbcType type = JdbcType.get(rs.getInt("DATA_TYPE"));
         dbTypeMap.put(rs.getString("TYPE_NAME"), type);
       }
       rs.close();
-      
+
     } catch (SQLException ex) {
       throw new IOException();
     }

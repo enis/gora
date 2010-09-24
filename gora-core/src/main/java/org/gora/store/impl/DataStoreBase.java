@@ -199,13 +199,14 @@ public T get(K key) throws IOException {
    * @param persistentClass persistent class
    */
   protected String getSchemaName(String mappingSchemaName, Class<?> persistentClass) {
+    String schemaName = DataStoreFactory.getDefaultSchemaName(properties, this);
+    if(schemaName != null) {
+      return schemaName;
+    }
+
     if(mappingSchemaName != null) {
       return mappingSchemaName;
     }
-
-    String schemaName = DataStoreFactory.getDefaultSchemaName(properties, this);
-    if(schemaName != null)
-      return schemaName;
 
     return StringUtils.getClassname(persistentClass);
   }
